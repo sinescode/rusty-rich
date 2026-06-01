@@ -1,0 +1,15 @@
+[book]
+authors = ["rusty-rich contributors"]
+language = "en"
+multilingual = false
+src = "src"
+title = "rusty-rich"
+description = "Rich text and beautiful formatting for the terminal — Rust port of Python Rich"
+
+[output.html]
+git-repository-url = "https://github.com/sinescode/rusty-rich"
+edit-url-template = "https://github.com/sinescode/rusty-rich/edit/main/docs/{path}"
+site-url = "/rusty-rich/"
+
+[output.html.search]
+limit-results = 20
