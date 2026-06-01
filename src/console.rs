@@ -685,6 +685,67 @@ impl Console {
         }
     }
 
+    // -- Export methods ------------------------------------------------------
+
+    /// Export the current console output as an HTML document.
+    ///
+    /// Renders the given renderable and wraps it in a styled HTML page.
+    pub fn export_html(&self, renderable: &dyn Renderable) -> String {
+        let result = renderable.render(&self.options);
+        let ansi = result.to_ansi();
+        crate::export::export_html(&crate::export::ExportHtmlOptions {
+            code: crate::export::strip_ansi_escapes(&ansi),
+            ..Default::default()
+        })
+    }
+
+    /// Save rendered output as an HTML file.
+    pub fn save_html(&self, path: impl AsRef<std::path::Path>, renderable: &dyn Renderable) -> std::io::Result<()> {
+        let html = self.export_html(renderable);
+        crate::export::save_html(path, &crate::export::ExportHtmlOptions {
+            code: html,
+            ..Default::default()
+        })
+    }
+
+    /// Export the current console output as an SVG document.
+    pub fn export_svg(&self, renderable: &dyn Renderable) -> String {
+        let result = renderable.render(&self.options);
+        let ansi = result.to_ansi();
+        crate::export::export_svg(&crate::export::ExportSvgOptions {
+            code: crate::export::strip_ansi_escapes(&ansi),
+            ..Default::default()
+        })
+    }
+
+    /// Save rendered output as an SVG file.
+    pub fn save_svg(&self, path: impl AsRef<std::path::Path>, renderable: &dyn Renderable) -> std::io::Result<()> {
+        let svg = self.export_svg(renderable);
+        crate::export::save_svg(path, &crate::export::ExportSvgOptions {
+            code: svg,
+            ..Default::default()
+        })
+    }
+
+    /// Export the current console output as plain text (strips ANSI).
+    pub fn export_text(&self, renderable: &dyn Renderable) -> String {
+        let result = renderable.render(&self.options);
+        let ansi = result.to_ansi();
+        crate::export::export_text(&crate::export::ExportTextOptions {
+            text: ansi,
+            strip_ansi: true,
+        })
+    }
+
+    /// Save rendered output as a plain text file.
+    pub fn save_text(&self, path: impl AsRef<std::path::Path>, renderable: &dyn Renderable) -> std::io::Result<()> {
+        let text = self.export_text(renderable);
+        crate::export::save_text(path, &crate::export::ExportTextOptions {
+            text,
+            strip_ansi: false,
+        })
+    }
+
     // -- Context manager equivalent -----------------------------------------
 
     /// Enter a capture context. Returns the Console back so it can be

@@ -103,6 +103,9 @@ pub mod json;
 pub mod logging;
 pub mod traceback;
 
+// -- Export -----------------------------------------------------------------
+pub mod export;
+
 // -- Re-exports for convenience ---------------------------------------------
 
 // Core types
@@ -198,5 +201,16 @@ pub use json::JsonRender;
 pub use logging::RichHandler;
 pub use traceback::{Traceback, Trace, Stack, Frame, install};
 pub use highlighter::{Highlighter, ReprHighlighter, NullHighlighter, RegexHighlighter};
+
+pub use export::{
+    export_html, save_html, ExportHtmlOptions,
+    export_svg, save_svg, ExportSvgOptions,
+    export_text, save_text, ExportTextOptions,
+    ExportTheme,
+    EXPORT_THEME_MONOKAI, EXPORT_THEME_DIMMED_MONOKAI,
+    EXPORT_THEME_NIGHT_OWLISH, EXPORT_THEME_SVG,
+    segments_to_html, escape_html, strip_ansi_escapes,
+    CONSOLE_HTML_FORMAT, CONSOLE_SVG_FORMAT,
+};
 
 pub use markup::{render as render_markup, escape as escape_markup};
