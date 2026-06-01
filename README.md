@@ -10,43 +10,48 @@
   <a href="https://crates.io/crates/rusty-rich"><img src="https://img.shields.io/crates/v/rusty-rich?color=F74C00" alt="crates.io"></a>
   <a href="https://docs.rs/rusty-rich"><img src="https://img.shields.io/docsrs/rusty-rich?color=F74C00" alt="docs.rs"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
-  <a href="#"><img src="https://img.shields.io/badge/tests-171%20passed-brightgreen" alt="tests"></a>
+  <a href="#"><img src="https://img.shields.io/badge/tests-197%20passed-brightgreen" alt="tests"></a>
 </p>
 
 ---
 
 ## ✨ Features
 
-- 🎨 **Style** — foreground/background colors, bold, italic, underline, dim, blink, reverse, strikethrough
+- 🎨 **Style** — foreground/background colors, bold, italic, underline, dim, blink, reverse, strikethrough, overline, conceal, frame, encircle, links
 - 📝 **Console markup** — `[bold red]text[/bold red]` BBCode-like inline styling
-- 📊 **Table** — tabular data with headers, footers, colspan/rowspan, column alignment, sections
+- 🎯 **256 named colors** — full ANSI 256-color palette with aliases, hex, RGB, auto-downgrade
+- 🎭 **170+ theme styles** — repr, json, markdown, logging, traceback, rule, bar, progress, table, tree, syntax, prompt categories
+
+- 📊 **Table** — tabular data with headers, footers, colspan/rowspan, column alignment, sections, 17 box styles
 - 🌲 **Tree** — hierarchical tree rendering with Unicode guides
-- 📦 **Panel** — bordered containers with titles, subtitles, 17 box styles
+- 📦 **Panel** — bordered containers with titles, subtitles
 - ➖ **Rule** — horizontal dividers with optional titles
-- 📐 **Padding & Align** — CSS-style spacing and alignment helpers
+- 📐 **Padding & Align** — CSS-style padding and alignment helpers
 - 📋 **Columns** — side-by-side layout
-- 🗂️ **Layout** — recursive split-pane layout system with ratio sizing
-- ⏳ **Progress** — multi-task progress bars with 7 column types, file tracking
-- 🔄 **Spinner** — 36+ animated spinners with name-based lookup
+- 🗂️ **Layout** — recursive split-pane layout with ratio sizing
+
+- ⏳ **Progress** — multi-task progress bars with 11 column types, file tracking, `track()` iterator
+- 🔄 **Spinner** — 55 animated spinners with case-insensitive name lookup
 - 📌 **Status** — spinner + message with in-place update
-- 🔄 **Live** — auto-updating live displays with alt-screen support
+- 🔄 **Live** — auto-updating displays with alt-screen, transient mode, stdout/stderr redirect via `LiveWriter`
+
 - 🌈 **Syntax highlighting** — powered by syntect (100+ languages)
-- 📝 **Markdown** — headings, code blocks, lists, blockquotes, links
-- 📋 **JSON** — pretty-printed, syntax-highlighted output
+- 📝 **Markdown** — headings, code blocks, lists, blockquotes, links, **tables**
+- 📋 **JSON** — pretty-printed, syntax-highlighted JSON
 - 🔍 **Logging** — Rich-formatted log records via the `log` crate
+
 - 🖼️ **Box drawing** — 17 box styles (rounded, square, heavy, double, ASCII, etc.)
-- 🎯 **TrueColor / 256 / Standard** color with automatic detection and downgrade
-- 🖥️ **Screen / Alt-screen** — full-screen terminal applications
+- 🖥️ **Screen / Alt-screen** — full-screen terminal applications with `ScreenContext`
 - ⌨️ **Prompts** — `Prompt`, `IntPrompt`, `FloatPrompt`, `Confirm`, `Select<T>`, password mode
-- 🔴 **Traceback** — rich exception rendering with locals, source code, frame suppression
+- 🔴 **Traceback** — rich exception rendering with locals, source code, frame suppression, panic hook
 - 📤 **HTML & SVG export** — capture console output for the web
-- 🎭 **Themes** — named style maps with stack-based inheritance
+- 🧩 **Segment utilities** — simplify, split_lines, strip_styles, strip_links, align, divide, set_shape, filter_control
 
 ## 📦 Installation
 
 ```toml
 [dependencies]
-rusty-rich = "0.1"
+rusty-rich = "0.2"
 ```
 
 ## 🚀 Quick Start
@@ -73,8 +78,8 @@ fn main() {
     let mut table = Table::new();
     table.add_column(Column::new("Name").justify(AlignMethod::Left));
     table.add_column(Column::new("Age").justify(AlignMethod::Right));
-    table.add_row_str(vec!["Alice".into(), "30".into()]);
-    table.add_row_str(vec!["Bob".into(), "25".into()]);
+    table.add_row_str("Alice", "30");
+    table.add_row_str("Bob", "25");
     console.println(&table);
 
     // Create a tree
@@ -88,17 +93,39 @@ fn main() {
 }
 ```
 
+## 🎯 Colors (256 names)
+
+```rust
+use rusty_rich::{Color, Style};
+
+// Named colors — 256 ANSI palette
+let red = Color::parse("red").unwrap();
+let hot_pink = Color::parse("hot_pink").unwrap();
+let steel_blue = Color::parse("steel_blue").unwrap();
+let grey53 = Color::parse("grey53").unwrap();
+
+// Hex / RGB
+let orange = Color::from_hex("#FF6600").unwrap();
+let custom = Color::from_rgb(100, 200, 50);
+
+// TrueColor → 8-bit → Standard auto-downgrade
+let style = Style::new()
+    .color(Color::parse("#FF6600").unwrap())
+    .bgcolor(Color::parse("#1E1E2E").unwrap())
+    .bold(true)
+    .italic(true);
+```
+
 ## 📊 Table with Colspan & Rowspan
 
 ```rust
-use rusty_rich::Table;
+use rusty_rich::{Table, Column, Cell};
 
 let mut table = Table::new().title("User Report");
 table.add_column(Column::new("Name"));
 table.add_column(Column::new("Details").colspan(2));  // spans 2 columns
 table.add_column(Column::new("Role"));                  // skipped by colspan above
 
-// Cell-based rows with colspan/rowspan
 let row = vec![
     Cell::new("Alice"),
     Cell::new("Engineer").colspan(2),
@@ -123,12 +150,34 @@ for i in 0..=100 {
 }
 println!();
 
-// Or use the `track()` convenience
+// Or use the `track()` convenience with an iterator
 let items: Vec<_> = (0..100).collect();
 let tracker = progress.track(items, "Processing", None);
 for item in tracker {
-    // process item
+    // process item — progress auto-advances
 }
+```
+
+## 📝 Markdown (with tables)
+
+```rust
+use rusty_rich::render_markdown;
+use rusty_rich::Console;
+
+let md = render_markdown("
+# Hello
+
+| Name  | Age |
+|-------|-----|
+| Alice | 30  |
+| Bob   | 25  |
+
+- list item 1
+- list item 2
+");
+
+let console = Console::new();
+console.println(&md);
 ```
 
 ## ⌨️ Interactive Prompts
@@ -139,22 +188,44 @@ use rusty_rich::{Prompt, Confirm, IntPrompt, Select};
 // String input
 let name = Prompt::ask_with("Enter your name").unwrap();
 
-// Password input (masked)
+// Password input (masked with *)
 let password = Prompt::new("Password").password(true).ask().unwrap();
 
-// Confirmation
+// Confirmation with default
 let ok = Confirm::ask_with("Continue?", true).unwrap();
 
 // Integer with validation
 let age = IntPrompt::ask_with("Enter age").unwrap();
 
-// Pick from choices
+// Pick from numbered choices
 let choice = Select::new("Pick a color")
-    .add("Red", "red")
-    .add("Green", "green")
-    .add("Blue", "blue")
+    .choice("Red", "red")
+    .choice("Green", "green")
+    .choice("Blue", "blue")
     .ask()
     .unwrap();
+```
+
+## 🔄 Live Display with Writer
+
+```rust
+use rusty_rich::{Console, Live, LiveWriter, Panel};
+use std::io::Write;
+use std::thread;
+use std::time::Duration;
+
+let mut live = Live::new(Panel::new("Starting...").title("Status"));
+let mut writer = live.create_writer();
+live.start().unwrap();
+
+for i in 0..=100 {
+    // Redirect writes through the live display
+    writeln!(writer, "Processing item {}...", i).unwrap();
+    live.update(Panel::new(format!("Progress: {}%", i)).title("Status")).unwrap();
+    thread::sleep(Duration::from_millis(50));
+}
+
+live.stop().unwrap();
 ```
 
 ## 🔴 Rich Tracebacks
@@ -175,7 +246,7 @@ let tb = Traceback::from_exception("MyError", "something went wrong", frames)
 ## 🖥️ Full-Screen Apps
 
 ```rust
-use rusty_rich::{Console, Screen, Live};
+use rusty_rich::{Console, Screen, Live, Panel};
 use std::thread;
 use std::time::Duration;
 
@@ -183,18 +254,15 @@ let mut console = Console::new();
 let mut screen = console.screen();  // enters alternate screen
 screen.enter();
 
-// Use Live for auto-updating regions
 let mut live = Live::new(Panel::new("Loading...").title("Status"));
-live.start();
+live.start().unwrap();
 
 for i in 0..=100 {
-    let panel = Panel::new(format!("Progress: {}%", i))
-        .title("Status");
-    live.update(panel);
+    live.update(Panel::new(format!("Progress: {}%", i)).title("Status")).unwrap();
     thread::sleep(Duration::from_millis(50));
 }
 
-live.stop();
+live.stop().unwrap();
 screen.exit();  // restores terminal
 ```
 
@@ -210,25 +278,34 @@ screen.exit();  // restores terminal
 | `BOX_HEAVY_EDGE` | ┏━┓ ┃ │ ┗━┛ |
 | `BOX_HEAVY_HEAD` | ┏━┓ ┃ ┃ └─┘ |
 | `BOX_SIMPLE` | borderless with separators |
+| `BOX_SIMPLE_HEAVY` | borderless with heavy separators |
 | `BOX_MINIMAL` | minimal horizontal rules |
 | `BOX_ASCII` | `+--+` ASCII-safe |
-| … and 7 more |
+| `BOX_ASCII2` | `+--+` alternate ASCII |
+| `BOX_MARKDOWN` | pipe-style markdown tables |
+| … and 4 more |
 
-## 🎯 Color System
+## 🧩 Segment Utilities
 
 ```rust
-use rusty_rich::{Color, Style};
+use rusty_rich::segment::{self, Segment, Segments};
 
-// Named colors
-let red = Color::parse("red").unwrap();
-let hot_pink = Color::parse("#FF69B4").unwrap();
+let segs: Segments = vec![
+    Segment::styled("Hello ", Style::new().bold(true)),
+    Segment::styled("World", Style::new().bold(true)),
+].into();
 
-// TrueColor → 8-bit → Standard auto-downgrade
-let style = Style::new()
-    .color(Color::parse("#FF6600").unwrap())
-    .bgcolor(Color::parse("#1E1E2E").unwrap())
-    .bold(true)
-    .italic(true);
+// Combine adjacent same-styled segments
+let simplified = segs.simplify();           // → one "Hello World" segment
+
+// Split into lines
+let lines = segment::split_lines(&segs.segments);
+
+// Strip all styling
+let plain = segment::strip_styles(&segs.segments);  // → "Hello World"
+
+// Align vertically
+let aligned = segment::align_middle(&lines, 80, 10, None);
 ```
 
 ## 📂 Module Map
@@ -237,11 +314,11 @@ let style = Style::new()
 src/
 ├── lib.rs              # Crate root + re-exports
 ├── console.rs          # Central rendering engine
-├── screen.rs           # Full-screen / alt-screen
-├── color.rs            # TrueColor / 256 / Standard
-├── style.rs            # 13 attributes + hyperlinks
-├── theme.rs            # Named style maps + stack
-├── segment.rs          # Styled text segment + control codes
+├── screen.rs           # Full-screen / alt-screen / ScreenContext
+├── color.rs            # TrueColor / 256 / Standard (256 names)
+├── style.rs            # 13 attributes + hyperlinks + metadata
+├── theme.rs            # 170+ named styles + stack
+├── segment.rs          # Segment + 9 utility functions
 ├── text.rs             # Text with Span styling
 ├── cells.rs            # Unicode cell width utilities
 ├── measure.rs          # Width measurement protocol
@@ -260,17 +337,18 @@ src/
 ├── box_drawing.rs      # 17 box/border styles
 │
 ├── progress.rs         # Multi-task progress + track()
-├── progress_columns.rs # 7 progress column types
-├── spinner.rs          # 36+ animated spinners
+├── progress_columns.rs # 11 progress column types
+├── spinner.rs          # 55 animated spinners
 ├── status.rs           # Spinner + message
-├── live.rs             # Auto-updating display
+├── live.rs             # Auto-updating display + LiveWriter
 │
 ├── syntax.rs           # Syntax highlighting (syntect)
-├── markdown.rs         # Markdown rendering (pulldown-cmark)
+├── markdown.rs         # Markdown rendering + table support
 ├── json.rs             # Pretty-printed JSON
 ├── logging.rs          # log crate integration
-├── prompt.rs           # Interactive prompts
-└── traceback.rs        # Rich exception tracebacks
+├── prompt.rs           # 5 interactive prompt types
+├── traceback.rs        # Rich exception tracebacks
+└── export.rs           # HTML / SVG / text export
 ```
 
 ## 🔬 Compared to Python Rich
@@ -279,28 +357,33 @@ src/
 |---|---|---|
 | Console + markup | ✅ | ✅ |
 | Text / Span / Style | ✅ | ✅ |
+| 256 named colors | ✅ | ✅ |
 | Table (colspan/rowspan) | ✅ | ✅ |
 | Panel / Rule / Tree | ✅ | ✅ |
 | Layout / Columns | ✅ | ✅ |
-| Progress (7 column types) | ✅ | ✅ |
+| Progress (11 column types) | ✅ | ✅ |
 | Live / Status | ✅ | ✅ |
 | Syntax highlighting | ✅ | ✅ |
-| Markdown / JSON | ✅ | ✅ |
+| Markdown (incl. tables) | ✅ | ✅ |
+| JSON / Logging | ✅ | ✅ |
 | Traceback (locals, suppress) | ✅ | ✅ |
 | Screen / Alt-screen | ✅ | ✅ |
 | Prompts (5 types) | ✅ | ✅ |
-| 36+ Spinners | ✅ | ✅ |
-| 17 Box styles | ✅ | ✅ |
+| 55+ Spinners | 80+ | 55 |
+| 17 Box styles | 20 | 17 |
 | HTML / SVG export | ✅ | ✅ |
-| Logging handler | ✅ | ✅ |
-| Jupyter integration | ✅ | — |
-| File watching | ✅ | — |
-| **Overall parity** | | **~90%** |
+| Segment utilities | ✅ | ✅ |
+| LiveWriter / redirect | ✅ | ✅ |
+| 170+ Theme styles | 170+ | 170+ |
+| Pretty / Inspect | ✅ | — |
+| Emoji / ANSI decoder | ✅ | — |
+| Jupyter support | ✅ | — |
+| **Overall parity** | | **~72%** |
 
 ## 🧪 Testing
 
 ```bash
-cargo test                    # 171 unit tests + 7 doctests
+cargo test                    # 197 unit tests
 cargo test --test battle_test # Integration / battle tests
 ```
 

@@ -235,7 +235,7 @@ where
 // ScreenContext
 // ---------------------------------------------------------------------------
 
-/// A context that enters the alternate screen buffer, provides an [`update`]
+/// A context that enters the alternate screen buffer, provides an [`update`](Self::update)
 /// method to display content, and automatically exits the alternate screen
 /// buffer on drop.
 ///
