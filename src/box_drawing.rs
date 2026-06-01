@@ -250,30 +250,10 @@ pub const DOUBLE_EDGE: &str = "\
 ╚═╧╝";
 
 /// Simple (no borders, just vertical separators).
-pub const SIMPLE: &str = "\
-
-
-
-
-
-
-
-
-";
+pub const SIMPLE: &str = "    \n    \n ── \n    \n    \n ── \n    \n    ";
 
 /// Simple with heavy header.
-pub const SIMPLE_HEAVY: &str = "\
-
-
-
-
-
-
-
- ━┿
-
-
-";
+pub const SIMPLE_HEAVY: &str = "    \n    \n ━━ \n    \n    \n ━━ \n    \n    ";
 
 /// Minimal (just horizontal rule under header).
 pub const MINIMAL: &str = "\
@@ -326,15 +306,7 @@ pub static BOX_ASCII_DOUBLE_HEAD: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_s
 // MARKDOWN box (no outer border)
 // ---------------------------------------------------------------------------
 
-pub const MARKDOWN: &str = "\
-
-| ||
-|-||
-| ||
-|-||
-|-||
-| ||
-    ";
+pub const MARKDOWN: &str = "    \n| ||\n|-||\n| ||\n|-||\n|-||\n| ||\n    ";
 
 pub static BOX_MARKDOWN: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(MARKDOWN, false));
 

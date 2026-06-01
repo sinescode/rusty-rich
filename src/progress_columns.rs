@@ -1,11 +1,10 @@
 //! Progress column types — equivalent to Python Rich's progress column
 //! system (SpinnerColumn, BarColumn, TextColumn, etc.).
 
-use std::time::Instant;
 
 use crate::progress::{ProgressBar, Task};
 use crate::spinner::Spinner;
-use crate::style::{Style, StyleType};
+use crate::style::Style;
 
 // ---------------------------------------------------------------------------
 // ProgressColumn trait

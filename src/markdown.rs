@@ -31,10 +31,33 @@ pub struct MarkdownRender {
 impl MarkdownRender {
     pub fn width(mut self, w: usize) -> Self { self.width = Some(w); self }
 
+    /// Set the code syntax-highlighting theme (default: "default").
+    pub fn code_theme(mut self, theme: impl Into<String>) -> Self {
+        self.code_theme = theme.into();
+        self
+    }
+
+    /// Enable or disable hyperlink rendering (default: true).
+    pub fn hyperlinks(mut self, enabled: bool) -> Self {
+        self.hyperlinks = enabled;
+        self
+    }
+
     fn get_style(name: &str) -> Style {
         use crate::theme::default_theme;
         let theme = default_theme();
         theme.get(name).cloned().unwrap_or(Style::new())
+    }
+
+    /// Look up a code-block style that respects `self.code_theme`.
+    fn code_style(&self) -> Style {
+        use crate::theme::default_theme;
+        let theme = default_theme();
+        let key = format!("markdown.code.{}", self.code_theme);
+        theme
+            .get(&key)
+            .cloned()
+            .unwrap_or_else(|| Self::get_style("markdown.code"))
     }
 }
 
@@ -46,9 +69,7 @@ impl Renderable for MarkdownRender {
         let mut lines: Vec<Vec<Segment>> = Vec::new();
         let mut current_line: Vec<Segment> = Vec::new();
         let mut in_code_block = false;
-        let mut in_heading = false;
         let mut heading_level = 0u8;
-        let mut in_paragraph = false;
         let mut list_depth = 0usize;
         let mut current_link: Option<String> = None;
         let mut link_text: Option<String> = None;
@@ -56,7 +77,6 @@ impl Renderable for MarkdownRender {
         for event in parser {
             match event {
                 Event::Start(Tag::Heading { level, .. }) => {
-                    in_heading = true;
                     heading_level = level as u8;
                     let style = match level {
                         HeadingLevel::H1 => Self::get_style("markdown.h1"),
@@ -70,7 +90,6 @@ impl Renderable for MarkdownRender {
                     ));
                 }
                 Event::End(TagEnd::Heading(_)) => {
-                    in_heading = false;
                     lines.push(current_line.clone());
                     current_line.clear();
                     // Add a rule under H1/H2
@@ -80,11 +99,8 @@ impl Renderable for MarkdownRender {
                         lines.push(vec![Segment::new(rule_line), Segment::line()]);
                     }
                 }
-                Event::Start(Tag::Paragraph) => {
-                    in_paragraph = true;
-                }
+                Event::Start(Tag::Paragraph) => {}
                 Event::End(TagEnd::Paragraph) => {
-                    in_paragraph = false;
                     if !current_line.is_empty() {
                         current_line.push(Segment::line());
                         lines.push(current_line.clone());
@@ -107,7 +123,7 @@ impl Renderable for MarkdownRender {
                         format!("Code: {lang}")
                     };
                     // Code block opening
-                    let code_style = Self::get_style("markdown.code");
+                    let code_style = self.code_style();
                     current_line.push(Segment::styled(
                         format!("┌─ {title} "),
                         code_style.clone(),
@@ -122,7 +138,7 @@ impl Renderable for MarkdownRender {
                         lines.push(current_line.clone());
                         current_line.clear();
                     }
-                    let code_style = Self::get_style("markdown.code");
+                    let code_style = self.code_style();
                     lines.push(vec![Segment::styled(
                         format!("└{}", "─".repeat(width.saturating_sub(2))),
                         code_style,
@@ -168,11 +184,14 @@ impl Renderable for MarkdownRender {
                 Event::End(TagEnd::Link) => {
                     if let (Some(url), Some(text)) = (current_link.take(), link_text.take()) {
                         let link_style = Self::get_style("markdown.link");
-                        let display = if text.is_empty() { url.clone() } else { text };
-                        current_line.push(Segment::styled(
-                            format!("{display} ({url})"),
-                            link_style,
-                        ));
+                        let display = if text.is_empty() {
+                            url.clone()
+                        } else if self.hyperlinks {
+                            format!("{text} ({url})")
+                        } else {
+                            text
+                        };
+                        current_line.push(Segment::styled(display, link_style));
                     }
                 }
                 Event::Text(text) | Event::Code(text) => {

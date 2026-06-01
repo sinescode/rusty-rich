@@ -542,7 +542,6 @@ mod tests {
 
     #[test]
     fn test_progress_file_wrap_existing() {
-        use std::io::Read;
         let data = b"test data for wrap";
         let dir = std::env::temp_dir();
         let path = dir.join("rusty_rich_test_wrap.txt");

@@ -533,7 +533,7 @@ impl Renderable for Traceback {
                         let inner_w = sub_box_inner.saturating_sub(2); // for │ │
                         let raw_width = UnicodeWidthStr::width(raw_line.as_str());
                         let pad_w = inner_w.saturating_sub(raw_width);
-                        let padded = if pad_w > 0 {
+                        let _padded = if pad_w > 0 {
                             format!("{}{}", raw_line, " ".repeat(pad_w))
                         } else {
                             raw_line
