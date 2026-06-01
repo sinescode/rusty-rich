@@ -519,7 +519,6 @@ fn resolve_color(color: &Color, theme: &ExportTheme) -> (u8, u8, u8) {
                 theme.foreground
             }
         }
-        _ => theme.foreground,
     }
 }
 
