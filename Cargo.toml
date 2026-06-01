@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2021"
 description = "Rich text and beautiful formatting in the terminal — a Rust port of Python's Rich library"
 license = "MIT"
+readme = "README.md"
+repository = "https://github.com/sinescode/rusty-rich"
+documentation = "https://docs.rs/rusty-rich"
 keywords = ["terminal", "rich", "formatting", "tui", "syntax-highlighting"]
 categories = ["command-line-interface", "command-line-utilities"]
 
