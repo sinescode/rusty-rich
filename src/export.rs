@@ -48,7 +48,7 @@ impl Default for ExportTheme {
     }
 }
 
-/// Monokai-inspired dark theme.
+/// Monokai-inspired dark theme for HTML/SVG export.
 pub const EXPORT_THEME_MONOKAI: ExportTheme = ExportTheme {
     background: (39, 40, 34),
     foreground: (248, 248, 242),
@@ -72,7 +72,7 @@ pub const EXPORT_THEME_MONOKAI: ExportTheme = ExportTheme {
     ],
 };
 
-/// Dimmed Monokai variant.
+/// Dimmed Monokai variant -- lower contrast, suitable for comfortable reading.
 pub const EXPORT_THEME_DIMMED_MONOKAI: ExportTheme = ExportTheme {
     background: (35, 35, 35),
     foreground: (185, 188, 186),
@@ -96,7 +96,7 @@ pub const EXPORT_THEME_DIMMED_MONOKAI: ExportTheme = ExportTheme {
     ],
 };
 
-/// Night Owl-inspired dark theme.
+/// Night Owl-inspired dark theme with deep blue background.
 pub const EXPORT_THEME_NIGHT_OWLISH: ExportTheme = ExportTheme {
     background: (1, 22, 39),
     foreground: (214, 222, 235),
@@ -120,7 +120,7 @@ pub const EXPORT_THEME_NIGHT_OWLISH: ExportTheme = ExportTheme {
     ],
 };
 
-/// Light theme suitable for SVG export.
+/// Light theme with white background, suitable for SVG export snippets.
 pub const EXPORT_THEME_SVG: ExportTheme = ExportTheme {
     background: (255, 255, 255),
     foreground: (0, 0, 0),
@@ -342,7 +342,7 @@ impl Default for ExportTextOptions {
     }
 }
 
-/// Export text, optionally stripping ANSI escape sequences.
+/// Export text, optionally stripping ANSI escape sequences. Returns plain text.
 pub fn export_text(options: &ExportTextOptions) -> String {
     if options.strip_ansi {
         strip_ansi_escapes(&options.text)
@@ -351,7 +351,7 @@ pub fn export_text(options: &ExportTextOptions) -> String {
     }
 }
 
-/// Save text output to a file, optionally stripping ANSI.
+/// Save text output to a file, optionally stripping ANSI escape sequences.
 pub fn save_text(
     path: impl AsRef<std::path::Path>,
     options: &ExportTextOptions,
@@ -371,7 +371,7 @@ pub fn escape_html(text: &str) -> String {
         .replace('"', "&quot;")
 }
 
-/// Escape special XML characters in text.
+/// Escape special XML characters (`&`, `<`, `>`, `"`, `'`) in text.
 pub fn escape_xml(text: &str) -> String {
     text.replace('&', "&amp;")
         .replace('<', "&lt;")

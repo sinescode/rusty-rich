@@ -285,29 +285,47 @@ use once_cell::sync::Lazy;
 
 /// Rounded box (default for Panel).
 pub static BOX_ROUNDED: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(ROUNDED, false));
+/// Square-cornered box.
 pub static BOX_SQUARE: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(SQUARE, false));
+/// Heavy (thick) borders.
 pub static BOX_HEAVY: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(HEAVY, false));
+/// Heavy outer edges with light inner dividers.
 pub static BOX_HEAVY_EDGE: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(HEAVY_EDGE, false));
+/// Heavy header row with regular body borders.
 pub static BOX_HEAVY_HEAD: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(HEAVY_HEAD, false));
+/// Double-line borders.
 pub static BOX_DOUBLE: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(DOUBLE, false));
+/// Double outer edge with single inner dividers.
 pub static BOX_DOUBLE_EDGE: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(DOUBLE_EDGE, false));
+/// Simple borders (no vertical edges, horizontal rules only).
 pub static BOX_SIMPLE: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(SIMPLE, false));
+/// Simple borders with heavy horizontal rules.
 pub static BOX_SIMPLE_HEAVY: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(SIMPLE_HEAVY, false));
+/// Minimal box (just horizontal separators between header/body).
 pub static BOX_MINIMAL: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(MINIMAL, false));
+/// Minimal box with heavy horizontal separators.
 pub static BOX_MINIMAL_HEAVY: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(MINIMAL_HEAVY, false));
+/// ASCII-only box (uses `+`, `-`, `|` characters).
 pub static BOX_ASCII: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(ASCII, true));
+/// ASCII box with doubled edges.
 pub static BOX_ASCII2: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(ASCII2, true));
+/// Square box with a double horizontal header separator.
 pub static BOX_SQUARE_DOUBLE_HEAD: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(SQUARE_DOUBLE_HEAD, false));
+/// Minimal box with a double horizontal header separator.
 pub static BOX_MINIMAL_DOUBLE_HEAD: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(MINIMAL_DOUBLE_HEAD, false));
+/// Simple box with a single horizontal rule under the header.
 pub static BOX_SIMPLE_HEAD: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(SIMPLE_HEAD, false));
+/// ASCII box with a double header line.
 pub static BOX_ASCII_DOUBLE_HEAD: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(ASCII_DOUBLE_HEAD, true));
 
 // ---------------------------------------------------------------------------
 // MARKDOWN box (no outer border)
 // ---------------------------------------------------------------------------
 
+/// Markdown-style box definition string (no outer borders).
 pub const MARKDOWN: &str = "    \n| ||\n|-||\n| ||\n|-||\n|-||\n| ||\n    ";
 
+/// Markdown-style box (no outer edges, vertical separators only).
 pub static BOX_MARKDOWN: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(MARKDOWN, false));
 
 // ---------------------------------------------------------------------------

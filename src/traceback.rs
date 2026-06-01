@@ -43,6 +43,7 @@ pub struct Frame {
 }
 
 impl Frame {
+    /// Create a new `Frame` with the given filename, line number, and function name.
     pub fn new(filename: impl Into<String>, lineno: usize, name: impl Into<String>) -> Self {
         Self {
             filename: filename.into(),
@@ -54,7 +55,7 @@ impl Frame {
         }
     }
 
-    /// Builder: attach the source line content.
+    /// Builder: attach the source line content for this frame.
     pub fn line(mut self, line: impl Into<String>) -> Self {
         self.line = Some(line.into());
         self
@@ -81,6 +82,7 @@ pub struct Stack {
 }
 
 impl Stack {
+    /// Create a new empty `Stack` with no exception type, value, or frames.
     pub fn new() -> Self {
         Self {
             exc_type: None,
@@ -94,19 +96,19 @@ impl Stack {
         }
     }
 
-    /// Builder: set the exception type.
+    /// Builder: set the exception type name (e.g. `"ValueError"`).
     pub fn exc_type(mut self, t: impl Into<String>) -> Self {
         self.exc_type = Some(t.into());
         self
     }
 
-    /// Builder: set the exception value.
+    /// Builder: set the exception message/value.
     pub fn exc_value(mut self, v: impl Into<String>) -> Self {
         self.exc_value = Some(v.into());
         self
     }
 
-    /// Builder: add a frame.
+    /// Builder: append a [`Frame`] to the stack's frame list.
     pub fn add_frame(mut self, frame: Frame) -> Self {
         self.frames.push(frame);
         self
@@ -120,10 +122,12 @@ pub struct Trace {
 }
 
 impl Trace {
+    /// Create a new empty `Trace` with no stacks.
     pub fn new() -> Self {
         Self { stacks: Vec::new() }
     }
 
+    /// Create a `Trace` containing a single [`Stack`].
     pub fn from_stack(stack: Stack) -> Self {
         Self { stacks: vec![stack] }
     }
@@ -194,71 +198,85 @@ impl Traceback {
 
     // -- Builder methods --------------------------------------------------
 
+    /// Builder: set the total output width in characters.
     pub fn width(mut self, width: usize) -> Self {
         self.width = Some(width);
         self
     }
 
+    /// Builder: set the width reserved for source code (excluding line numbers).
     pub fn code_width(mut self, width: usize) -> Self {
         self.code_width = Some(width);
         self
     }
 
+    /// Builder: set the number of extra source lines shown before and after the error line.
     pub fn extra_lines(mut self, n: usize) -> Self {
         self.extra_lines = n;
         self
     }
 
+    /// Builder: set the theme name (e.g. `"monokai"`, `"base16-ocean.dark"`).
     pub fn theme(mut self, theme: impl Into<String>) -> Self {
         self.theme_name = Some(theme.into());
         self
     }
 
+    /// Builder: enable or disable word wrapping of long lines.
     pub fn word_wrap(mut self, wrap: bool) -> Self {
         self.word_wrap = wrap;
         self
     }
 
+    /// Builder: show local variables at each frame when set to `true`.
     pub fn show_locals(mut self, show: bool) -> Self {
         self.show_locals = show;
         self
     }
 
+    /// Builder: enable indentation guides in source context.
     pub fn indent_guides(mut self, guides: bool) -> Self {
         self.indent_guides = guides;
         self
     }
 
+    /// Builder: set the maximum number of local variables to display per frame.
     pub fn locals_max_length(mut self, n: usize) -> Self {
         self.locals_max_length = n;
         self
     }
 
+    /// Builder: set the maximum length for local variable string values.
     pub fn locals_max_string(mut self, n: usize) -> Self {
         self.locals_max_string = n;
         self
     }
 
+    /// Builder: set the maximum depth for nested local variable display.
     pub fn locals_max_depth(mut self, n: usize) -> Self {
         self.locals_max_depth = n;
         self
     }
 
+    /// Builder: hide locals with dunder names (e.g. `__name__`) when `true`.
     pub fn locals_hide_dunder(mut self, hide: bool) -> Self {
         self.locals_hide_dunder = hide;
         self
     }
 
+    /// Builder: hide locals with underscore-prefixed names (e.g. `_secret`) when `true`.
     pub fn locals_hide_sunder(mut self, hide: bool) -> Self {
         self.locals_hide_sunder = hide;
         self
     }
 
+    /// Builder: suppress frames whose filename matches any of the given patterns.
     pub fn suppress(mut self, suppress: Vec<String>) -> Self {
         self.suppress = suppress;
         self
     }
 
+    /// Builder: limit the number of frames shown (remaining are collapsed into a single message).
     pub fn max_frames(mut self, n: usize) -> Self {
         self.max_frames = Some(n);
         self

@@ -1,7 +1,34 @@
 //! Text style — equivalent to Rich's `style.py`.
 //!
-//! A Style combines a foreground color, background color, and a set of
-//! boolean text attributes (bold, italic, underline, etc.).
+//! A [`Style`] combines foreground/background color with 13 text attributes
+//! (bold, dim, italic, underline, blink, reverse, strike, underline2, frame,
+//! encircle, overline, blink2, conceal), plus optional link and metadata.
+//!
+//! # Quick Example
+//!
+//! ```rust
+//! use rusty_rich::{Style, Color};
+//!
+//! let style = Style::new()
+//!     .color(Color::parse("cyan").unwrap())
+//!     .bgcolor(Color::parse("#1E1E2E").unwrap())
+//!     .bold(true)
+//!     .italic(true);
+//!
+//! // Parse from a string
+//! let parsed = Style::from_str("bold red on blue");
+//! ```
+//!
+//! # Style Combination
+//!
+//! Styles combine left-to-right via [`Style::combine`] with a 3-state attribute
+//! cascade: explicit `true` wins over inherit, explicit `false` resets, and
+//! unset falls through to the parent.
+//!
+//! # StyleStack
+//!
+//! [`StyleStack`] tracks nested style inheritance for markup parsing. Push
+//! a style when entering a tag, pop when leaving.
 
 use std::fmt;
 use std::hash::{Hash, Hasher};
@@ -20,24 +47,39 @@ static NEXT_ID: AtomicU32 = AtomicU32::new(0);
 pub struct Attributes(u32);
 
 impl Attributes {
+    /// Bit flag for bold text.
     pub const BOLD: u32 = 1 << 0;
+    /// Bit flag for dim/dark text.
     pub const DIM: u32 = 1 << 1;
+    /// Bit flag for italic text.
     pub const ITALIC: u32 = 1 << 2;
+    /// Bit flag for underlined text.
     pub const UNDERLINE: u32 = 1 << 3;
+    /// Bit flag for blinking text.
     pub const BLINK: u32 = 1 << 4;
+    /// Bit flag for reverse-video text.
     pub const REVERSE: u32 = 1 << 5;
+    /// Bit flag for strikethrough text.
     pub const STRIKE: u32 = 1 << 6;
+    /// Bit flag for double underline.
     pub const UNDERLINE2: u32 = 1 << 7;
+    /// Bit flag for framed text.
     pub const FRAME: u32 = 1 << 8;
+    /// Bit flag for encircled text.
     pub const ENCIRCLE: u32 = 1 << 9;
+    /// Bit flag for overlined text.
     pub const OVERLINE: u32 = 1 << 10;
+    /// Bit flag for rapid blink.
     pub const BLINK2: u32 = 1 << 11;
+    /// Bit flag for concealed/hidden text.
     pub const CONCEAL: u32 = 1 << 12;
 
+    /// Create an empty set of attributes (no flags set).
     pub const fn empty() -> Self {
         Self(0)
     }
 
+    /// Set or clear a specific attribute bit.
     pub fn set(&mut self, bit: u32, value: bool) {
         if value {
             self.0 |= bit;
@@ -46,10 +88,12 @@ impl Attributes {
         }
     }
 
+    /// Check whether a specific attribute bit is set.
     pub fn get(&self, bit: u32) -> bool {
         self.0 & bit != 0
     }
 
+    /// Return the raw bitmask value.
     pub const fn bits(&self) -> u32 {
         self.0
     }
@@ -311,10 +355,12 @@ impl Style {
 
     // -- queries ------------------------------------------------------------
 
+    /// Returns `true` if this is a null (empty) style.
     pub fn is_null(&self) -> bool {
         self.is_null
     }
 
+    /// Returns `true` if this style has no colors, attributes, or link set.
     pub fn is_plain(&self) -> bool {
         self.color.is_none()
             && self.bgcolor.is_none()
@@ -548,6 +594,7 @@ pub struct StyleStack {
 }
 
 impl StyleStack {
+    /// Create a new style stack with a given default style.
     pub fn new(default_style: Style) -> Self {
         Self {
             stack: Vec::new(),
@@ -579,6 +626,7 @@ impl StyleStack {
         self.stack.len()
     }
 
+    /// Returns `true` if the stack is empty (no pushed styles).
     pub fn is_empty(&self) -> bool {
         self.stack.is_empty()
     }

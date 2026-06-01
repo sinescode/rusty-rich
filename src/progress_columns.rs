@@ -33,11 +33,14 @@ pub struct TextColumn {
 }
 
 impl TextColumn {
+    /// Create a new `TextColumn` that reads from the given task field key.
     pub fn new(key: impl Into<String>) -> Self {
         Self { key: key.into(), format: "{:>11}".to_string(), style: Style::new() }
     }
 
+    /// Builder: set the format string (e.g. `"{:>10}"`).
     pub fn format(mut self, fmt: impl Into<String>) -> Self { self.format = fmt.into(); self }
+    /// Builder: set the text style.
     pub fn style(mut self, s: Style) -> Self { self.style = s; self }
 }
 
@@ -66,12 +69,16 @@ pub struct BarColumn {
 }
 
 impl BarColumn {
+    /// Create a new `BarColumn` with a default [`ProgressBar`].
     pub fn new() -> Self {
         Self { bar: ProgressBar::new(), width: None }
     }
 
+    /// Builder: set the style for the completed portion of the bar.
     pub fn complete_style(mut self, s: Style) -> Self { self.bar = self.bar.complete_style(s); self }
+    /// Builder: set the style for the remaining portion of the bar.
     pub fn finished_style(mut self, s: Style) -> Self { self.bar = self.bar.remaining_style(s); self }
+    /// Builder: set a fixed width for the bar (otherwise auto-sized).
     pub fn width(mut self, w: usize) -> Self { self.width = Some(w); self }
 }
 
@@ -104,6 +111,7 @@ pub struct SpinnerColumn {
 }
 
 impl SpinnerColumn {
+    /// Create a new `SpinnerColumn` with a default [`Spinner`].
     pub fn new() -> Self {
         Self {
             spinner: Spinner::default(),
@@ -113,7 +121,9 @@ impl SpinnerColumn {
         }
     }
 
+    /// Builder: set the spinner style (active animation).
     pub fn style(mut self, s: Style) -> Self { self.style = s; self }
+    /// Builder: set the style for the finished checkmark.
     pub fn finished_style(mut self, s: Style) -> Self { self.finished_style = s; self }
 }
 
@@ -148,6 +158,7 @@ pub struct TimeElapsedColumn {
 }
 
 impl TimeElapsedColumn {
+    /// Create a new `TimeElapsedColumn` with default style.
     pub fn new() -> Self {
         Self { style: Style::new(), paused_style: Style::new().dim(true) }
     }
@@ -219,8 +230,10 @@ pub struct TaskProgressColumn {
 }
 
 impl TaskProgressColumn {
+    /// Create a new `TaskProgressColumn` with default style.
     pub fn new() -> Self { Self { style: Style::new() } }
 
+    /// Builder: set the percentage text style.
     pub fn style(mut self, s: Style) -> Self { self.style = s; self }
 }
 
@@ -254,6 +267,7 @@ pub struct MofNCompleteColumn {
 }
 
 impl MofNCompleteColumn {
+    /// Create a new `MofNCompleteColumn` with default style and `"/"` separator.
     pub fn new() -> Self {
         Self { style: Style::new(), separator: "/".to_string() }
     }
@@ -329,10 +343,12 @@ pub struct FileSizeColumn {
 }
 
 impl FileSizeColumn {
+    /// Create a new `FileSizeColumn` with default style.
     pub fn new() -> Self {
         Self { style: Style::new() }
     }
 
+    /// Builder: set the text style.
     pub fn style(mut self, s: Style) -> Self { self.style = s; self }
 }
 
@@ -360,10 +376,12 @@ pub struct TotalFileSizeColumn {
 }
 
 impl TotalFileSizeColumn {
+    /// Create a new `TotalFileSizeColumn` with default style.
     pub fn new() -> Self {
         Self { style: Style::new() }
     }
 
+    /// Builder: set the text style.
     pub fn style(mut self, s: Style) -> Self { self.style = s; self }
 }
 
@@ -396,11 +414,14 @@ pub struct DownloadColumn {
 }
 
 impl DownloadColumn {
+    /// Create a new `DownloadColumn` with default style and `"/"` separator.
     pub fn new() -> Self {
         Self { style: Style::new(), separator: "/".to_string() }
     }
 
+    /// Builder: set the text style.
     pub fn style(mut self, s: Style) -> Self { self.style = s; self }
+    /// Builder: set the separator between completed and total (default `"/"`).
     pub fn separator(mut self, sep: impl Into<String>) -> Self { self.separator = sep.into(); self }
 }
 
@@ -433,10 +454,12 @@ pub struct TransferSpeedColumn {
 }
 
 impl TransferSpeedColumn {
+    /// Create a new `TransferSpeedColumn` with default style.
     pub fn new() -> Self {
         Self { style: Style::new() }
     }
 
+    /// Builder: set the text style.
     pub fn style(mut self, s: Style) -> Self { self.style = s; self }
 }
 

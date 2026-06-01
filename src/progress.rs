@@ -1,5 +1,40 @@
 //! Progress bars and task tracking. Equivalent to Rich's `progress.py`
 //! and `progress_bar.py`.
+//!
+//! # Overview
+//!
+//! [`Progress`] manages multiple concurrent tasks, each with its own
+//! description, total, and completed count. The display is built from
+//! configurable column types (see [`crate::progress_columns`]).
+//!
+//! # Quick Example
+//!
+//! ```rust
+//! use rusty_rich::Progress;
+//!
+//! let mut progress = Progress::new();
+//! let task = progress.add_task("Downloading...", Some(100.0));
+//! progress.update(task, 50.0);
+//! println!("{}", progress.render(80));
+//! ```
+//!
+//! # Tracking Iterables
+//!
+//! ```rust
+//! use rusty_rich::{Progress, TrackIterator};
+//!
+//! let mut progress = Progress::new();
+//! let items: Vec<i32> = (0..100).collect();
+//! let tracker = progress.track(items, "Processing", None);
+//! for item in tracker {
+//!     // item is yielded, progress auto-advances
+//! }
+//! ```
+//!
+//! # File Progress
+//!
+//! [`ProgressFile`] wraps a `std::io::Read` and tracks read progress via a
+//! [`Progress`] task. Use [`Progress::wrap_file`] to create one.
 
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
@@ -34,6 +69,7 @@ pub struct ProgressBar {
 }
 
 impl ProgressBar {
+    /// Create a new `ProgressBar` with default values (total=100, completed=0).
     pub fn new() -> Self {
         Self {
             total: Some(100.0),
@@ -127,6 +163,7 @@ pub struct Task {
 }
 
 impl Task {
+    /// Create a new `Task` with the given id, description, and optional total.
     pub fn new(id: usize, description: impl Into<String>, total: Option<f64>) -> Self {
         Self {
             id,
@@ -139,6 +176,7 @@ impl Task {
         }
     }
 
+    /// Return the progress fraction (0.0–1.0), or 0.0 if no total is set.
     pub fn progress(&self) -> f64 {
         if let Some(t) = self.total {
             if t > 0.0 {
@@ -151,10 +189,13 @@ impl Task {
         }
     }
 
+    /// Return the [`Duration`] since this task was created.
     pub fn elapsed(&self) -> Duration {
         self.start_time.elapsed()
     }
 
+    /// Estimate the remaining [`Duration`] based on current progress, or
+    /// [`None`] if progress is zero or no total is set.
     pub fn time_remaining(&self) -> Option<Duration> {
         let pct = self.progress();
         if pct > 0.0 {
@@ -193,6 +234,7 @@ pub struct Progress {
 }
 
 impl Progress {
+    /// Create a new `Progress` instance with no tasks.
     pub fn new() -> Self {
         Self {
             tasks: Vec::new(),
@@ -204,13 +246,15 @@ impl Progress {
         }
     }
 
-    /// Set custom columns for rendering.
+    /// Replace the default columns with a custom list of [`ProgressColumn`](crate::progress_columns::ProgressColumn)s.
+    ///
+    /// Each task is rendered as one row using the provided columns.
     pub fn with_columns(mut self, columns: Vec<Box<dyn crate::progress_columns::ProgressColumn>>) -> Self {
         self.columns = Some(columns);
         self
     }
 
-    /// Add a new task and return its ID.
+    /// Register a new task and return its numeric ID (used by `advance`, `update`, etc.).
     pub fn add_task(
         &mut self,
         description: impl Into<String>,
@@ -222,7 +266,7 @@ impl Progress {
         id
     }
 
-    /// Advance a task by a delta.
+    /// Increase a task's completed count by `delta`.
     pub fn advance(&mut self, task_id: usize, delta: f64) {
         if let Some(task) = self.tasks.iter_mut().find(|t| t.id == task_id) {
             task.completed += delta;
@@ -234,19 +278,19 @@ impl Progress {
         }
     }
 
-    /// Update a task's completed value.
+    /// Set a task's completed count directly (overwrites current value).
     pub fn update(&mut self, task_id: usize, completed: f64) {
         if let Some(task) = self.tasks.iter_mut().find(|t| t.id == task_id) {
             task.completed = completed;
         }
     }
 
-    /// Remove a completed task.
+    /// Remove a task by its ID. No-op if the task does not exist.
     pub fn remove_task(&mut self, task_id: usize) {
         self.tasks.retain(|t| t.id != task_id);
     }
 
-    /// Render all tasks as a string.
+    /// Render all visible tasks to a multi-line string at the given terminal width.
     pub fn render(&self, width: usize) -> String {
         if let Some(ref columns) = self.columns {
             self.render_with_columns(width, columns)
@@ -313,7 +357,8 @@ impl Progress {
         )
     }
 
-    /// Add a `track()` method that wraps an iterator with progress tracking.
+    /// Wrap an iterator with progress tracking, returning a [`TrackIterator`].
+    ///
     /// Equivalent to Python Rich's `track()`.
     pub fn track<I: IntoIterator>(
         &mut self,
@@ -334,12 +379,14 @@ impl Progress {
         }
     }
 
-    /// Advance a task by a number of bytes.
+    /// Convenience: advance a task by a [`u64`] byte count (casts to `f64` internally).
     pub fn advance_bytes(&mut self, task_id: usize, bytes: u64) {
         self.advance(task_id, bytes as f64);
     }
 
-    /// Open a file and track read progress.
+    /// Open a file at the given path and wrap it with progress tracking.
+    ///
+    /// Returns a [`ProgressFile`] whose reads are recorded via this [`Progress`].
     pub fn open(
         &mut self,
         path: impl AsRef<std::path::Path>,
@@ -352,7 +399,7 @@ impl Progress {
         Ok(self.wrap_file(file, total, description))
     }
 
-    /// Wrap an existing file with progress tracking.
+    /// Wrap an already-open [`std::fs::File`] with progress tracking.
     pub fn wrap_file(
         &mut self,
         file: std::fs::File,

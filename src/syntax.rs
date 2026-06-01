@@ -47,16 +47,16 @@ impl Syntax {
         }
     }
 
-    /// Builder: set theme.
+    /// Builder: set the syntect theme name (e.g. `"base16-ocean.dark"`, `"monokai"`).
     pub fn theme(mut self, theme: impl Into<String>) -> Self { self.theme = theme.into(); self }
 
-    /// Builder: show line numbers.
+    /// Builder: enable line numbers in the rendered output.
     pub fn line_numbers(mut self) -> Self { self.line_numbers = true; self }
 
-    /// Builder: set start line.
+    /// Builder: set the starting line number for display (default 1).
     pub fn start_line(mut self, n: usize) -> Self { self.start_line = n; self }
 
-    /// Builder: set background color.
+    /// Builder: set a background color for the code block.
     pub fn background(mut self, color: crate::color::Color) -> Self { self.background_color = Some(color); self }
 }
 

@@ -1,4 +1,50 @@
 //! Live — auto-updating display. Equivalent to Rich's `live.py`.
+//!
+//! [`Live`] manages a terminal region that updates in-place. Each refresh
+//! overwrites the previous output, creating an auto-updating display.
+//!
+//! # Quick Example
+//!
+//! ```rust,no_run
+//! use rusty_rich::{Live, panel::Panel};
+//! use std::thread;
+//! use std::time::Duration;
+//!
+//! let mut live = Live::new(Panel::new("Loading...").title("Progress"));
+//! live.start().unwrap();
+//!
+//! for i in 0..=100 {
+//!     live.update(Panel::new(format!("{}%", i)).title("Progress")).unwrap();
+//!     thread::sleep(Duration::from_millis(50));
+//! }
+//!
+//! live.stop().unwrap();
+//! ```
+//!
+//! # LiveWriter
+//!
+//! [`LiveWriter`] captures `write!` output and displays it within the live
+//! region. Use [`Live::create_writer`] to create one, then write to it while
+//! the live display is active:
+//!
+//! ```rust,no_run
+//! use rusty_rich::{Live, panel::Panel};
+//! use std::io::Write;
+//!
+//! let mut live = Live::new(Panel::new("Status").title("App"));
+//! let mut writer = live.create_writer();
+//! live.start().unwrap();
+//!
+//! writeln!(writer, "Processing item 1...").unwrap();
+//! writeln!(writer, "Done!").unwrap();
+//!
+//! live.stop().unwrap();
+//! ```
+//!
+//! # Transient Mode
+//!
+//! Call [`Live::transient`] to erase the live region on stop — the output
+//! disappears as if it was never there. Useful for "loading…" overlays.
 
 use std::io::{self, Write};
 use std::time::Instant;
@@ -11,14 +57,17 @@ pub struct LiveWriter {
 }
 
 impl LiveWriter {
+    /// Create a new `LiveWriter` with an empty capture buffer.
     pub fn new() -> Self {
         Self { buffer: Vec::new() }
     }
 
+    /// Return a reference to the captured output bytes.
     pub fn capture(&self) -> &[u8] {
         &self.buffer
     }
 
+    /// Clear the captured output buffer.
     pub fn clear(&mut self) {
         self.buffer.clear();
     }
@@ -59,6 +108,7 @@ impl std::fmt::Debug for Live {
 }
 
 impl Live {
+    /// Create a new `Live` display wrapping the given [`Renderable`].
     pub fn new(renderable: impl Renderable + Send + Sync + 'static) -> Self {
         Self {
             renderable: Some(DynRenderable::new(renderable)),
@@ -74,11 +124,17 @@ impl Live {
         }
     }
 
+    /// Builder: use the alternate screen buffer for full-screen display.
     pub fn screen(mut self) -> Self { self.screen = true; self }
+    /// Builder: disable automatic periodic refresh.
     pub fn no_auto_refresh(mut self) -> Self { self.auto_refresh = false; self }
+    /// Builder: set the refresh rate in Hz (default 4.0).
     pub fn refresh_per_second(mut self, rate: f64) -> Self { self.refresh_per_second = rate; self }
+    /// Builder: enable transient mode (live display disappears on stop).
     pub fn transient(mut self) -> Self { self.transient = true; self }
+    /// Builder: redirect stdout writes into the live display.
     pub fn redirect_stdout(mut self, redirect: bool) -> Self { self.redirect_stdout = redirect; self }
+    /// Builder: redirect stderr writes into the live display.
     pub fn redirect_stderr(mut self, redirect: bool) -> Self { self.redirect_stderr = redirect; self }
 
     /// Register a writer whose captured content will be rendered during refresh.
@@ -89,6 +145,7 @@ impl Live {
         LiveWriter::new()
     }
 
+    /// Start the live display: enter alternate screen (if configured) and hide cursor.
     pub fn start(&mut self) -> io::Result<()> {
         self.started = Some(Instant::now());
         if self.screen {
@@ -98,6 +155,7 @@ impl Live {
         self.refresh()
     }
 
+    /// Stop the live display: restore cursor, exit alternate screen, and clean up.
     pub fn stop(&mut self) -> io::Result<()> {
         if self.transient {
             for _ in 0..self.previous_line_count {
@@ -113,11 +171,13 @@ impl Live {
         Ok(())
     }
 
+    /// Replace the displayed content and refresh immediately.
     pub fn update(&mut self, renderable: impl Renderable + Send + Sync + 'static) -> io::Result<()> {
         self.renderable = Some(DynRenderable::new(renderable));
         self.refresh()
     }
 
+    /// Re-render the current content in place (cursor is moved back to overwrite previous output).
     pub fn refresh(&mut self) -> io::Result<()> {
         if let Some(ref renderable) = self.renderable {
             let opts = ConsoleOptions::default();

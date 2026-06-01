@@ -1,4 +1,45 @@
 //! Table — tabular data with columns. Equivalent to Rich's `table.py`.
+//!
+//! # Overview
+//!
+//! The [`Table`] renderable displays data in rows and columns with rich
+//! styling. Each column is defined by a [`Column`] that specifies header,
+//! footer, alignment, width constraints, and ratio. Cells can optionally
+//! span multiple columns or rows via [`Cell::colspan`] and [`Cell::rowspan`].
+//!
+//! # Quick Example
+//!
+//! ```rust
+//! use rusty_rich::{Table, Column};
+//!
+//! let mut table = Table::new();
+//! table.add_column(Column::new("Name"));
+//! table.add_column(Column::new("Age"));
+//! table.add_row_str("Alice", "30");
+//! table.add_row_str("Bob", "25");
+//! ```
+//!
+//! # Colspan & Rowspan
+//!
+//! ```rust
+//! use rusty_rich::{Table, Column, Cell};
+//!
+//! let mut table = Table::new();
+//! table.add_column(Column::new("A"));
+//! table.add_column(Column::new("B"));
+//! table.add_row(vec![Cell::new("spans both").colspan(2)]);
+//! ```
+//!
+//! # Box Styles
+//!
+//! Tables support all 17 box styles from [`crate::box_drawing`]. The default
+//! is [`BOX_HEAVY_HEAD`](crate::box_drawing::BOX_HEAVY_HEAD). Change it with
+//! [`Table::box_style`](Table::box_style).
+//!
+//! # Sections
+//!
+//! Call [`Table::add_section`] to insert a section divider between groups of
+//! rows.
 
 
 use crate::align::{AlignMethod, VerticalAlignMethod};
@@ -209,17 +250,51 @@ impl Table {
         }
     }
 
-    /// Add a column.
+    /// Add a column definition to the table.
+    ///
+    /// Columns must be added before rows are populated.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use rusty_rich::{Table, Column};
+    ///
+    /// let mut table = Table::new();
+    /// table.add_column(Column::new("Name"));
+    /// table.add_column(Column::new("Age"));
+    /// ```
     pub fn add_column(&mut self, column: Column) {
         self.columns.push(column);
     }
 
-    /// Add a row from Cell objects (supports colspan/rowspan).
+    /// Add a row from [`Cell`] objects (supports colspan/rowspan).
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use rusty_rich::{Table, Column, Cell};
+    ///
+    /// let mut table = Table::new();
+    /// table.add_column(Column::new("A"));
+    /// table.add_column(Column::new("B"));
+    /// table.add_row(vec![Cell::new("data").colspan(2)]);
+    /// ```
     pub fn add_row(&mut self, row: Vec<Cell>) {
         self.rows.push(row);
     }
 
-    /// Add a row from strings (backward-compatible, converts to Cells).
+    /// Add a row from plain strings (backward-compatible, converts to [`Cell`]s).
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use rusty_rich::{Table, Column};
+    ///
+    /// let mut table = Table::new();
+    /// table.add_column(Column::new("Name"));
+    /// table.add_column(Column::new("Age"));
+    /// table.add_row_str(vec!["Alice".into(), "30".into()]);
+    /// ```
     pub fn add_row_str(&mut self, row: Vec<String>) {
         let cells: Vec<Cell> = row.into_iter().map(Cell::new).collect();
         self.rows.push(cells);

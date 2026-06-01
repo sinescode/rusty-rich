@@ -13,7 +13,9 @@ pub struct Region {
 /// Direction of a split.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Direction {
+    /// Split content side by side (left to right).
     Horizontal,
+    /// Split content stacked (top to bottom).
     Vertical,
 }
 
@@ -22,26 +24,35 @@ pub enum Direction {
 pub enum LayoutNode {
     /// A split container with children and a direction.
     Split {
+        /// Direction of the split (horizontal or vertical).
         direction: Direction,
-        sizes: Vec<usize>, // relative sizes (ratios)
+        /// Relative size ratios for children.
+        sizes: Vec<usize>,
+        /// Child layout nodes.
         children: Vec<LayoutNode>,
     },
     /// A leaf with a renderable name (placeholder) and optional fixed size.
     Leaf {
+        /// Name identifier for this leaf.
         name: String,
-        renderable: Option<String>, // label for now
+        /// Optional label for the renderable.
+        renderable: Option<String>,
+        /// Optional fixed size constraint.
         size: Option<usize>,
     },
 }
 
 impl LayoutNode {
-    /// Create a new vertical split.
+    /// Create a new split node with equal-size children.
+    ///
+    /// Each child is assigned an initial ratio of 1. Use
+    /// [`sizes`](LayoutNode::sizes) to customize the ratios.
     pub fn split(direction: Direction, children: Vec<LayoutNode>) -> Self {
         let sizes = vec![1; children.len()];
         Self::Split { direction, sizes, children }
     }
 
-    /// Update the size ratios.
+    /// Builder: set the size ratios for the children of this split node.
     pub fn sizes(mut self, sizes: Vec<usize>) -> Self {
         if let Self::Split { sizes: ref mut s, .. } = self {
             *s = sizes;
@@ -50,15 +61,20 @@ impl LayoutNode {
     }
 }
 
-/// The Layout compute engine.
+/// The Layout compute engine. Assigns screen regions to a tree of layout
+/// nodes by recursively splitting available space.
 #[derive(Debug, Clone)]
 pub struct Layout {
+    /// The root [`LayoutNode`] defining the split hierarchy.
     pub root: LayoutNode,
+    /// Whether the layout is visible.
     pub visible: bool,
+    /// Minimum size for any region.
     pub minimum_size: usize,
 }
 
 impl Layout {
+    /// Create a new layout with the given root node.
     pub fn new(root: LayoutNode) -> Self {
         Self {
             root,
@@ -68,6 +84,9 @@ impl Layout {
     }
 
     /// Compute region assignments by recursively splitting the given area.
+    ///
+    /// Returns a list of `(name, region)` pairs for each leaf node in the
+    /// layout tree.
     pub fn compute(&self, total_width: usize, total_height: usize) -> Vec<(String, Region)> {
         let mut regions = Vec::new();
         let region = Region { x: 0, y: 0, width: total_width, height: total_height };

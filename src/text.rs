@@ -23,6 +23,7 @@ pub struct Span {
 }
 
 impl Span {
+    /// Create a new `Span` covering byte range `[start, end)` with a given style.
     pub fn new(start: usize, end: usize, style: Style) -> Self {
         Self { start, end, style }
     }

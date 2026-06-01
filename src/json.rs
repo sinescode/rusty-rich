@@ -16,6 +16,7 @@ pub fn render_json(value: &Value) -> JsonRender {
     }
 }
 
+/// Renders a JSON value with syntax highlighting via [`Renderable`].
 #[derive(Debug, Clone)]
 pub struct JsonRender {
     value: Value,
@@ -25,7 +26,9 @@ pub struct JsonRender {
 }
 
 impl JsonRender {
+    /// Set the indentation width (number of spaces per level, default 2).
     pub fn indent(mut self, n: usize) -> Self { self.indent = n; self }
+    /// Set a custom theme for syntax highlighting colours.
     pub fn theme(mut self, t: Theme) -> Self { self.theme = Some(t); self }
 
     fn style_for(&self, name: &str) -> Style {

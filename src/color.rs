@@ -1,7 +1,37 @@
 //! Color system — equivalent to Rich's `color.py`.
 //!
-//! Supports ANSI standard colors, 8-bit (256) colors, and 24-bit true color.
-//! Includes named color constants and color blending.
+//! Supports ANSI standard (16) colors, 8-bit (256) colors, and 24-bit true
+//! color with automatic downgrade. Includes 256 named color constants, hex/RGB
+//! constructors, and color blending utilities.
+//!
+//! # Quick Example
+//!
+//! ```rust
+//! use rusty_rich::Color;
+//!
+//! // Named colors — 256 ANSI palette
+//! let red = Color::parse("red").unwrap();
+//! let hot_pink = Color::parse("hot_pink").unwrap();
+//!
+//! // Hex and RGB
+//! let orange = Color::from_hex("#FF6600").unwrap();
+//! let custom = Color::from_rgb(100, 200, 50);
+//! ```
+//!
+//! # Color Systems
+//!
+//! [`ColorSystem`] describes what the terminal supports:
+//!
+//! - [`ColorSystem::Standard`] — 16 ANSI colors
+//! - [`ColorSystem::EightBit`] — 256-color palette
+//! - [`ColorSystem::TrueColor`] — 24-bit RGB
+//!
+//! Use [`Color::downgrade`] to convert a color to a lower color system.
+//!
+//! # Named Color Map
+//!
+//! [`Color::from_ansi_name`] and [`Color::parse`] look up names in the
+//! 256-entry ANSI palette. Both `grey`/`gray` spellings are supported.
 
 use std::fmt;
 
@@ -14,6 +44,7 @@ pub struct ColorTriplet {
 }
 
 impl ColorTriplet {
+    /// Create a new `ColorTriplet` from red, green, and blue components.
     pub const fn new(red: u8, green: u8, blue: u8) -> Self {
         Self { red, green, blue }
     }
@@ -264,9 +295,12 @@ impl fmt::Display for Color {
 // ColorParseError
 // ---------------------------------------------------------------------------
 
+/// Errors that can occur when parsing a color from a string.
 #[derive(Debug, Clone)]
 pub enum ColorParseError {
+    /// The color name was not found in the ANSI palette.
     UnknownName(String),
+    /// The hex string was not a valid 6-digit RGB value.
     InvalidHex(String),
 }
 
@@ -325,6 +359,7 @@ pub static STANDARD_PALETTE: &[(u8, u8, u8)] = &[
     (255, 255, 255), // 15: bright white
 ];
 
+/// The 16 ANSI standard color names in palette order (black, red, ..., bright_white).
 pub static STANDARD_COLOR_NAMES: &[&str] = &[
     "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white",
     "bright_black", "bright_red", "bright_green", "bright_yellow",

@@ -23,6 +23,7 @@ pub struct RichHandler {
 }
 
 impl RichHandler {
+    /// Create a new `RichHandler` with default settings (shows time, level, and path).
     pub fn new() -> Self {
         Self {
             console: Console::new(),
@@ -80,7 +81,9 @@ impl RichHandler {
         text.render()
     }
 
-    /// Emit a log record (integrates with the `log` crate).
+    /// Emit a `log` crate [`Record`](log::Record) using Rich formatting.
+    ///
+    /// Formats the record and writes it to the console.
     pub fn emit(&mut self, record: &log::Record) {
         let formatted = self.render(
             record.level(),

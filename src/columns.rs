@@ -23,6 +23,17 @@ impl std::fmt::Debug for Columns {
 }
 
 impl Columns {
+    /// Create an empty [`Columns`] container.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use rusty_rich::Columns;
+    ///
+    /// let mut cols = Columns::new();
+    /// cols.add("item 1");
+    /// cols.add("item 2");
+    /// ```
     pub fn new() -> Self {
         Self {
             renderables: Vec::new(),
@@ -33,12 +44,16 @@ impl Columns {
         }
     }
 
+    /// Add a renderable to the column layout.
     pub fn add(&mut self, renderable: impl Renderable + Send + Sync + 'static) {
         self.renderables.push(DynRenderable::new(renderable));
     }
 
+    /// Builder: set padding between columns (in characters).
     pub fn padding(mut self, padding: usize) -> Self { self.padding = padding; self }
+    /// Builder: force all columns to have equal width.
     pub fn equal(mut self) -> Self { self.equal = true; self }
+    /// Builder: expand columns to fill the available width.
     pub fn expand(mut self) -> Self { self.expand = true; self }
 }
 

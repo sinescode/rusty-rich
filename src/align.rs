@@ -11,14 +11,18 @@ use std::fmt;
 /// Horizontal alignment method.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AlignMethod {
+    /// Left-align (the default).
     Left,
+    /// Center-align.
     Center,
+    /// Right-align.
     Right,
-    Full, // justified
+    /// Full justification (spaces distributed between words).
+    Full,
 }
 
 impl AlignMethod {
-    /// Align text within the given width.
+    /// Align text within the given width, returning a padded string.
     pub fn align_text(&self, text: &str, width: usize) -> String {
         let text_width = unicode_width::UnicodeWidthStr::width(text);
         if text_width >= width {
@@ -57,6 +61,7 @@ impl AlignMethod {
         }
     }
 
+    /// Parse an alignment method from its string name (`"left"`, `"center"`, `"right"`, or `"full"`).
     pub fn from_str(s: &str) -> Self {
         match s {
             "left" | "default" => Self::Left,
@@ -92,12 +97,16 @@ impl Default for AlignMethod {
 /// Vertical alignment method.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum VerticalAlignMethod {
+    /// Align to the top edge.
     Top,
+    /// Align to the vertical center.
     Middle,
+    /// Align to the bottom edge.
     Bottom,
 }
 
 impl VerticalAlignMethod {
+    /// Parse a vertical alignment method from its string name (`"top"`, `"middle"`, or `"bottom"`).
     pub fn from_str(s: &str) -> Self {
         match s {
             "top" => Self::Top,
@@ -142,6 +151,7 @@ pub struct Align<T: crate::console::Renderable> {
 }
 
 impl<T: crate::console::Renderable> Align<T> {
+    /// Wrap a renderable with default left/top alignment.
     pub fn new(renderable: T) -> Self {
         Self {
             renderable,
@@ -152,6 +162,7 @@ impl<T: crate::console::Renderable> Align<T> {
         }
     }
 
+    /// Set the horizontal alignment.
     pub fn align(mut self, align: AlignMethod) -> Self {
         self.align = align;
         self

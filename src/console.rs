@@ -27,6 +27,7 @@ pub struct ConsoleDimensions {
 }
 
 impl ConsoleDimensions {
+    /// Detect the terminal size, falling back to 80x25 if detection fails.
     pub fn detect() -> Self {
         if let Some((w, h)) = terminal_size::terminal_size() {
             Self {
@@ -150,7 +151,9 @@ impl ConsoleOptions {
 /// Equivalent to Python Rich's `RenderResult = Iterable[Union[Segment, RenderableType]]`.
 #[derive(Clone)]
 pub enum RenderItem {
+    /// A fully-rendered [`Segment`].
     Segment(Segment),
+    /// A nested [`DynRenderable`] that will be recursively flattened.
     Nested(DynRenderable),
 }
 
@@ -183,10 +186,14 @@ pub struct RenderResult {
 }
 
 impl RenderResult {
+    /// Create an empty [`RenderResult`].
     pub fn new() -> Self {
         Self { lines: Vec::new(), items: Vec::new() }
     }
 
+    /// Create a [`RenderResult`] from a plain text string.
+    ///
+    /// The text becomes a single line with one segment.
     pub fn from_text(text: &str) -> Self {
         Self {
             lines: vec![vec![Segment::new(text)]],
@@ -194,15 +201,18 @@ impl RenderResult {
         }
     }
 
+    /// Create a [`RenderResult`] from a list of [`Segment`]s on a single line.
     pub fn from_segments(segments: Vec<Segment>) -> Self {
         let items: Vec<RenderItem> = segments.iter().map(|s| RenderItem::Segment(s.clone())).collect();
         Self { lines: vec![segments], items }
     }
 
+    /// Create a [`RenderResult`] from pre-computed lines of [`Segment`]s.
     pub fn from_lines(lines: Vec<Vec<Segment>>) -> Self {
         Self { lines, items: Vec::new() }
     }
 
+    /// Create a [`RenderResult`] from [`RenderItem`]s for recursive flattening.
     pub fn from_items(items: Vec<RenderItem>) -> Self {
         Self { lines: Vec::new(), items }
     }
@@ -270,6 +280,10 @@ fn flatten_items(items: &[RenderItem], options: &ConsoleOptions, out: &mut Vec<S
 ///
 /// Equivalent to `__rich_console__` in Python Rich.
 pub trait Renderable {
+    /// Render this object into a [`RenderResult`] using the provided options.
+    ///
+    /// Implementing types produce [`Segment`]s or nested [`Renderable`]s
+    /// that are recursively flattened by [`Console::render`].
     fn render(&self, options: &ConsoleOptions) -> RenderResult;
 
     /// Optional width-measurement hook (equivalent to `__rich_measure__`).
@@ -281,18 +295,21 @@ pub trait Renderable {
 
 // -- Implementations for common types ---------------------------------------
 
+/// Allows a [`String`] to be used as a renderable.
 impl Renderable for String {
     fn render(&self, options: &ConsoleOptions) -> RenderResult {
         self.as_str().render(options)
     }
 }
 
+/// Allows a [`&str`] to be used as a renderable (rendered as plain text).
 impl Renderable for &str {
     fn render(&self, _options: &ConsoleOptions) -> RenderResult {
         RenderResult::from_text(self)
     }
 }
 
+/// Allows a [`Text`] object to be used as a renderable.
 impl Renderable for Text {
     fn render(&self, _options: &ConsoleOptions) -> RenderResult {
         let rendered = self.render();
@@ -305,13 +322,17 @@ impl Renderable for Text {
     }
 }
 
-/// A wrapper that provides Clone + Debug for trait-object renderables.
+/// A wrapper that provides `Clone` + `Debug` for trait-object renderables.
+///
+/// [`DynRenderable`] boxes any [`Renderable`] behind an [`Arc`] so it can be
+/// stored in collections like [`Group`] and [`Panel`](crate::Panel).
 #[derive(Clone)]
 pub struct DynRenderable {
     inner: Arc<dyn Renderable + Send + Sync>,
 }
 
 impl DynRenderable {
+    /// Wrap a [`Renderable`] in a [`DynRenderable`].
     pub fn new(r: impl Renderable + Send + Sync + 'static) -> Self {
         Self { inner: Arc::new(r) }
     }
@@ -323,28 +344,35 @@ impl fmt::Debug for DynRenderable {
     }
 }
 
+/// Delegates rendering to the inner trait object.
 impl Renderable for DynRenderable {
     fn render(&self, options: &ConsoleOptions) -> RenderResult {
         self.inner.render(options)
     }
 }
 
-/// A group of renderables rendered one after another.
+/// A renderable that renders multiple children one after another (vertically).
+///
+/// Equivalent to Python Rich's `Group`.
 #[derive(Debug, Clone)]
 pub struct Group {
+    /// The child renderables to render in sequence.
     pub children: Vec<DynRenderable>,
 }
 
 impl Group {
+    /// Create an empty [`Group`].
     pub fn new() -> Self {
         Self { children: Vec::new() }
     }
 
+    /// Add a renderable child to the group.
     pub fn add(&mut self, renderable: impl Renderable + Send + Sync + 'static) {
         self.children.push(DynRenderable::new(renderable));
     }
 }
 
+/// Renders each child sequentially and concatenates their output lines.
 impl Renderable for Group {
     fn render(&self, options: &ConsoleOptions) -> RenderResult {
         let mut all_lines: Vec<Vec<Segment>> = Vec::new();
@@ -431,7 +459,7 @@ impl Console {
         }
     }
 
-    /// Set whether to suppress all output.
+    /// Set the console width (overrides auto-detected terminal width).
     pub fn set_width(&mut self, width: usize) {
         self.width = Some(width);
         self.options.max_width = width;
@@ -926,6 +954,10 @@ impl fmt::Debug for Console {
 // Color system detection
 // ---------------------------------------------------------------------------
 
+/// Detect the terminal color system from environment variables.
+///
+/// Checks `COLORTERM`, `TERM`, `NO_COLOR`, and `CLICOLOR` to determine
+/// whether the terminal supports true color, 8-bit, or standard 16 colors.
 fn detect_color_system() -> ColorSystem {
     // Check common env vars
     if let Ok(val) = std::env::var("COLORTERM") {

@@ -1,7 +1,43 @@
 //! Segment — styled text unit. Equivalent to Rich's `segment.py`.
 //!
-//! A `Segment` is the smallest unit of output: a piece of text with an
-//! associated style and optional control codes.
+//! A [`Segment`] is the smallest unit of output: a piece of text with an
+//! associated [`Style`](crate::Style) and optional control code.
+//!
+//! # Core Types
+//!
+//! - [`Segment`] — text + optional style + optional control code
+//! - [`Segments`] — a collection of segments with convenience methods
+//! - `ControlType` — 16 terminal control codes (bell, cursor movement, etc.)
+//! - `ControlCode` — a control type with optional parameters
+//!
+//! # Utility Functions (v0.2)
+//!
+//! | Function | Description |
+//! |----------|-------------|
+//! | `Segments::simplify` | Combine adjacent segments with identical styles |
+//! | `split_lines` | Split segments into lines at newline boundaries |
+//! | `strip_styles` | Remove all styling, returning plain text |
+//! | `strip_links` | Remove link IDs and URLs from segment styles |
+//! | `align_top` / `align_middle` / `align_bottom` | Vertical alignment helpers |
+//! | `divide` | Split segments at given cell offsets |
+//! | `set_shape` | Pad or truncate segments to exact width × height |
+//! | `filter_control` | Keep only control segments (or only non-control) |
+//! | `get_line_length` | Total cell width of a line of segments |
+//!
+//! # Example
+//!
+//! ```rust
+//! use rusty_rich::{Segment, Segments, Style};
+//!
+//! let segs = Segments::from(vec![
+//!     Segment::styled("Hello ", Style::new().bold(true)),
+//!     Segment::styled("World", Style::new().bold(true)),
+//! ]);
+//!
+//! // Combine adjacent same-styled segments
+//! let merged = segs.simplify();
+//! assert_eq!(merged.segments.len(), 1);
+//! ```
 
 use std::fmt;
 

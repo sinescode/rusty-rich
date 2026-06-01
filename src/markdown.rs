@@ -22,6 +22,7 @@ pub fn render_markdown(md: &str) -> MarkdownRender {
     }
 }
 
+/// Renders markdown text to styled terminal output via [`Renderable`].
 #[derive(Debug, Clone)]
 pub struct MarkdownRender {
     source: String,
@@ -31,9 +32,10 @@ pub struct MarkdownRender {
 }
 
 impl MarkdownRender {
+    /// Set a fixed rendering width (defaults to the console width).
     pub fn width(mut self, w: usize) -> Self { self.width = Some(w); self }
 
-    /// Set the code syntax-highlighting theme (default: "default").
+    /// Set the code syntax-highlighting theme (default: `"default"`).
     pub fn code_theme(mut self, theme: impl Into<String>) -> Self {
         self.code_theme = theme.into();
         self

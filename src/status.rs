@@ -40,7 +40,7 @@ impl Status {
         }
     }
 
-    /// Set the spinner style.
+    /// Builder: replace the default spinner with a custom [`Spinner`].
     pub fn spinner(mut self, spinner: Spinner) -> Self { self.spinner = spinner; self }
 
     /// Start displaying the status.

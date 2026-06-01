@@ -60,6 +60,7 @@ impl Clone for RegexHighlighter {
 }
 
 impl RegexHighlighter {
+    /// Create an empty regex highlighter with no rules.
     pub fn new() -> Self {
         Self { rules: Vec::new() }
     }
@@ -109,6 +110,7 @@ pub struct ReprHighlighter {
 }
 
 impl ReprHighlighter {
+    /// Create a new `ReprHighlighter` with built-in rules for numbers, URLs, paths, and strings.
     pub fn new() -> Self {
         // Build the regex highlighter with common repr patterns
         let mut rh = RegexHighlighter::new();

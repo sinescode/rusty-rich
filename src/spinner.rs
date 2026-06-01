@@ -242,106 +242,127 @@ pub const SPINNER_VERTICAL_BARS: SpinnerFrames = SpinnerFrames {
 // Additional spinners from Python Rich (bringing total to 55+)
 // ===========================================================================
 
+/// Braille dots spinner: vertical bar grows upward then collapses.
 pub const SPINNER_DOTS12: SpinnerFrames = SpinnerFrames {
     frames: &["⣀", "⣤", "⣶", "⣿", "⣶", "⣤"],
     interval: 0.08,
 };
 
+/// Braille dots spinner: complex diagonal crawl pattern.
 pub const SPINNER_DOTS13: SpinnerFrames = SpinnerFrames {
     frames: &["⣼", "⣹", "⢻", "⠿", "⡟", "⣏", "⣧", "⣶"],
     interval: 0.08,
 };
 
+/// Braille dots 8-bit style: fills from empty to full block.
 pub const SPINNER_DOTS8_BIT: SpinnerFrames = SpinnerFrames {
     frames: &["⠀", "⠁", "⠂", "⠃", "⠇", "⠏", "⠟", "⠿", "⡿", "⣿", "⣿", "⣿"],
     interval: 0.08,
 };
 
+/// Simple ASCII dots in a back-and-forth scrolling pattern.
 pub const SPINNER_SIMPLE_DOTS_SCROLLING: SpinnerFrames = SpinnerFrames {
     frames: &[".  ", ".. ", "...", " ..", "  .", " ..", "...", ".. "],
     interval: 0.2,
 };
 
+/// Star-spangled spinner using star-shaped Unicode characters.
 pub const SPINNER_STAR: SpinnerFrames = SpinnerFrames {
     frames: &["✶", "✸", "✹", "✺", "✹", "✷"],
     interval: 0.1,
 };
 
+/// Minimal star spinner: plus, cross, asterisk.
 pub const SPINNER_STAR2: SpinnerFrames = SpinnerFrames {
     frames: &["+", "x", "*"],
     interval: 0.12,
 };
 
+/// Underscore / tick / overbar flipping animation.
 pub const SPINNER_FLIP: SpinnerFrames = SpinnerFrames {
     frames: &["_", "_", "_", "-", "`", "`", "'", "¯", "_", "_", "_", "-"],
     interval: 0.1,
 };
 
+/// Balloon inflating: dot, small o, O, at-sign, star, then empty.
 pub const SPINNER_BALLOON: SpinnerFrames = SpinnerFrames {
     frames: &[". ", "o ", "O ", "@ ", "* ", " "],
     interval: 0.12,
 };
 
+/// Balloon inflate-deflate: dot, o, O, degree symbol, O, o, dot.
 pub const SPINNER_BALLOON2: SpinnerFrames = SpinnerFrames {
     frames: &[".", "o", "O", "°", "O", "o", "."],
     interval: 0.12,
 };
 
+/// Pipe-junction spinner: box-drawing corners cycle clockwise.
 pub const SPINNER_PIPE: SpinnerFrames = SpinnerFrames {
     frames: &["┤", "┘", "┴", "└", "├", "┌", "┬", "┐"],
     interval: 0.1,
 };
 
+/// Square corners cycling through four quadrant-filled states.
 pub const SPINNER_SQUARE_CORNERS: SpinnerFrames = SpinnerFrames {
     frames: &["◰", "◳", "◲", "◱"],
     interval: 0.12,
 };
 
+/// Circle quadrants rotating counter-clockwise.
 pub const SPINNER_CIRCLE_QUARTERS: SpinnerFrames = SpinnerFrames {
     frames: &["◴", "◷", "◶", "◵"],
     interval: 0.12,
 };
 
+/// Circle halves rotating through four semi-filled states.
 pub const SPINNER_CIRCLE_HALVES: SpinnerFrames = SpinnerFrames {
     frames: &["◐", "◓", "◑", "◒"],
     interval: 0.12,
 };
 
+/// Minimal two-frame aesthetic: filled and empty block.
 pub const SPINNER_AESTHETIC: SpinnerFrames = SpinnerFrames {
     frames: &["▰", "▱"],
     interval: 0.15,
 };
 
+/// Braille dot pattern: single dots travel from top-left to bottom-right.
 pub const SPINNER_BRAILLE_LONG: SpinnerFrames = SpinnerFrames {
     frames: &["⠁", "⠂", "⠄", "⠠", "⠐", "⠈", "⡀", "⢀"],
     interval: 0.08,
 };
 
+/// Braille dot crawl: left column fills then merges into full block.
 pub const SPINNER_BRAILLE_CRAWL: SpinnerFrames = SpinnerFrames {
     frames: &["⡀", "⡄", "⡆", "⡇", "⡏", "⡟", "⡿", "⣿"],
     interval: 0.08,
 };
 
+/// Pulse animation: full block fades through dithering to empty.
 pub const SPINNER_PULSE: SpinnerFrames = SpinnerFrames {
     frames: &["█", "▓", "▒", "░"],
     interval: 0.1,
 };
 
+/// Short Braille bounce: dot moves right then back left.
 pub const SPINNER_BOUNCE: SpinnerFrames = SpinnerFrames {
     frames: &["⠁", "⠂", "⠄", "⠂"],
     interval: 0.12,
 };
 
+/// Material Design-style circle halves (fast rotation).
 pub const SPINNER_MATERIAL: SpinnerFrames = SpinnerFrames {
     frames: &["◐", "◓", "◑", "◒"],
     interval: 0.08,
 };
 
+/// Classic Windows command-line style rotating line.
 pub const SPINNER_WINDOWS: SpinnerFrames = SpinnerFrames {
     frames: &["/", "-", "\\", "|"],
     interval: 0.1,
 };
 
+/// Shaded blocks: empty-to-full through dithering, then back.
 pub const SPINNER_SHADED_BLOCKS: SpinnerFrames = SpinnerFrames {
     frames: &["░", "▒", "▓", "█", "▓", "▒"],
     interval: 0.08,
