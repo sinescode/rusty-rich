@@ -3,12 +3,14 @@
 //! Uses `pulldown-cmark` for parsing and renders headings, code blocks,
 //! lists, tables, blockquotes, and inline formatting.
 
-use pulldown_cmark::{CodeBlockKind, Event, HeadingLevel, Options, Parser, Tag, TagEnd};
+use pulldown_cmark::{Alignment, CodeBlockKind, Event, HeadingLevel, Options, Parser, Tag, TagEnd};
 
 use crate::console::{ConsoleOptions, RenderResult, Renderable};
 use crate::rule::Rule;
 use crate::segment::Segment;
 use crate::style::Style;
+use crate::align::AlignMethod;
+use crate::table::{Cell, Column, Table};
 
 /// Render markdown text.
 pub fn render_markdown(md: &str) -> MarkdownRender {
@@ -73,6 +75,12 @@ impl Renderable for MarkdownRender {
         let mut list_depth = 0usize;
         let mut current_link: Option<String> = None;
         let mut link_text: Option<String> = None;
+        let mut in_table = false;
+        let mut table_alignments: Vec<Alignment> = Vec::new();
+        let mut table_rows: Vec<Vec<String>> = Vec::new();
+        let mut _table_is_header = false;
+        let mut current_row: Vec<String> = Vec::new();
+        let mut current_cell_text = String::new();
 
         for event in parser {
             match event {
@@ -196,22 +204,32 @@ impl Renderable for MarkdownRender {
                 }
                 Event::Text(text) | Event::Code(text) => {
                     let s: &str = &text;
-                    // Collect link text if we're inside a link
-                    if current_link.is_some() {
-                        if let Some(ref mut lt) = link_text {
-                            lt.push_str(s);
-                        }
-                    }
-                    if in_code_block {
-                        // Indent code
-                        for line in s.lines() {
-                            current_line.push(Segment::new(format!("│ {line}")));
-                            current_line.push(Segment::line());
-                            lines.push(current_line.clone());
-                            current_line.clear();
+                    if in_table {
+                        current_cell_text.push_str(s);
+                        // Also handle link text collection inside table cells
+                        if current_link.is_some() {
+                            if let Some(ref mut lt) = link_text {
+                                lt.push_str(s);
+                            }
                         }
                     } else {
-                        current_line.push(Segment::new(s));
+                        // Collect link text if we're inside a link
+                        if current_link.is_some() {
+                            if let Some(ref mut lt) = link_text {
+                                lt.push_str(s);
+                            }
+                        }
+                        if in_code_block {
+                            // Indent code
+                            for line in s.lines() {
+                                current_line.push(Segment::new(format!("│ {line}")));
+                                current_line.push(Segment::line());
+                                lines.push(current_line.clone());
+                                current_line.clear();
+                            }
+                        } else {
+                            current_line.push(Segment::new(s));
+                        }
                     }
                 }
                 Event::SoftBreak => {
@@ -226,6 +244,64 @@ impl Renderable for MarkdownRender {
                     let rule = Rule::new().characters("─");
                     let res = rule.render(options);
                     lines.extend(res.lines);
+                }
+                Event::Start(Tag::Table(alignments)) => {
+                    in_table = true;
+                    table_alignments = alignments;
+                    table_rows = Vec::new();
+                }
+                Event::End(TagEnd::Table) => {
+                    in_table = false;
+                    if !table_rows.is_empty() {
+                        let mut table = Table::new();
+                        table.show_header = false;
+                        table.show_edge = true;
+                        for align in &table_alignments {
+                            let justify = match align {
+                                Alignment::Left => AlignMethod::Left,
+                                Alignment::Right => AlignMethod::Right,
+                                Alignment::Center => AlignMethod::Center,
+                                Alignment::None => AlignMethod::Left,
+                            };
+                            table.add_column(Column::new("").justify(justify));
+                        }
+                        for (i, row) in table_rows.iter().enumerate() {
+                            let cells: Vec<Cell> = row
+                                .iter()
+                                .enumerate()
+                                .map(|(_, c)| {
+                                    if i == 0 {
+                                        Cell::new(c.clone()).style(Style::new().bold(true))
+                                    } else {
+                                        Cell::new(c.clone())
+                                    }
+                                })
+                                .collect();
+                            table.add_row(cells);
+                        }
+                        let result = table.render(options);
+                        lines.extend(result.lines);
+                    }
+                }
+                Event::Start(Tag::TableHead) => {
+                    _table_is_header = true;
+                }
+                Event::End(TagEnd::TableHead) => {
+                    _table_is_header = false;
+                }
+                Event::Start(Tag::TableRow) => {
+                    current_row = Vec::new();
+                }
+                Event::End(TagEnd::TableRow) => {
+                    table_rows.push(current_row.clone());
+                    current_row.clear();
+                }
+                Event::Start(Tag::TableCell) => {
+                    current_cell_text = String::new();
+                }
+                Event::End(TagEnd::TableCell) => {
+                    current_row.push(current_cell_text.clone());
+                    current_cell_text.clear();
                 }
                 _ => {}
             }

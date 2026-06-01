@@ -5,6 +5,36 @@ use std::time::Instant;
 
 use crate::console::{ConsoleOptions, DynRenderable, Renderable};
 
+/// A writer that captures output for live display.
+pub struct LiveWriter {
+    buffer: Vec<u8>,
+}
+
+impl LiveWriter {
+    pub fn new() -> Self {
+        Self { buffer: Vec::new() }
+    }
+
+    pub fn capture(&self) -> &[u8] {
+        &self.buffer
+    }
+
+    pub fn clear(&mut self) {
+        self.buffer.clear();
+    }
+}
+
+impl Write for LiveWriter {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.buffer.extend_from_slice(buf);
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+}
+
 /// Manages a live-updating region of the terminal.
 pub struct Live {
     renderable: Option<DynRenderable>,
@@ -14,6 +44,9 @@ pub struct Live {
     transient: bool,
     started: Option<Instant>,
     previous_line_count: usize,
+    redirect_stdout: bool,
+    redirect_stderr: bool,
+    writers: Vec<LiveWriter>,
 }
 
 impl std::fmt::Debug for Live {
@@ -35,6 +68,9 @@ impl Live {
             transient: false,
             started: None,
             previous_line_count: 0,
+            redirect_stdout: true,
+            redirect_stderr: true,
+            writers: Vec::new(),
         }
     }
 
@@ -42,6 +78,16 @@ impl Live {
     pub fn no_auto_refresh(mut self) -> Self { self.auto_refresh = false; self }
     pub fn refresh_per_second(mut self, rate: f64) -> Self { self.refresh_per_second = rate; self }
     pub fn transient(mut self) -> Self { self.transient = true; self }
+    pub fn redirect_stdout(mut self, redirect: bool) -> Self { self.redirect_stdout = redirect; self }
+    pub fn redirect_stderr(mut self, redirect: bool) -> Self { self.redirect_stderr = redirect; self }
+
+    /// Register a writer whose captured content will be rendered during refresh.
+    pub fn add_writer(&mut self, writer: LiveWriter) { self.writers.push(writer); }
+
+    /// Create a LiveWriter that captures output while Live is active.
+    pub fn create_writer() -> LiveWriter {
+        LiveWriter::new()
+    }
 
     pub fn start(&mut self) -> io::Result<()> {
         self.started = Some(Instant::now());
@@ -92,6 +138,15 @@ impl Live {
             }
 
             self.previous_line_count = line_count;
+
+            // Write captured writer content
+            for writer in &self.writers {
+                let captured = String::from_utf8_lossy(writer.capture());
+                if !captured.is_empty() {
+                    write!(io::stdout(), "{}", captured)?;
+                }
+            }
+
             io::stdout().flush()?;
         }
         Ok(())

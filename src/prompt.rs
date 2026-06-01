@@ -620,8 +620,8 @@ impl Confirm {
             ("y", "N")
         };
         let styled_prompt = apply_style(&self.base.prompt, "prompt");
-        let styled_choices = apply_style(&format!("{}/{}", yes, no), "prompt.choices");
-        format!("{} [{}]: ", styled_prompt, styled_choices)
+        let styled_choices = apply_style(&format!("[{}/{}]", yes, no), "prompt.choices");
+        format!("{} {}: ", styled_prompt, styled_choices)
     }
 
     /// Ask the user for a yes/no answer.

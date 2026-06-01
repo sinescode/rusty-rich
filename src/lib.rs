@@ -187,7 +187,7 @@ pub use prompt::{
     Prompt, PromptBase, PromptError, IntPrompt, FloatPrompt, Confirm, Select,
 };
 pub use status::Status;
-pub use live::Live;
+pub use live::{Live, LiveWriter};
 pub use screen::Screen;
 pub use screen::ScreenContext;
 pub use screen::ScreenUpdate;

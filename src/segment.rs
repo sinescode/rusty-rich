@@ -300,6 +300,231 @@ pub fn space(count: usize) -> Segment {
     Segment::new(" ".repeat(count))
 }
 
+// ---------------------------------------------------------------------------
+// Segment collection utilities
+// ---------------------------------------------------------------------------
+
+impl Segments {
+    /// Combine adjacent segments that have the same style.
+    pub fn simplify(&self) -> Segments {
+        let mut result: Vec<Segment> = Vec::new();
+        for seg in &self.segments {
+            if let Some(last) = result.last_mut() {
+                if last.style == seg.style && last.control.is_none() && seg.control.is_none() {
+                    last.text.push_str(&seg.text);
+                    continue;
+                }
+            }
+            result.push(seg.clone());
+        }
+        Segments { segments: result }
+    }
+}
+
+/// Split an iterable of segments into lines at newline boundaries.
+pub fn split_lines(segments: &[Segment]) -> Vec<Vec<Segment>> {
+    let mut lines: Vec<Vec<Segment>> = Vec::new();
+    let mut current: Vec<Segment> = Vec::new();
+    for seg in segments {
+        if seg.text == "\n" && seg.style.is_none() && seg.control.is_none() {
+            lines.push(std::mem::take(&mut current));
+        } else if seg.text.contains('\n') && seg.style.is_none() && seg.control.is_none() {
+            let parts: Vec<&str> = seg.text.split('\n').collect();
+            for (i, part) in parts.iter().enumerate() {
+                if i > 0 {
+                    lines.push(std::mem::take(&mut current));
+                }
+                if !part.is_empty() {
+                    current.push(Segment::new(*part));
+                }
+            }
+        } else {
+            current.push(seg.clone());
+        }
+    }
+    if !current.is_empty() {
+        lines.push(current);
+    }
+    lines
+}
+
+/// Remove all styles from segments, returning plain text only.
+pub fn strip_styles(segments: &[Segment]) -> String {
+    let mut out = String::new();
+    for seg in segments {
+        if seg.control.is_none() {
+            out.push_str(&seg.text);
+        }
+    }
+    out
+}
+
+/// Remove link IDs and URLs from all segment styles.
+pub fn strip_links(segments: &[Segment]) -> Vec<Segment> {
+    segments
+        .iter()
+        .map(|seg| {
+            let mut s = seg.clone();
+            if let Some(ref style) = seg.style {
+                let mut new_style = style.clone();
+                new_style.link_id = 0;
+                new_style.link = None;
+                s.style = Some(new_style);
+            }
+            s
+        })
+        .collect()
+}
+
+/// Align lines to the top of a region of given height.
+pub fn align_top(
+    lines: &[Vec<Segment>],
+    _width: usize,
+    height: usize,
+    _style: Option<&Style>,
+) -> Vec<Vec<Segment>> {
+    let blank_line = vec![Segment::new(" ".repeat(_width))];
+    let mut result: Vec<Vec<Segment>> = lines.to_vec();
+    while result.len() < height {
+        result.push(blank_line.clone());
+    }
+    result.truncate(height);
+    result
+}
+
+/// Align lines to the middle of a region of given height.
+pub fn align_middle(
+    lines: &[Vec<Segment>],
+    _width: usize,
+    height: usize,
+    _style: Option<&Style>,
+) -> Vec<Vec<Segment>> {
+    let blank_line = vec![Segment::new(" ".repeat(_width))];
+    let top_pad = (height.saturating_sub(lines.len())) / 2;
+    let mut result: Vec<Vec<Segment>> = Vec::new();
+    for _ in 0..top_pad {
+        result.push(blank_line.clone());
+    }
+    result.extend(lines.iter().cloned());
+    while result.len() < height {
+        result.push(blank_line.clone());
+    }
+    result.truncate(height);
+    result
+}
+
+/// Align lines to the bottom of a region of given height.
+pub fn align_bottom(
+    lines: &[Vec<Segment>],
+    _width: usize,
+    height: usize,
+    _style: Option<&Style>,
+) -> Vec<Vec<Segment>> {
+    let blank_line = vec![Segment::new(" ".repeat(_width))];
+    let bottom_pad = height.saturating_sub(lines.len());
+    let mut result: Vec<Vec<Segment>> = Vec::new();
+    for _ in 0..bottom_pad {
+        result.push(blank_line.clone());
+    }
+    result.extend(lines.iter().cloned());
+    result.truncate(height);
+    result
+}
+
+/// Divide segments at the given cell offsets.
+pub fn divide(segments: &[Segment], cuts: &[usize]) -> Vec<Vec<Segment>> {
+    let mut result: Vec<Vec<Segment>> = Vec::new();
+    let mut remaining = segments.to_vec();
+    let mut offset = 0usize;
+
+    for &cut in cuts {
+        let mut chunk: Vec<Segment> = Vec::new();
+        let target = cut.saturating_sub(offset);
+
+        let mut chunk_cells = 0usize;
+        while chunk_cells < target && !remaining.is_empty() {
+            let seg = remaining.remove(0);
+            let seg_len = seg.cell_length();
+            if chunk_cells + seg_len <= target {
+                chunk_cells += seg_len;
+                chunk.push(seg);
+            } else {
+                let split_at = target - chunk_cells;
+                let (left, right) = seg.split(split_at);
+                chunk.push(left);
+                if let Some(r) = right {
+                    remaining.insert(0, r);
+                }
+                chunk_cells = target;
+            }
+        }
+        result.push(chunk);
+        offset = cut;
+    }
+
+    if !remaining.is_empty() {
+        result.push(remaining);
+    }
+
+    result
+}
+
+/// Set segments to an exact width and height, padding/truncating as needed.
+pub fn set_shape(
+    lines: &[Vec<Segment>],
+    width: usize,
+    height: usize,
+    _style: Option<&Style>,
+) -> Vec<Vec<Segment>> {
+    let blank_line = vec![Segment::new(" ".repeat(width))];
+    let mut result: Vec<Vec<Segment>> = Vec::new();
+
+    for line in lines.iter().take(height) {
+        let cell_len: usize = line.iter().map(|s| s.cell_length()).sum();
+        let mut new_line = line.clone();
+        if cell_len < width {
+            new_line.push(Segment::new(" ".repeat(width - cell_len)));
+        } else if cell_len > width {
+            let mut truncated = Vec::new();
+            let mut count = 0usize;
+            for seg in line {
+                let seg_len = seg.cell_length();
+                if count + seg_len <= width {
+                    truncated.push(seg.clone());
+                    count += seg_len;
+                } else if count < width {
+                    let (left, _) = seg.split(width - count);
+                    truncated.push(left);
+                    break;
+                }
+            }
+            new_line = truncated;
+        }
+        result.push(new_line);
+    }
+
+    while result.len() < height {
+        result.push(blank_line.clone());
+    }
+
+    result
+}
+
+/// Filter segments, keeping only control codes if `is_control` is true,
+/// or only non-control segments if `is_control` is false.
+pub fn filter_control(segments: &[Segment], is_control: bool) -> Vec<Segment> {
+    segments
+        .iter()
+        .filter(|seg| seg.control.is_some() == is_control)
+        .cloned()
+        .collect()
+}
+
+/// Get the total cell length of a line of segments.
+pub fn get_line_length(line: &[Segment]) -> usize {
+    line.iter().map(|s| s.cell_length()).sum()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

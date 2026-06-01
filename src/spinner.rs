@@ -238,6 +238,115 @@ pub const SPINNER_VERTICAL_BARS: SpinnerFrames = SpinnerFrames {
     interval: 0.08,
 };
 
+// ===========================================================================
+// Additional spinners from Python Rich (bringing total to 55+)
+// ===========================================================================
+
+pub const SPINNER_DOTS12: SpinnerFrames = SpinnerFrames {
+    frames: &["⣀", "⣤", "⣶", "⣿", "⣶", "⣤"],
+    interval: 0.08,
+};
+
+pub const SPINNER_DOTS13: SpinnerFrames = SpinnerFrames {
+    frames: &["⣼", "⣹", "⢻", "⠿", "⡟", "⣏", "⣧", "⣶"],
+    interval: 0.08,
+};
+
+pub const SPINNER_DOTS8_BIT: SpinnerFrames = SpinnerFrames {
+    frames: &["⠀", "⠁", "⠂", "⠃", "⠇", "⠏", "⠟", "⠿", "⡿", "⣿", "⣿", "⣿"],
+    interval: 0.08,
+};
+
+pub const SPINNER_SIMPLE_DOTS_SCROLLING: SpinnerFrames = SpinnerFrames {
+    frames: &[".  ", ".. ", "...", " ..", "  .", " ..", "...", ".. "],
+    interval: 0.2,
+};
+
+pub const SPINNER_STAR: SpinnerFrames = SpinnerFrames {
+    frames: &["✶", "✸", "✹", "✺", "✹", "✷"],
+    interval: 0.1,
+};
+
+pub const SPINNER_STAR2: SpinnerFrames = SpinnerFrames {
+    frames: &["+", "x", "*"],
+    interval: 0.12,
+};
+
+pub const SPINNER_FLIP: SpinnerFrames = SpinnerFrames {
+    frames: &["_", "_", "_", "-", "`", "`", "'", "¯", "_", "_", "_", "-"],
+    interval: 0.1,
+};
+
+pub const SPINNER_BALLOON: SpinnerFrames = SpinnerFrames {
+    frames: &[". ", "o ", "O ", "@ ", "* ", " "],
+    interval: 0.12,
+};
+
+pub const SPINNER_BALLOON2: SpinnerFrames = SpinnerFrames {
+    frames: &[".", "o", "O", "°", "O", "o", "."],
+    interval: 0.12,
+};
+
+pub const SPINNER_PIPE: SpinnerFrames = SpinnerFrames {
+    frames: &["┤", "┘", "┴", "└", "├", "┌", "┬", "┐"],
+    interval: 0.1,
+};
+
+pub const SPINNER_SQUARE_CORNERS: SpinnerFrames = SpinnerFrames {
+    frames: &["◰", "◳", "◲", "◱"],
+    interval: 0.12,
+};
+
+pub const SPINNER_CIRCLE_QUARTERS: SpinnerFrames = SpinnerFrames {
+    frames: &["◴", "◷", "◶", "◵"],
+    interval: 0.12,
+};
+
+pub const SPINNER_CIRCLE_HALVES: SpinnerFrames = SpinnerFrames {
+    frames: &["◐", "◓", "◑", "◒"],
+    interval: 0.12,
+};
+
+pub const SPINNER_AESTHETIC: SpinnerFrames = SpinnerFrames {
+    frames: &["▰", "▱"],
+    interval: 0.15,
+};
+
+pub const SPINNER_BRAILLE_LONG: SpinnerFrames = SpinnerFrames {
+    frames: &["⠁", "⠂", "⠄", "⠠", "⠐", "⠈", "⡀", "⢀"],
+    interval: 0.08,
+};
+
+pub const SPINNER_BRAILLE_CRAWL: SpinnerFrames = SpinnerFrames {
+    frames: &["⡀", "⡄", "⡆", "⡇", "⡏", "⡟", "⡿", "⣿"],
+    interval: 0.08,
+};
+
+pub const SPINNER_PULSE: SpinnerFrames = SpinnerFrames {
+    frames: &["█", "▓", "▒", "░"],
+    interval: 0.1,
+};
+
+pub const SPINNER_BOUNCE: SpinnerFrames = SpinnerFrames {
+    frames: &["⠁", "⠂", "⠄", "⠂"],
+    interval: 0.12,
+};
+
+pub const SPINNER_MATERIAL: SpinnerFrames = SpinnerFrames {
+    frames: &["◐", "◓", "◑", "◒"],
+    interval: 0.08,
+};
+
+pub const SPINNER_WINDOWS: SpinnerFrames = SpinnerFrames {
+    frames: &["/", "-", "\\", "|"],
+    interval: 0.1,
+};
+
+pub const SPINNER_SHADED_BLOCKS: SpinnerFrames = SpinnerFrames {
+    frames: &["░", "▒", "▓", "█", "▓", "▒"],
+    interval: 0.08,
+};
+
 /// Default spinner.
 pub const DEFAULT_SPINNER: SpinnerFrames = SPINNER_DOTS;
 
@@ -285,6 +394,27 @@ pub const SPINNERS: &[(&str, &SpinnerFrames)] = &[
     ("toggle", &SPINNER_TOGGLE),
     ("triangle", &SPINNER_TRIANGLE),
     ("verticalBars", &SPINNER_VERTICAL_BARS),
+    ("dots12", &SPINNER_DOTS12),
+    ("dots13", &SPINNER_DOTS13),
+    ("dots8Bit", &SPINNER_DOTS8_BIT),
+    ("simpleDotsScrolling", &SPINNER_SIMPLE_DOTS_SCROLLING),
+    ("star", &SPINNER_STAR),
+    ("star2", &SPINNER_STAR2),
+    ("flip", &SPINNER_FLIP),
+    ("balloon", &SPINNER_BALLOON),
+    ("balloon2", &SPINNER_BALLOON2),
+    ("pipe", &SPINNER_PIPE),
+    ("squareCorners", &SPINNER_SQUARE_CORNERS),
+    ("circleQuarters", &SPINNER_CIRCLE_QUARTERS),
+    ("circleHalves", &SPINNER_CIRCLE_HALVES),
+    ("aesthetic", &SPINNER_AESTHETIC),
+    ("brailleLong", &SPINNER_BRAILLE_LONG),
+    ("brailleCrawl", &SPINNER_BRAILLE_CRAWL),
+    ("pulse", &SPINNER_PULSE),
+    ("bounce", &SPINNER_BOUNCE),
+    ("material", &SPINNER_MATERIAL),
+    ("windows", &SPINNER_WINDOWS),
+    ("shadedBlocks", &SPINNER_SHADED_BLOCKS),
 ];
 
 /// Get a spinner by name (case-insensitive).
@@ -581,4 +711,23 @@ mod tests {
     fn test_default_spinner_is_dots() {
         assert_eq!(DEFAULT_SPINNER.frames, SPINNER_DOTS.frames);
     }
+
+    #[test]
+    fn test_spinner_dots12() { assert!(!SPINNER_DOTS12.frames.is_empty()); assert!(SPINNER_DOTS12.interval > 0.0); }
+    #[test]
+    fn test_spinner_dots13() { assert!(!SPINNER_DOTS13.frames.is_empty()); assert!(SPINNER_DOTS13.interval > 0.0); }
+    #[test]
+    fn test_spinner_star() { assert!(!SPINNER_STAR.frames.is_empty()); assert!(SPINNER_STAR.interval > 0.0); }
+    #[test]
+    fn test_spinner_flip() { assert!(!SPINNER_FLIP.frames.is_empty()); assert!(SPINNER_FLIP.interval > 0.0); }
+    #[test]
+    fn test_spinner_balloon() { assert!(!SPINNER_BALLOON.frames.is_empty()); assert!(SPINNER_BALLOON.interval > 0.0); }
+    #[test]
+    fn test_spinner_pipe() { assert!(!SPINNER_PIPE.frames.is_empty()); assert!(SPINNER_PIPE.interval > 0.0); }
+    #[test]
+    fn test_spinner_pulse() { assert!(!SPINNER_PULSE.frames.is_empty()); assert!(SPINNER_PULSE.interval > 0.0); }
+    #[test]
+    fn test_spinner_windows() { assert!(!SPINNER_WINDOWS.frames.is_empty()); assert!(SPINNER_WINDOWS.interval > 0.0); }
+    #[test]
+    fn test_spinner_shaded_blocks() { assert!(!SPINNER_SHADED_BLOCKS.frames.is_empty()); assert!(SPINNER_SHADED_BLOCKS.interval > 0.0); }
 }
