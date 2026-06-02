@@ -50,6 +50,7 @@ use std::io::{self, Write};
 use std::time::Instant;
 
 use crate::console::{ConsoleOptions, DynRenderable, Renderable};
+use crate::segment::Segment;
 
 /// A writer that captures output for live display.
 pub struct LiveWriter {
@@ -84,6 +85,49 @@ impl Write for LiveWriter {
     }
 }
 
+/// A hook that transforms render output.
+///
+/// [`RenderHook`] provides a way to intercept and modify the rendered
+/// segment lines before they are written to the terminal. Multiple hooks
+/// can be registered on a [`Live`] display and are applied in order.
+///
+/// # Example
+///
+/// ```rust,no_run
+/// use rusty_rich::live::RenderHook;
+/// use rusty_rich::Segment;
+///
+/// let hook = RenderHook::new(|lines| {
+///     // Reverse the order of displayed lines
+///     let mut reversed = lines.to_vec();
+///     reversed.reverse();
+///     reversed
+/// });
+/// ```
+pub struct RenderHook {
+    hook: Box<dyn Fn(&[Vec<Segment>]) -> Vec<Vec<Segment>> + Send>,
+}
+
+impl RenderHook {
+    /// Create a new [`RenderHook`] with the given transformation function.
+    ///
+    /// The function receives the current rendered lines of segments and
+    /// returns the modified lines.
+    pub fn new<F>(hook: F) -> Self
+    where
+        F: Fn(&[Vec<Segment>]) -> Vec<Vec<Segment>> + Send + 'static,
+    {
+        Self {
+            hook: Box::new(hook),
+        }
+    }
+
+    /// Apply this hook to the given segments, returning the transformed segments.
+    pub fn apply(&self, segments: &[Vec<Segment>]) -> Vec<Vec<Segment>> {
+        (self.hook)(segments)
+    }
+}
+
 /// Manages a live-updating region of the terminal.
 pub struct Live {
     renderable: Option<DynRenderable>,
@@ -91,11 +135,13 @@ pub struct Live {
     auto_refresh: bool,
     refresh_per_second: f64,
     transient: bool,
-    started: Option<Instant>,
+    started: bool,
+    started_at: Option<Instant>,
     previous_line_count: usize,
     redirect_stdout: bool,
     redirect_stderr: bool,
     writers: Vec<LiveWriter>,
+    render_hooks: Vec<RenderHook>,
 }
 
 impl std::fmt::Debug for Live {
@@ -116,11 +162,13 @@ impl Live {
             auto_refresh: true,
             refresh_per_second: 4.0,
             transient: false,
-            started: None,
+            started: false,
+            started_at: None,
             previous_line_count: 0,
             redirect_stdout: true,
             redirect_stderr: true,
             writers: Vec::new(),
+            render_hooks: Vec::new(),
         }
     }
 
@@ -147,7 +195,8 @@ impl Live {
 
     /// Start the live display: enter alternate screen (if configured) and hide cursor.
     pub fn start(&mut self) -> io::Result<()> {
-        self.started = Some(Instant::now());
+        self.started = true;
+        self.started_at = Some(Instant::now());
         if self.screen {
             write!(io::stdout(), "\x1b[?1049h")?;
         }
@@ -167,7 +216,8 @@ impl Live {
         }
         write!(io::stdout(), "\x1b[?25h")?;
         io::stdout().flush()?;
-        self.started = None;
+        self.started = false;
+        self.started_at = None;
         Ok(())
     }
 
@@ -178,6 +228,9 @@ impl Live {
     }
 
     /// Re-render the current content in place (cursor is moved back to overwrite previous output).
+    ///
+    /// If any [`RenderHook`]s are registered, they are applied to the rendered
+    /// segment lines before the output is written to the terminal.
     pub fn refresh(&mut self) -> io::Result<()> {
         if let Some(ref renderable) = self.renderable {
             let opts = ConsoleOptions::default();
@@ -187,8 +240,24 @@ impl Live {
                 write!(io::stdout(), "\x1b[{}F", self.previous_line_count)?;
             }
 
-            let ansi = result.to_ansi();
-            let line_count = ansi.lines().count();
+            // Apply render hooks to transform segment lines before output
+            let (ansi, line_count) = if !self.render_hooks.is_empty() {
+                let mut lines = result.lines.clone();
+                for hook in &self.render_hooks {
+                    lines = hook.apply(&lines);
+                }
+                let mut out = String::new();
+                for line in &lines {
+                    for seg in line {
+                        out.push_str(&seg.to_ansi());
+                    }
+                }
+                (out, lines.len())
+            } else {
+                let s = result.to_ansi();
+                let c = s.lines().count();
+                (s, c)
+            };
 
             write!(io::stdout(), "{ansi}")?;
             if line_count < self.previous_line_count {
@@ -211,10 +280,138 @@ impl Live {
         }
         Ok(())
     }
+
+    /// Check if the live display is currently running.
+    pub fn is_started(&self) -> bool {
+        self.started
+    }
+
+    /// Get a reference to the current renderable.
+    ///
+    /// # Panics
+    ///
+    /// Panics if no renderable has been set (this should not happen with
+    /// normal usage, as `Live::new` always creates one).
+    pub fn get_renderable(&self) -> &dyn Renderable {
+        self.renderable.as_ref().unwrap() as &dyn Renderable
+    }
+
+    /// Get the current renderable being displayed.
+    ///
+    /// # Panics
+    ///
+    /// Panics if no renderable has been set (this should not happen with
+    /// normal usage, as `Live::new` always creates one).
+    pub fn renderable(&self) -> &dyn Renderable {
+        self.renderable.as_ref().unwrap() as &dyn Renderable
+    }
+
+    /// Process multiple renderables through the Live display pipeline.
+    ///
+    /// Each renderable is rendered with the given options, and the resulting
+    /// segment lines are collected into a single vector.
+    pub fn process_renderables(
+        &self,
+        renderables: &[Box<dyn Renderable>],
+        options: &ConsoleOptions,
+    ) -> Vec<Vec<Segment>> {
+        let mut all_lines = Vec::new();
+        for renderable in renderables {
+            let result = renderable.render(options);
+            all_lines.extend(result.lines);
+        }
+        all_lines
+    }
+
+    /// Add a render hook to the live display.
+    ///
+    /// Hooks are applied in registration order during each refresh, allowing
+    /// transformation of the rendered segment lines before they are output.
+    pub fn add_render_hook(&mut self, hook: RenderHook) {
+        self.render_hooks.push(hook);
+    }
 }
 
 impl Drop for Live {
     fn drop(&mut self) {
         let _ = self.stop();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::text::Text;
+
+    #[test]
+    fn test_is_started() {
+        let mut live = Live::new(Text::new("test"));
+        assert!(!live.is_started());
+        live.start().unwrap();
+        assert!(live.is_started());
+        live.stop().unwrap();
+        assert!(!live.is_started());
+    }
+
+    #[test]
+    fn test_renderable_accessor() {
+        let live = Live::new(Text::new("hello"));
+        let r = live.get_renderable();
+        // Verify we get a valid reference by rendering it
+        let opts = ConsoleOptions::default();
+        let result = r.render(&opts);
+        assert!(!result.to_ansi().is_empty());
+    }
+
+    #[test]
+    fn test_render_hook_basic() {
+        let hook = RenderHook::new(|segments| segments.to_vec());
+        let input = vec![vec![Segment::new("test")]];
+        let output = hook.apply(&input);
+        assert_eq!(output.len(), 1);
+        assert_eq!(output[0][0].text, "test");
+    }
+
+    #[test]
+    fn test_render_hook_transform() {
+        let hook = RenderHook::new(|segments| {
+            let mut transformed = segments.to_vec();
+            transformed.push(vec![Segment::new("appended")]);
+            transformed
+        });
+        let input = vec![vec![Segment::new("original")]];
+        let output = hook.apply(&input);
+        assert_eq!(output.len(), 2);
+        assert_eq!(output[1][0].text, "appended");
+    }
+
+    #[test]
+    fn test_process_renderables() {
+        let live = Live::new(Text::new("dummy"));
+        let opts = ConsoleOptions::default();
+        let renderables: Vec<Box<dyn Renderable>> = vec![
+            Box::new(Text::new("first")),
+            Box::new(Text::new("second")),
+        ];
+        let lines = live.process_renderables(&renderables, &opts);
+        assert!(!lines.is_empty());
+    }
+
+    #[test]
+    fn test_start_stop_cycle() {
+        let mut live = Live::new(Text::new("test"));
+        assert!(!live.is_started());
+        live.start().unwrap();
+        assert!(live.is_started());
+        live.stop().unwrap();
+        assert!(!live.is_started());
+    }
+
+    #[test]
+    fn test_add_render_hook() {
+        let mut live = Live::new(Text::new("test"));
+        let hook = RenderHook::new(|segments| segments.to_vec());
+        live.add_render_hook(hook);
+        assert_eq!(live.render_hooks.len(), 1);
     }
 }

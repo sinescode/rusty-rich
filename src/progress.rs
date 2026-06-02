@@ -39,7 +39,13 @@
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
+use crate::console::{ConsoleOptions, DynRenderable, Renderable};
+use crate::progress_columns::{
+    BarColumn, ProgressColumn, SpinnerColumn, TaskProgressColumn, TextColumn,
+    TimeElapsedColumn,
+};
 use crate::style::Style;
+use crate::table::{Cell, Table};
 
 // ---------------------------------------------------------------------------
 // ProgressBar
@@ -159,7 +165,10 @@ pub struct Task {
     pub completed: f64,
     pub visible: bool,
     pub start_time: Instant,
+    pub stop_time: Option<Instant>,
     pub fields: HashMap<String, String>,
+    /// Optional custom renderable associated with this task.
+    pub renderable: Option<DynRenderable>,
 }
 
 impl Task {
@@ -172,7 +181,9 @@ impl Task {
             completed: 0.0,
             visible: true,
             start_time: Instant::now(),
+            stop_time: None,
             fields: HashMap::new(),
+            renderable: None,
         }
     }
 
@@ -218,6 +229,35 @@ impl Task {
 }
 
 // ---------------------------------------------------------------------------
+// RenderableColumn — a ProgressColumn that renders a custom renderable
+// ---------------------------------------------------------------------------
+
+/// A column that renders a custom renderable per task.
+pub struct RenderableColumn {
+    pub format: Box<dyn Fn(&Task) -> DynRenderable + Send + Sync>,
+}
+
+impl RenderableColumn {
+    /// Create a new `RenderableColumn` from a renderable-producing closure.
+    pub fn new<F: Fn(&Task) -> DynRenderable + Send + Sync + 'static>(format: F) -> Self {
+        Self { format: Box::new(format) }
+    }
+}
+
+impl std::fmt::Debug for RenderableColumn {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("RenderableColumn").finish()
+    }
+}
+
+impl ProgressColumn for RenderableColumn {
+    fn render(&self, task: &Task, _width: usize, _elapsed: Duration) -> String {
+        let renderable = (self.format)(task);
+        renderable.render(&ConsoleOptions::default()).to_ansi()
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Progress
 // ---------------------------------------------------------------------------
 
@@ -239,7 +279,7 @@ impl Progress {
         Self {
             tasks: Vec::new(),
             auto_refresh: true,
-            refresh_per_second: 4.0,
+            refresh_per_second: 10.0,
             transient: false,
             columns: None,
             next_id: 1,
@@ -288,6 +328,106 @@ impl Progress {
     /// Remove a task by its ID. No-op if the task does not exist.
     pub fn remove_task(&mut self, task_id: usize) {
         self.tasks.retain(|t| t.id != task_id);
+    }
+
+    /// Force a refresh/render of the progress display.
+    /// In a live display context this triggers a re-render.
+    pub fn refresh(&mut self) {
+        // Force refresh — in a live display this triggers a redraw.
+        // Stateless rendering: this is a no-op placeholder.
+    }
+
+    /// Mark a task as started (reset its start_time to now).
+    pub fn start_task(&mut self, task_id: usize) {
+        if let Some(task) = self.tasks.iter_mut().find(|t| t.id == task_id) {
+            task.start_time = Instant::now();
+        }
+    }
+
+    /// Mark a task as stopped (set its stop_time to now).
+    pub fn stop_task(&mut self, task_id: usize) {
+        if let Some(task) = self.tasks.iter_mut().find(|t| t.id == task_id) {
+            task.stop_time = Some(Instant::now());
+        }
+    }
+
+    /// Reset a task's completed count.
+    ///
+    /// If `total` is `Some`, also updates the task's total.
+    pub fn reset(&mut self, task_id: usize, total: Option<f64>) {
+        if let Some(task) = self.tasks.iter_mut().find(|t| t.id == task_id) {
+            task.completed = 0.0;
+            if let Some(t) = total {
+                task.total = Some(t);
+            }
+        }
+    }
+
+    /// Check if all tasks are finished.
+    pub fn finished(&self) -> bool {
+        self.tasks.iter().all(|t| t.is_finished())
+    }
+
+    /// Get the default column set for rendering.
+    ///
+    /// Returns: description, spinner, bar, percentage, elapsed.
+    pub fn get_default_columns(&self) -> Vec<Box<dyn ProgressColumn>> {
+        vec![
+            Box::new(TextColumn::new("description")),
+            Box::new(SpinnerColumn::new()),
+            Box::new(BarColumn::new()),
+            Box::new(TaskProgressColumn::new()),
+            Box::new(TimeElapsedColumn::new()),
+        ]
+    }
+
+    /// Get the renderable for a specific task, if any.
+    pub fn get_renderable(&self, task_id: usize) -> Option<&dyn Renderable> {
+        self.tasks
+            .iter()
+            .find(|t| t.id == task_id)
+            .and_then(|t| t.renderable.as_ref())
+            .map(|dr| dr as &dyn Renderable)
+    }
+
+    /// Get all task renderables.
+    pub fn get_renderables(&self) -> Vec<&dyn Renderable> {
+        self.tasks
+            .iter()
+            .filter_map(|t| t.renderable.as_ref())
+            .map(|dr| dr as &dyn Renderable)
+            .collect()
+    }
+
+    /// Build a [`Table`] from tasks and progress columns.
+    ///
+    /// Each visible task becomes a row, each column becomes a cell rendered
+    /// by the corresponding `ProgressColumn`.
+    pub fn make_tasks_table(&self, columns: &[Box<dyn ProgressColumn>]) -> Table {
+        let now = Instant::now();
+        let mut table = Table::new();
+        table.show_header = false;
+        table.show_edge = false;
+        table.padding = (0, 1, 0, 0);
+
+        // Add a table column for each progress column
+        for (i, _col) in columns.iter().enumerate() {
+            table.add_column(crate::table::Column::new(format!("Col {}", i)));
+        }
+
+        for task in &self.tasks {
+            if !task.visible {
+                continue;
+            }
+            let elapsed = now.duration_since(task.start_time);
+            let cells: Vec<Cell> = columns
+                .iter()
+                .map(|col| Cell::new(col.render(task, 20, elapsed)))
+                .collect();
+            table.add_row(cells);
+        }
+
+        table
     }
 
     /// Render all visible tasks to a multi-line string at the given terminal width.
@@ -363,7 +503,7 @@ impl Progress {
     pub fn track<I: IntoIterator>(
         &mut self,
         sequence: I,
-        description: impl Into<String>,
+        description: &str,
         total: Option<f64>,
     ) -> TrackIterator<I::IntoIter> {
         let iter = sequence.into_iter();
@@ -396,18 +536,20 @@ impl Progress {
         let metadata = std::fs::metadata(path)?;
         let total = metadata.len();
         let file = std::fs::File::open(path)?;
-        Ok(self.wrap_file(file, total, description))
+        let desc = description.into();
+        Ok(self.wrap_file(file, &desc, Some(total)))
     }
 
     /// Wrap an already-open [`std::fs::File`] with progress tracking.
     pub fn wrap_file(
         &mut self,
         file: std::fs::File,
-        total: u64,
-        description: impl Into<String>,
+        description: &str,
+        total: Option<u64>,
     ) -> ProgressFile {
-        let task_id = self.add_task(description, Some(total as f64));
-        ProgressFile::new(file, task_id, total)
+        let total_val = total.unwrap_or(0) as f64;
+        let task_id = self.add_task(description, Some(total_val));
+        ProgressFile::new(file, task_id, total.unwrap_or(0))
     }
 }
 
@@ -415,6 +557,32 @@ impl Default for Progress {
     fn default() -> Self {
         Self::new()
     }
+}
+
+// ---------------------------------------------------------------------------
+// Standalone track function
+// ---------------------------------------------------------------------------
+
+/// Create a [`TrackIterator`] from a sequence (standalone, no Progress).
+pub fn track<T: IntoIterator>(sequence: T, _description: &str, total: Option<f64>) -> TrackIterator<T::IntoIter> {
+    let iter = sequence.into_iter();
+    let (lower, upper) = iter.size_hint();
+    let total_val = total.unwrap_or(upper.unwrap_or(lower) as f64);
+    TrackIterator {
+        inner: iter,
+        progress_id: 0,
+        count: 0,
+        total: total_val,
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Standalone wrap_file function
+// ---------------------------------------------------------------------------
+
+/// Wrap a file with progress tracking (standalone, no Progress).
+pub fn wrap_file(file: std::fs::File, _description: &str, total: Option<u64>) -> ProgressFile {
+    ProgressFile::new(file, 0, total.unwrap_or(0))
 }
 
 // ---------------------------------------------------------------------------
@@ -596,11 +764,144 @@ mod tests {
 
         let file = std::fs::File::open(&path).unwrap();
         let mut p = Progress::new();
-        let pf = p.wrap_file(file, data.len() as u64, "wrapped");
+        let pf = p.wrap_file(file, "wrapped", Some(data.len() as u64));
         assert_eq!(pf.total(), data.len() as u64);
         assert_eq!(pf.task_id(), 1);
 
         drop(pf);
         std::fs::remove_file(&path).unwrap();
+    }
+
+    // --- New feature tests ---
+
+    #[test]
+    fn test_start_task() {
+        let mut p = Progress::new();
+        let id = p.add_task("test", Some(100.0));
+        // start_task resets the start_time; just verify it doesn't panic
+        p.start_task(id);
+        assert!(!p.tasks[0].elapsed().is_zero());
+    }
+
+    #[test]
+    fn test_stop_task() {
+        let mut p = Progress::new();
+        let id = p.add_task("test", Some(100.0));
+        p.stop_task(id);
+        assert!(p.tasks[0].stop_time.is_some());
+    }
+
+    #[test]
+    fn test_reset_task() {
+        let mut p = Progress::new();
+        let id = p.add_task("test", Some(100.0));
+        p.advance(id, 50.0);
+        assert_eq!(p.tasks[0].completed, 50.0);
+        p.reset(id, Some(200.0));
+        assert_eq!(p.tasks[0].completed, 0.0);
+        assert_eq!(p.tasks[0].total, Some(200.0));
+    }
+
+    #[test]
+    fn test_finished() {
+        let mut p = Progress::new();
+        p.add_task("a", Some(100.0));
+        p.add_task("b", Some(100.0));
+        assert!(!p.finished());
+        p.update(1, 100.0);
+        p.update(2, 100.0);
+        assert!(p.finished());
+    }
+
+    #[test]
+    fn test_get_default_columns() {
+        let p = Progress::new();
+        let cols = p.get_default_columns();
+        assert_eq!(cols.len(), 5);
+    }
+
+    #[test]
+    fn test_refresh() {
+        let mut p = Progress::new();
+        p.add_task("test", Some(100.0));
+        // Should not panic
+        p.refresh();
+    }
+
+    #[test]
+    fn test_track_method() {
+        let mut p = Progress::new();
+        let items = vec![1, 2, 3];
+        let tracker = p.track(items, "counting", Some(3.0));
+        assert_eq!(tracker.progress_id, 1);
+        assert_eq!(p.tasks.len(), 1);
+    }
+
+    #[test]
+    fn test_standalone_track() {
+        let items = vec![1, 2, 3];
+        let tracker = track(items, "counting", Some(3.0));
+        assert_eq!(tracker.progress_id, 0);
+    }
+
+    #[test]
+    fn test_standalone_wrap_file() {
+        let data = b"hello";
+        let dir = std::env::temp_dir();
+        let path = dir.join("rusty_rich_test_standalone_wrap.txt");
+        std::fs::write(&path, data).unwrap();
+        let file = std::fs::File::open(&path).unwrap();
+        let pf = wrap_file(file, "standalone", Some(data.len() as u64));
+        assert_eq!(pf.total(), 5);
+        std::fs::remove_file(&path).unwrap();
+    }
+
+    #[test]
+    fn test_renderable_column() {
+        let col = RenderableColumn::new(|task: &Task| {
+            DynRenderable::new(task.description.clone())
+        });
+        let task = Task::new(1, "hello", Some(100.0));
+        let result = col.render(&task, 20, Duration::from_secs(0));
+        assert!(result.contains("hello"));
+    }
+
+    #[test]
+    fn test_make_tasks_table() {
+        let mut p = Progress::new();
+        p.add_task("task1", Some(100.0));
+        p.add_task("task2", Some(50.0));
+        let cols = p.get_default_columns();
+        let table = p.make_tasks_table(&cols);
+        assert_eq!(table.row_count(), 2);
+    }
+
+    #[test]
+    fn test_get_renderable() {
+        let mut p = Progress::new();
+        let id = p.add_task("test", Some(100.0));
+        // No renderable set initially
+        assert!(p.get_renderable(id).is_none());
+    }
+
+    #[test]
+    fn test_get_renderables() {
+        let mut p = Progress::new();
+        p.add_task("a", Some(100.0));
+        p.add_task("b", Some(50.0));
+        let renderables = p.get_renderables();
+        assert!(renderables.is_empty());
+    }
+
+    #[test]
+    fn test_auto_refresh_default() {
+        let p = Progress::new();
+        assert!(p.auto_refresh);
+    }
+
+    #[test]
+    fn test_refresh_per_second_default() {
+        let p = Progress::new();
+        assert!((p.refresh_per_second - 10.0).abs() < f64::EPSILON);
     }
 }

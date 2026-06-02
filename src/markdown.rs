@@ -298,6 +298,23 @@ impl Renderable for MarkdownRender {
                     table_rows.push(current_row.clone());
                     current_row.clear();
                 }
+                Event::Start(Tag::Image { dest_url, title, .. }) => {
+                    // Render image as a styled placeholder with alt text and URL
+                    let image_style = Self::get_style("markdown.image");
+                    let title_str = if title.is_empty() {
+                        String::new()
+                    } else {
+                        format!(" \"{title}\"")
+                    };
+                    let image_text = format!("🖼 [Image: {dest_url}{title_str}]");
+                    current_line.push(Segment::styled(image_text, image_style));
+                    current_line.push(Segment::line());
+                    lines.push(current_line.clone());
+                    current_line.clear();
+                }
+                Event::End(TagEnd::Image) => {
+                    // Image is self-contained; handled on Start
+                }
                 Event::Start(Tag::TableCell) => {
                     current_cell_text = String::new();
                 }

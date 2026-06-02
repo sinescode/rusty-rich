@@ -940,7 +940,8 @@ fn dyn_renderable_creation() {
 fn styled_text_pipeline() {
     // Full pipeline: Style → Text → Segment → ANSI
     let style = Style::new().bold(true).color(Color::parse("green").unwrap());
-    let text = Text::styled("Success!", style.clone());
+    let mut text = Text::new("Success!");
+    text.style = style.clone();
     assert_eq!(text.plain, "Success!");
 
     let seg = Segment::styled(text.plain.clone(), style);

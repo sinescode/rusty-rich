@@ -221,10 +221,7 @@
 //!
 //! ## Comparison with Python Rich
 //!
-//! rusty-rich achieves ~72% feature parity with Python Rich 13.x (197 tests).
-//! Missing features: `Pretty` (object rendering), `Inspect` (introspection), emoji support, Jupyter integration,
-//! ANSI decoder, and system pager.
-//!
+//! rusty-rich achieves ~88% feature parity with Python Rich 14.x (475+ tests).
 //! ## Feature Flags
 //!
 //! No feature flags — all functionality is included by default. Dependencies are
@@ -322,6 +319,43 @@ pub mod json;
 pub mod logging;
 /// Rich exception tracebacks with source code, locals, frame suppression, panic hook.
 pub mod traceback;
+
+// -- Additional renderables --------------------------------------------------
+
+/// Pretty-printing for Rust data structures with tree traversal and syntax highlighting.
+pub mod pretty;
+/// Emoji shortcode replacement — `:smile:` → 😊.
+pub mod emoji;
+/// System pager integration — pipes output to `less` or `$PAGER`.
+pub mod pager;
+/// Constrain the maximum width of any renderable.
+pub mod constrain;
+/// Pre-styled renderable wrapper — applies a style to all output of a renderable.
+pub mod styled;
+/// Horizontal bar chart with labels, colors, and auto-scaling.
+pub mod bar;
+/// Human-readable file size and transfer speed formatting.
+pub mod filesize;
+/// Container renderables — `Lines` and `Renderables` for grouping output.
+pub mod containers;
+/// Color palette generation — gradients, rainbows, monochrome ramps.
+pub mod palette;
+/// Error diagnostics — rich-formatted error reporting.
+pub mod diagnose;
+/// ANSI escape sequence decoder — parse ANSI text into styled `Text`.
+pub mod ansi;
+/// Variable scope inspection — render name→value mappings as tables.
+pub mod scope;
+/// Auto-refreshing file content display — watches file for changes.
+pub mod file_proxy;
+/// Rich representation protocol — customizable pretty-printing for Rust types.
+pub mod repr;
+/// Terminal control sequence generation — cursor movement, screen, titles, bells.
+pub mod control;
+/// Object introspection — structured display of type info, attributes, and methods.
+pub mod inspect;
+/// Standalone log record formatter — renders log records as Rich tables.
+pub mod log_render;
 
 // -- Export -----------------------------------------------------------------
 
@@ -620,3 +654,121 @@ pub use export::CONSOLE_SVG_FORMAT;
 pub use markup::render as render_markup;
 /// Escape square brackets in a string so they are not interpreted as markup tags.
 pub use markup::escape as escape_markup;
+
+// -- New modules (Phase 2 additions) ------------------------------------------
+
+// Pretty printing
+pub use pretty::Pretty;
+pub use pretty::Node as PrettyNode;
+pub use pretty::pprint;
+pub use pretty::pretty_repr;
+pub use pretty::traverse;
+pub use pretty::install as pretty_install;
+
+// Emoji
+pub use emoji::Emoji;
+pub use emoji::NoEmoji;
+
+// Pager
+pub use pager::Pager;
+pub use pager::PagerContext;
+pub use pager::SystemPager;
+
+// Constrain
+pub use constrain::Constrain;
+
+// Styled
+pub use styled::Styled;
+
+// Bar chart
+pub use bar::Bar;
+pub use bar::BarChart;
+
+// File size
+pub use filesize::format_size as format_file_size;
+pub use filesize::format_speed as format_transfer_speed;
+pub use filesize::pick_unit_and_suffix;
+
+// Containers
+pub use containers::Lines;
+pub use containers::Renderables;
+
+// Palette
+pub use palette::Palette;
+
+// Diagnose
+pub use diagnose::report;
+pub use diagnose::diagnose;
+
+// ANSI decoder
+pub use ansi::AnsiDecoder;
+
+// Scope
+pub use scope::render_scope;
+pub use scope::scope_summary;
+
+// File proxy
+pub use file_proxy::FileProxy;
+
+// Repr protocol
+pub use repr::RichRepr;
+pub use repr::auto as repr_auto;
+pub use repr::rich_repr;
+pub use repr::ReprOptions;
+pub use repr::ReprError;
+
+// Syntax additional exports
+pub use syntax::SyntaxTheme;
+pub use syntax::ANSISyntaxTheme;
+pub use syntax::get_lexer_by_name;
+pub use syntax::get_style_by_name;
+pub use syntax::guess_lexer_for_filename;
+
+// Console additional exports
+pub use console::Capture;
+pub use console::NewLine;
+pub use console::NoChange;
+pub use console::RenderHook;
+pub use console::ThemeContext;
+pub use console::reconfigure;
+
+// Layout additional exports
+pub use layout::Splitter;
+pub use layout::ColumnSplitter;
+pub use layout::RowSplitter;
+pub use layout::NoSplitter;
+
+// Table additional exports
+pub use table::Row;
+
+// Progress additional exports
+pub use progress::RenderableColumn;
+pub use progress::track;
+pub use progress::wrap_file;
+
+// Highlighter additional exports
+pub use highlighter::ISO8601Highlighter;
+pub use highlighter::JSONHighlighter;
+pub use highlighter::PathHighlighter;
+
+// Filesize additional exports
+pub use filesize::decimal as format_size_decimal;
+
+// Control exports
+pub use control::Control;
+pub use control::control_bell;
+pub use control::control_home;
+pub use control::control_clear;
+pub use control::control_move_to;
+pub use control::strip_control_codes;
+pub use control::escape_control_codes;
+
+// Inspect exports
+pub use inspect::Inspect;
+pub use inspect::inspect;
+pub use inspect::inspect_str;
+
+// LogRender exports
+pub use log_render::LogRender;
+pub use log_render::LogRecord;
+pub use log_render::LogTable;

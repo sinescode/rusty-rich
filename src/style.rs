@@ -34,7 +34,7 @@ use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::sync::atomic::{AtomicU32, Ordering};
 
-use crate::color::Color;
+use crate::color::{Color, ColorType, EIGHT_BIT_PALETTE, STANDARD_COLOR_NAMES, STANDARD_PALETTE};
 
 static NEXT_ID: AtomicU32 = AtomicU32::new(0);
 
@@ -106,6 +106,23 @@ pub const STYLE_BITS: &[u32] = &[
     Attributes::STRIKE, Attributes::UNDERLINE2, Attributes::FRAME,
     Attributes::ENCIRCLE, Attributes::OVERLINE, Attributes::BLINK2,
     Attributes::CONCEAL,
+];
+
+/// All 13 style attribute (name, bit) pairs for iteration.
+pub const STYLE_ATTRIBUTES: &[(&str, u32)] = &[
+    ("bold", Attributes::BOLD),
+    ("dim", Attributes::DIM),
+    ("italic", Attributes::ITALIC),
+    ("underline", Attributes::UNDERLINE),
+    ("blink", Attributes::BLINK),
+    ("reverse", Attributes::REVERSE),
+    ("strike", Attributes::STRIKE),
+    ("underline2", Attributes::UNDERLINE2),
+    ("frame", Attributes::FRAME),
+    ("encircle", Attributes::ENCIRCLE),
+    ("overline", Attributes::OVERLINE),
+    ("blink2", Attributes::BLINK2),
+    ("conceal", Attributes::CONCEAL),
 ];
 
 impl fmt::Display for Attributes {
@@ -377,6 +394,15 @@ impl Style {
         }
     }
 
+    /// Check if the italic attribute is explicitly set to `true`.
+    pub fn get_italic(&self) -> Option<bool> {
+        if self.set_attributes & Attributes::ITALIC != 0 {
+            Some(self.attributes.get(Attributes::ITALIC))
+        } else {
+            None
+        }
+    }
+
     /// Merge two styles: `self` is the base, `other` overrides.
     pub fn combine(&self, other: &Style) -> Style {
         if other.is_null {
@@ -525,6 +551,209 @@ impl Style {
     pub fn reset_ansi(&self) -> &'static str {
         "\x1b[0m"
     }
+
+    // -- chaining --------------------------------------------------------------
+
+    /// Create a chain-of-styles fallback. When `self` has a value set, use it;
+    /// otherwise fall through to `other`.
+    pub fn chain(&self, other: &Style) -> Style {
+        let mut result = Style::new();
+        result.color = self.color.clone().or_else(|| other.color.clone());
+        result.bgcolor = self.bgcolor.clone().or_else(|| other.bgcolor.clone());
+        result.link = self.link.clone().or_else(|| other.link.clone());
+        result.meta = self.meta.clone().or_else(|| other.meta.clone());
+        for &bit in STYLE_BITS {
+            if self.set_attributes & bit != 0 {
+                result.set_attributes |= bit;
+                result.attributes.set(bit, self.attributes.get(bit));
+            } else if other.set_attributes & bit != 0 {
+                result.set_attributes |= bit;
+                result.attributes.set(bit, other.attributes.get(bit));
+            }
+        }
+        result
+    }
+
+    // -- copy / clear ----------------------------------------------------------
+
+    /// Explicit clone (delegates to Clone, named for Python parity).
+    pub fn copy(&self) -> Style {
+        self.clone()
+    }
+
+    /// Clear the meta field and link field, returning self for chaining.
+    pub fn clear_meta_and_links(&mut self) -> &mut Self {
+        self.meta = None;
+        self.link = None;
+        self
+    }
+
+    // -- constructors ----------------------------------------------------------
+
+    /// Create a style with just a foreground color set.
+    pub fn from_color(color: Color) -> Self {
+        Self::new().color(color)
+    }
+
+    /// Create a style with metadata.
+    pub fn from_meta(meta: Vec<u8>) -> Self {
+        let mut s = Self::new();
+        s.meta = Some(meta);
+        s
+    }
+
+    // -- html export -----------------------------------------------------------
+
+    /// Generate CSS style string for HTML export.
+    pub fn get_html_style(&self, _theme: Option<&crate::export::ExportTheme>) -> String {
+        if self.is_null {
+            return String::new();
+        }
+        let mut parts: Vec<String> = Vec::new();
+
+        if let Some(ref c) = self.color {
+            let hex = color_to_css_hex(c);
+            if !hex.is_empty() {
+                parts.push(format!("color: {}", hex));
+            }
+        }
+        if let Some(ref c) = self.bgcolor {
+            let hex = color_to_css_hex(c);
+            if !hex.is_empty() {
+                parts.push(format!("background-color: {}", hex));
+            }
+        }
+        if self.set_attributes & Attributes::BOLD != 0 && self.attributes.get(Attributes::BOLD) {
+            parts.push("font-weight: bold".into());
+        }
+        if self.set_attributes & Attributes::ITALIC != 0 && self.attributes.get(Attributes::ITALIC) {
+            parts.push("font-style: italic".into());
+        }
+
+        // text-decoration: combine underline and strike
+        let mut decor: Vec<&str> = Vec::new();
+        if self.set_attributes & Attributes::UNDERLINE != 0
+            && self.attributes.get(Attributes::UNDERLINE)
+        {
+            decor.push("underline");
+        }
+        if self.set_attributes & Attributes::UNDERLINE2 != 0
+            && self.attributes.get(Attributes::UNDERLINE2)
+        {
+            decor.push("underline");
+        }
+        if self.set_attributes & Attributes::STRIKE != 0
+            && self.attributes.get(Attributes::STRIKE)
+        {
+            decor.push("line-through");
+        }
+        if !decor.is_empty() {
+            parts.push(format!("text-decoration: {}", decor.join(" ")));
+        }
+
+        if parts.is_empty() {
+            String::new()
+        } else {
+            parts.join("; ")
+        }
+    }
+
+    // -- normalize -------------------------------------------------------------
+
+    /// Return a "normalized" style: remove negative (explicitly false) attributes
+    /// that just reset inherited ones. Only keep explicitly true attributes and
+    /// colors.
+    pub fn normalize(&self) -> Style {
+        let mut s = Style::new();
+        s.color = self.color.clone();
+        s.bgcolor = self.bgcolor.clone();
+        s.link = self.link.clone();
+        s.link_id = self.link_id;
+        s.meta = self.meta.clone();
+        for &bit in STYLE_BITS {
+            if self.set_attributes & bit != 0 && self.attributes.get(bit) {
+                s.set_attributes |= bit;
+                s.attributes.set(bit, true);
+            }
+        }
+        s
+    }
+
+    // -- utility ---------------------------------------------------------------
+
+    /// Return the "first" significant color name for display purposes
+    /// (fg color name, or bg color name, or None).
+    pub fn pick_first(&self) -> Option<&'static str> {
+        if let Some(ref c) = self.color {
+            if let Some(name) = color_to_name(c) {
+                return Some(name);
+            }
+        }
+        if let Some(ref c) = self.bgcolor {
+            if let Some(name) = color_to_name(c) {
+                return Some(name);
+            }
+        }
+        None
+    }
+
+    /// Render `text` wrapped in this style's ANSI codes.
+    pub fn render(&self, text: &str) -> String {
+        format!("{}{}{}", self.to_ansi(), text, self.reset_ansi())
+    }
+
+    /// Render a test/demo string. If text is None, use "Lorem ipsum".
+    pub fn test(&self, text: Option<&str>) -> String {
+        let t = text.unwrap_or("Lorem ipsum");
+        self.render(t)
+    }
+
+    /// Update or clear the link, returning self for chaining.
+    pub fn update_link(&mut self, url: Option<String>) -> &mut Self {
+        self.link = url;
+        if self.link.is_some() {
+            self.link_id = NEXT_ID.fetch_add(1, Ordering::Relaxed);
+        }
+        self
+    }
+
+    // -- accessors -------------------------------------------------------------
+
+    /// Get a reference to metadata.
+    pub fn meta(&self) -> Option<&Vec<u8>> {
+        self.meta.as_ref()
+    }
+
+    /// Get a mutable reference to metadata.
+    pub fn meta_mut(&mut self) -> Option<&mut Vec<u8>> {
+        self.meta.as_mut()
+    }
+
+    /// Set metadata, returning self for chaining.
+    pub fn set_meta(&mut self, meta: Option<Vec<u8>>) -> &mut Self {
+        self.meta = meta;
+        self
+    }
+
+    /// Get the link ID.
+    pub fn link_id(&self) -> u32 {
+        self.link_id
+    }
+
+    /// Alias for `bgcolor()` (Python rich has both `.on()` and `.bgcolor()`).
+    pub fn on(self, color: impl Into<Option<Color>>) -> Self {
+        self.bgcolor(color)
+    }
+
+    /// Get a reference to the foreground color.
+    pub fn color_ref(&self) -> Option<&Color> {
+        self.color.as_ref()
+    }
+
+    /// Get a reference to the background color.
+    pub fn bgcolor_ref(&self) -> Option<&Color> {
+        self.bgcolor.as_ref()
+    }
 }
 
 impl Default for Style {
@@ -581,6 +810,52 @@ impl fmt::Display for Style {
 
 /// Convenience type alias.
 pub type StyleType = Style;
+
+// -- helper functions for html export and color name lookup ------------------
+
+/// Convert a `Color` to a CSS hex string `#rrggbb`.
+fn color_to_css_hex(c: &Color) -> String {
+    match c.color_type {
+        ColorType::Default => String::new(),
+        ColorType::Standard => {
+            if let Some(n) = c.number {
+                let (r, g, b) = STANDARD_PALETTE[n as usize];
+                format!("#{:02x}{:02x}{:02x}", r, g, b)
+            } else {
+                String::new()
+            }
+        }
+        ColorType::EightBit => {
+            if let Some(n) = c.number {
+                let [r, g, b] = EIGHT_BIT_PALETTE[n as usize];
+                format!("#{:02x}{:02x}{:02x}", r, g, b)
+            } else {
+                String::new()
+            }
+        }
+        ColorType::TrueColor => {
+            if let Some((r, g, b)) = c.triplet {
+                format!("#{:02x}{:02x}{:02x}", r, g, b)
+            } else {
+                String::new()
+            }
+        }
+    }
+}
+
+/// Return the static color name for a Standard color, or `None` otherwise.
+fn color_to_name(c: &Color) -> Option<&'static str> {
+    match c.color_type {
+        ColorType::Standard => {
+            if let Some(n) = c.number {
+                Some(STANDARD_COLOR_NAMES[n as usize])
+            } else {
+                None
+            }
+        }
+        _ => None,
+    }
+}
 
 // ---------------------------------------------------------------------------
 // StyleStack — a stack of styles (for nested markup)
@@ -658,5 +933,208 @@ mod tests {
         let ansi = s.to_ansi();
         assert!(ansi.contains("31")); // red foreground
         assert!(ansi.contains("1"));  // bold
+    }
+
+    #[test]
+    fn test_chain() {
+        let a = Style::new().bold(true);
+        let b = Style::new().color(Color::parse("red").unwrap()).italic(true);
+        let chained = a.chain(&b);
+        assert_eq!(chained.get_bold(), Some(true));
+        assert!(chained.attributes.get(Attributes::ITALIC));
+        assert!(chained.set_attributes & Attributes::ITALIC != 0);
+        assert!(chained.color.is_some());
+    }
+
+    #[test]
+    fn test_chain_precedence() {
+        let a = Style::new().bold(true).color(Color::parse("red").unwrap());
+        let b = Style::new().bold(false).color(Color::parse("blue").unwrap());
+        let chained = a.chain(&b);
+        // a sets bold(true) and color(red); b sets bold(false) and color(blue)
+        // chain: self's values take priority
+        assert_eq!(chained.get_bold(), Some(true));
+        let c = chained.color.as_ref().unwrap();
+        let name = color_to_name(c);
+        assert_eq!(name, Some("red"));
+    }
+
+    #[test]
+    fn test_copy() {
+        let s = Style::new().bold(true).color(Color::parse("red").unwrap());
+        let c = s.copy();
+        assert_eq!(s, c);
+    }
+
+    #[test]
+    fn test_clear_meta_and_links() {
+        let mut s = Style::new().link("https://example.com");
+        s.meta = Some(vec![1, 2, 3]);
+        s.clear_meta_and_links();
+        assert!(s.link.is_none());
+        assert!(s.meta.is_none());
+    }
+
+    #[test]
+    fn test_from_color() {
+        let s = Style::from_color(Color::parse("red").unwrap());
+        assert!(s.color.is_some());
+        assert!(s.bgcolor.is_none());
+    }
+
+    #[test]
+    fn test_from_meta() {
+        let s = Style::from_meta(vec![10, 20, 30]);
+        assert_eq!(s.meta(), Some(&vec![10, 20, 30]));
+    }
+
+    #[test]
+    fn test_get_html_style() {
+        let s = Style::new()
+            .color(Color::parse("red").unwrap())
+            .bold(true)
+            .italic(true);
+        let css = s.get_html_style(None);
+        assert!(css.contains("color:"));
+        assert!(css.contains("font-weight: bold"));
+        assert!(css.contains("font-style: italic"));
+    }
+
+    #[test]
+    fn test_get_html_style_underline_strike() {
+        let s = Style::new()
+            .color(Color::parse("red").unwrap())
+            .underline(true)
+            .strike(true);
+        let css = s.get_html_style(None);
+        assert!(css.contains("text-decoration:"));
+        assert!(css.contains("underline"));
+        assert!(css.contains("line-through"));
+    }
+
+    #[test]
+    fn test_get_html_style_null() {
+        let s = Style::null();
+        let css = s.get_html_style(None);
+        assert!(css.is_empty());
+    }
+
+    #[test]
+    fn test_normalize() {
+        let s = Style::new().bold(true).italic(false);
+        let n = s.normalize();
+        assert_eq!(n.get_bold(), Some(true));
+        // italic was set to false, so normalize should remove it
+        assert!(n.set_attributes & Attributes::ITALIC == 0);
+    }
+
+    #[test]
+    fn test_pick_first() {
+        let s = Style::new().color(Color::parse("red").unwrap());
+        assert_eq!(s.pick_first(), Some("red"));
+    }
+
+    #[test]
+    fn test_pick_first_fallback() {
+        let s = Style::new().bgcolor(Color::parse("blue").unwrap());
+        assert_eq!(s.pick_first(), Some("blue"));
+    }
+
+    #[test]
+    fn test_pick_first_none() {
+        let s = Style::new();
+        assert_eq!(s.pick_first(), None);
+    }
+
+    #[test]
+    fn test_render() {
+        let s = Style::new().bold(true).color(Color::parse("red").unwrap());
+        let rendered = s.render("hello");
+        assert!(rendered.starts_with("\x1b["));
+        assert!(rendered.contains("hello"));
+        assert!(rendered.ends_with("\x1b[0m"));
+    }
+
+    #[test]
+    fn test_test_with_text() {
+        let s = Style::new().bold(true);
+        let out = s.test(Some("custom"));
+        assert!(out.contains("custom"));
+    }
+
+    #[test]
+    fn test_test_default() {
+        let s = Style::new().bold(true);
+        let out = s.test(None);
+        assert!(out.contains("Lorem ipsum"));
+    }
+
+    #[test]
+    fn test_update_link() {
+        let mut s = Style::new();
+        s.update_link(Some("https://example.com".into()));
+        assert!(s.link.is_some());
+        let first_id = s.link_id;
+        s.update_link(None);
+        assert!(s.link.is_none());
+        assert_eq!(s.link_id, first_id);
+    }
+
+    #[test]
+    fn test_link_id() {
+        let s = Style::new().link("https://example.com");
+        assert!(s.link_id() > 0);
+    }
+
+    #[test]
+    fn test_meta_methods() {
+        let mut s = Style::new();
+        s.set_meta(Some(vec![1, 2, 3]));
+        assert_eq!(s.meta(), Some(&vec![1, 2, 3]));
+        if let Some(m) = s.meta_mut() {
+            m.push(4);
+        }
+        assert_eq!(s.meta(), Some(&vec![1, 2, 3, 4]));
+    }
+
+    #[test]
+    fn test_on() {
+        let s = Style::new().on(Color::parse("red").unwrap());
+        assert!(s.bgcolor.is_some());
+        let b = Color::parse("red").unwrap();
+        assert_eq!(s.bgcolor.unwrap(), b);
+    }
+
+    #[test]
+    fn test_references() {
+        let s = Style::new()
+            .color(Color::parse("red").unwrap())
+            .bgcolor(Color::parse("blue").unwrap());
+        assert!(s.color_ref().is_some());
+        assert!(s.bgcolor_ref().is_some());
+    }
+
+    #[test]
+    fn test_color_to_css_hex() {
+        let c = Color::parse("red").unwrap();
+        let hex = color_to_css_hex(&c);
+        assert_eq!(hex, "#800000"); // standard red
+    }
+
+    #[test]
+    fn test_color_to_css_hex_truecolor() {
+        let c = Color::from_rgb(255, 0, 128);
+        let hex = color_to_css_hex(&c);
+        assert_eq!(hex, "#ff0080");
+    }
+
+    #[test]
+    fn test_static_attributes() {
+        assert!(!STYLE_ATTRIBUTES.is_empty());
+        let names: Vec<&str> = STYLE_ATTRIBUTES.iter().map(|(n, _)| *n).collect();
+        assert!(names.contains(&"bold"));
+        assert!(names.contains(&"italic"));
+        assert!(names.contains(&"underline"));
+        assert!(!names.contains(&"notexist"));
     }
 }

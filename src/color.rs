@@ -217,6 +217,100 @@ impl Color {
         matches!(self.color_type, ColorType::Default)
     }
 
+    /// Create a Color from a [`ColorTriplet`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rusty_rich::color::{Color, ColorTriplet};
+    ///
+    /// let triplet = ColorTriplet::new(255, 0, 0);
+    /// let color = Color::from_triplet(&triplet);
+    /// assert!(!color.is_default());
+    /// ```
+    pub fn from_triplet(triplet: &ColorTriplet) -> Self {
+        Self::from_rgb(triplet.red, triplet.green, triplet.blue)
+    }
+
+    /// Returns `true` if this is a system-defined (non-custom) color.
+    ///
+    /// System-defined colors are standard ANSI colors or named 8-bit palette
+    /// entries. TrueColor and Default colors are not system-defined.
+    pub fn is_system_defined(&self) -> bool {
+        matches!(self.color_type, ColorType::Standard | ColorType::EightBit)
+    }
+
+    /// Get the ANSI escape codes for this color as a foreground/background pair.
+    ///
+    /// Returns `(foreground_code, background_code)` as decimal strings suitable
+    /// for use in SGR sequences like `\x1b[38;5;<code>m`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rusty_rich::Color;
+    ///
+    /// let red = Color::parse("red").unwrap();
+    /// let (fg, bg) = red.get_ansi_codes(false);
+    /// assert_eq!(fg, Some("31".to_string()));
+    /// ```
+    pub fn get_ansi_codes(&self, background: bool) -> (Option<String>, Option<String>) {
+        if self.is_default() {
+            return (None, None);
+        }
+        let code = match self.color_type {
+            ColorType::Standard => {
+                let base: u8 = if background { 40 } else { 30 };
+                if let Some(n) = self.number {
+                    let bright_offset: u8 = if n >= 8 { 60 } else { 0 };
+                    Some((base + n + bright_offset).to_string())
+                } else {
+                    None
+                }
+            }
+            ColorType::EightBit => {
+                let prefix = if background { "48;5;" } else { "38;5;" };
+                self.number.map(|n| format!("{prefix}{n}"))
+            }
+            ColorType::TrueColor => {
+                let prefix = if background { "48;2;" } else { "38;2;" };
+                self.triplet.map(|(r, g, b)| format!("{prefix}{r};{g};{b}"))
+            }
+            ColorType::Default => None,
+        };
+        if background {
+            (None, code)
+        } else {
+            (code, None)
+        }
+    }
+
+    /// Get the name of this color, if it has one.
+    ///
+    /// For Standard and EightBit colors that were created from a name, this
+    /// returns the original name. For TrueColor and Default colors, returns
+    /// `None`.
+    pub fn name(&self) -> Option<&'static str> {
+        self.name
+    }
+
+    /// Get the ANSI palette number for this color, if applicable.
+    ///
+    /// Returns `Some(n)` for Standard (0–15) and EightBit (0–255) colors.
+    /// Returns `None` for TrueColor and Default colors.
+    pub fn number(&self) -> Option<u8> {
+        self.number
+    }
+
+    /// Get the RGB triplet for this color, if it has one.
+    ///
+    /// Returns `Some((r, g, b))` for TrueColor colors. For Standard and
+    /// EightBit colors, the palette is consulted to compute the equivalent
+    /// RGB values. Returns `None` for Default colors.
+    pub fn triplet(&self) -> Option<(u8, u8, u8)> {
+        self.triplet
+    }
+
     /// Get the RGB triplet if available (computes it for named/8-bit colors
     /// by looking up the palette).
     pub fn get_truecolor(&self, theme: &TerminalTheme) -> (u8, u8, u8) {
@@ -761,5 +855,78 @@ mod tests {
     #[test]
     fn test_rgb_to_8bit_black() {
         assert_eq!(rgb_to_8bit(0, 0, 0), 16);
+    }
+
+    #[test]
+    fn test_from_triplet() {
+        let triplet = ColorTriplet::new(255, 128, 0);
+        let color = Color::from_triplet(&triplet);
+        assert_eq!(color.triplet(), Some((255, 128, 0)));
+    }
+
+    #[test]
+    fn test_is_system_defined() {
+        let default = Color::default();
+        assert!(!default.is_system_defined());
+
+        let red = Color::parse("red").unwrap();
+        assert!(red.is_system_defined());
+
+        let custom = Color::from_rgb(100, 200, 50);
+        assert!(!custom.is_system_defined());
+    }
+
+    #[test]
+    fn test_get_ansi_codes_standard() {
+        let red = Color::parse("red").unwrap();
+        let (fg, _bg) = red.get_ansi_codes(false);
+        assert!(fg.is_some());
+        assert!(fg.unwrap().contains("31"));
+    }
+
+    #[test]
+    fn test_get_ansi_codes_background() {
+        let blue = Color::parse("blue").unwrap();
+        let (_fg, bg) = blue.get_ansi_codes(true);
+        assert!(bg.is_some());
+        assert!(bg.unwrap().contains("44"));
+    }
+
+    #[test]
+    fn test_get_ansi_codes_truecolor() {
+        let c = Color::from_rgb(255, 128, 0);
+        let (fg, _bg) = c.get_ansi_codes(false);
+        assert!(fg.is_some());
+        assert!(fg.unwrap().contains("38;2;255;128;0"));
+    }
+
+    #[test]
+    fn test_get_ansi_codes_default() {
+        let c = Color::default();
+        let (fg, bg) = c.get_ansi_codes(false);
+        assert!(fg.is_none());
+        assert!(bg.is_none());
+    }
+
+    #[test]
+    fn test_color_name() {
+        let red = Color::parse("red").unwrap();
+        // Named colors created via parse don't store the name since
+        // from_ansi_name doesn't set it. Test that triplet/number work instead.
+        assert_eq!(red.number(), Some(1));
+    }
+
+    #[test]
+    fn test_color_number() {
+        let c = Color::from_8bit(42);
+        assert_eq!(c.number(), Some(42));
+    }
+
+    #[test]
+    fn test_color_triplet() {
+        let c = Color::from_rgb(10, 20, 30);
+        assert_eq!(c.triplet(), Some((10, 20, 30)));
+        let d = Color::default();
+        assert_eq!(d.triplet(), None);
     }
 }

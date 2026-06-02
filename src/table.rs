@@ -168,6 +168,38 @@ impl Column {
 }
 
 // ---------------------------------------------------------------------------
+// Row
+// ---------------------------------------------------------------------------
+
+/// An explicit row in a table (header row or data row).
+#[derive(Debug, Clone)]
+pub struct Row {
+    pub cells: Vec<Cell>,
+    pub style: Option<Style>,
+    pub end_section: bool,
+}
+
+impl Row {
+    /// Create a new Row from a list of [`Cell`]s.
+    pub fn new(cells: Vec<Cell>) -> Self {
+        Self { cells, style: None, end_section: false }
+    }
+
+    /// Builder: set the row style.
+    pub fn style(mut self, style: Style) -> Self {
+        self.style = Some(style);
+        self
+    }
+
+    /// Builder: signal that this row ends a section (a section divider
+    /// will be rendered after it).
+    pub fn end_section(mut self, value: bool) -> Self {
+        self.end_section = value;
+        self
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Table
 // ---------------------------------------------------------------------------
 
@@ -218,6 +250,10 @@ pub struct Table {
     pub rowspans: Vec<usize>,
     /// Row indices that have a section separator before them.
     pub section_rows: HashSet<usize>,
+    /// Pad the outer edge of the table (left of first column, right of last).
+    pub pad_edge: bool,
+    /// Row indices where sections end (ordered, in insertion order).
+    pub sections: Vec<usize>,
 }
 
 impl Table {
@@ -247,6 +283,8 @@ impl Table {
             leading: 0,
             rowspans: Vec::new(),
             section_rows: HashSet::new(),
+            pad_edge: true,
+            sections: Vec::new(),
         }
     }
 
@@ -283,6 +321,20 @@ impl Table {
         self.rows.push(row);
     }
 
+    /// Add a pre-built [`Row`] object, which may carry a style and section
+    /// information.
+    ///
+    /// If the row has `end_section` set to `true`, a section divider is
+    /// inserted before this row.
+    pub fn add_row_explicit(&mut self, row: Row) -> &mut Self {
+        if row.end_section {
+            self.section_rows.insert(self.rows.len());
+            self.sections.push(self.rows.len());
+        }
+        self.rows.push(row.cells);
+        self
+    }
+
     /// Add a row from plain strings (backward-compatible, converts to [`Cell`]s).
     ///
     /// # Examples
@@ -309,6 +361,9 @@ impl Table {
     /// Builder: add a row of strings and return self.
     pub fn row_str(mut self, row: Vec<String>) -> Self { self.add_row_str(row); self }
 
+    /// Builder: add a pre-built [`Row`] and return self.
+    pub fn row_explicit(mut self, row: Row) -> Self { self.add_row_explicit(row); self }
+
     /// Builder: set title.
     pub fn title(mut self, t: impl Into<String>) -> Self { self.title = Some(t.into()); self }
 
@@ -329,6 +384,36 @@ impl Table {
 
     /// Builder: set leading (blank lines between rows).
     pub fn leading(mut self, l: usize) -> Self { self.leading = l; self }
+
+    /// Builder: enable row highlighting.
+    pub fn highlight(mut self, value: bool) -> Self { self.highlight = value; self }
+
+    /// Builder: set title alignment.
+    pub fn title_justify(mut self, justify: AlignMethod) -> Self { self.title_justify = justify; self }
+
+    /// Builder: set caption alignment.
+    pub fn caption_justify(mut self, justify: AlignMethod) -> Self { self.caption_justify = justify; self }
+
+    /// Builder: set alternating row styles.
+    pub fn row_styles(mut self, styles: Vec<Style>) -> Self { self.row_styles = styles; self }
+
+    /// Builder: show/hide outer edge border.
+    pub fn show_edge(mut self, value: bool) -> Self { self.show_edge = value; self }
+
+    /// Builder: collapse padding between cells.
+    pub fn collapse_padding(mut self, value: bool) -> Self { self.collapse_padding = value; self }
+
+    /// Builder: pad the outer edge of the table.
+    pub fn pad_edge(mut self, value: bool) -> Self { self.pad_edge = value; self }
+
+    /// Get the style for a specific row (cycling through `row_styles` if set).
+    pub fn get_row_style(&self, row_index: usize) -> Option<Style> {
+        if self.row_styles.is_empty() {
+            None
+        } else {
+            Some(self.row_styles[row_index % self.row_styles.len()].clone())
+        }
+    }
 
     /// Create a grid table (no outer border, no header, no footer).
     /// Equivalent to `Table.grid()`.
@@ -357,13 +442,18 @@ impl Table {
             leading: 0,
             rowspans: Vec::new(),
             section_rows: HashSet::new(),
+            pad_edge: true,
+            sections: Vec::new(),
         }
     }
 
     /// Add a section separator before the next row.
     /// The next row added will have a horizontal rule above it.
-    pub fn add_section(&mut self) {
+    /// Returns `&mut Self` for chaining.
+    pub fn add_section(&mut self) -> &mut Self {
         self.section_rows.insert(self.rows.len());
+        self.sections.push(self.rows.len());
+        self
     }
 
     /// Get the row count.
@@ -603,6 +693,7 @@ impl Table {
         is_header: bool,
     ) -> Vec<Segment> {
         let mut line = Vec::new();
+        let col_count = widths.len();
         let bs = |ch: char| -> Segment {
             let ansi = self.border_style.to_ansi();
             let reset = if ansi.is_empty() { "" } else { "\x1b[0m" };
@@ -617,15 +708,20 @@ impl Table {
             let justify = col.map(|c| c.justify).unwrap_or(AlignMethod::Left);
             let (_pt, pr, _pb, pl) = self.padding;
 
+            // Adjust edge padding based on pad_edge
+            let left_pad = if i == 0 && !self.pad_edge { 0 } else { pl };
+            let right_pad = if i == col_count - 1 && !self.pad_edge { 0 } else { pr };
+
             // Pad left
-            line.push(Segment::new(" ".repeat(pl)));
+            line.push(Segment::new(" ".repeat(left_pad)));
 
             // Align the text
-            let disp = justify.align_text(val, w.saturating_sub(pl + pr));
+            let content_w = w.saturating_sub(left_pad + right_pad);
+            let disp = justify.align_text(val, content_w);
             // Truncate if needed
-            let disp_trunc = if UnicodeWidthStr::width(disp.as_str()) > *w {
+            let disp_trunc = if UnicodeWidthStr::width(disp.as_str()) > content_w {
                 let mut truncated = disp.chars().take(
-                    w.saturating_sub(1) // leave room for ellipsis
+                    content_w.saturating_sub(1) // leave room for ellipsis
                 ).collect::<String>();
                 truncated.push('…');
                 truncated
@@ -648,9 +744,9 @@ impl Table {
             }
 
             // Pad right
-            line.push(Segment::new(" ".repeat(pr)));
+            line.push(Segment::new(" ".repeat(right_pad)));
 
-            if i < widths.len() - 1 {
+            if i < col_count - 1 {
                 line.push(bs(b.mid_vertical));
             }
         }
@@ -671,6 +767,7 @@ impl Table {
         rowspan_remaining: &mut [usize],
     ) -> Vec<Segment> {
         let mut line = Vec::new();
+        let col_count = widths.len();
         let bs = |ch: char| -> Segment {
             let ansi = self.border_style.to_ansi();
             let reset = if ansi.is_empty() { "" } else { "\x1b[0m" };
@@ -679,7 +776,6 @@ impl Table {
 
         line.push(bs(b.mid_vertical));
 
-        let col_count = widths.len();
         let mut cell_idx = 0;
         let mut col: usize = 0;
 
@@ -690,7 +786,9 @@ impl Table {
                 // Render an empty spanned cell for this column
                 let w = widths[col];
                 let (_pt, pr, _pb, pl) = self.padding;
-                line.push(Segment::new(" ".repeat(pl + w + pr)));
+                let left_pad = if col == 0 && !self.pad_edge { 0 } else { pl };
+                let right_pad = if col == col_count - 1 && !self.pad_edge { 0 } else { pr };
+                line.push(Segment::new(" ".repeat(left_pad + w + right_pad)));
                 if col < col_count - 1 {
                     line.push(bs(b.mid_vertical));
                 }
@@ -702,7 +800,9 @@ impl Table {
             if cell_idx >= cells.len() {
                 let w = widths[col];
                 let (_pt, pr, _pb, pl) = self.padding;
-                line.push(Segment::new(" ".repeat(pl + w + pr)));
+                let left_pad = if col == 0 && !self.pad_edge { 0 } else { pl };
+                let right_pad = if col == col_count - 1 && !self.pad_edge { 0 } else { pr };
+                line.push(Segment::new(" ".repeat(left_pad + w + right_pad)));
                 if col < col_count - 1 {
                     line.push(bs(b.mid_vertical));
                 }
@@ -716,7 +816,9 @@ impl Table {
             let span_end = (col + cell.colspan).min(col_count);
             let span_width: usize = widths[col..span_end].iter().sum();
             let (_pt, pr, _pb, pl) = self.padding;
-            let content_width = span_width.saturating_sub(pl + pr);
+            let left_pad = if col == 0 && !self.pad_edge { 0 } else { pl };
+            let right_pad = if span_end >= col_count && !self.pad_edge { 0 } else { pr };
+            let content_width = span_width.saturating_sub(left_pad + right_pad);
 
             let col_def = self.columns.get(col);
             let justify = col_def.map(|c| c.justify).unwrap_or(AlignMethod::Left);
@@ -734,7 +836,7 @@ impl Table {
             };
 
             // Pad left
-            line.push(Segment::new(" ".repeat(pl)));
+            line.push(Segment::new(" ".repeat(left_pad)));
 
             // Apply cell style, header style, or column style
             if let Some(ref cell_style) = cell.style {
@@ -760,7 +862,7 @@ impl Table {
             }
 
             // Pad right
-            line.push(Segment::new(" ".repeat(pr)));
+            line.push(Segment::new(" ".repeat(right_pad)));
 
             // Set rowspan for future rows
             if cell.rowspan > 1 {
@@ -791,6 +893,7 @@ impl Table {
         _is_header: bool,
     ) -> Vec<Segment> {
         let mut line = Vec::new();
+        let col_count = widths.len();
         let bs = |ch: char| -> Segment {
             let ansi = self.border_style.to_ansi();
             let reset = if ansi.is_empty() { "" } else { "\x1b[0m" };
@@ -799,8 +902,11 @@ impl Table {
 
         line.push(bs(b.mid_vertical));
         for (i, w) in widths.iter().enumerate() {
-            line.push(Segment::new(" ".repeat(*w)));
-            if i < widths.len() - 1 {
+            let (_pt, pr, _pb, pl) = self.padding;
+            let left_pad = if i == 0 && !self.pad_edge { 0 } else { pl };
+            let right_pad = if i == col_count - 1 && !self.pad_edge { 0 } else { pr };
+            line.push(Segment::new(" ".repeat(left_pad + w + right_pad)));
+            if i < col_count - 1 {
                 line.push(bs(b.mid_vertical));
             }
         }
@@ -934,5 +1040,141 @@ mod tests {
         let result = table.render(&opts);
         let ansi = result.to_ansi();
         assert!(ansi.contains("wide"));
+    }
+
+    // --- New feature tests ---
+
+    #[test]
+    fn test_row_struct() {
+        let cells = vec![Cell::new("a"), Cell::new("b")];
+        let row = Row::new(cells)
+            .style(Style::new().bold(true))
+            .end_section(true);
+        assert_eq!(row.cells.len(), 2);
+        assert!(row.style.is_some());
+        assert!(row.end_section);
+    }
+
+    #[test]
+    fn test_add_row_explicit() {
+        let mut table = Table::new();
+        table.add_column(Column::new("A"));
+        table.add_column(Column::new("B"));
+        let row = Row::new(vec![Cell::new("x"), Cell::new("y")]);
+        table.add_row_explicit(row);
+        assert_eq!(table.row_count(), 1);
+
+        let opts = ConsoleOptions::default();
+        let result = table.render(&opts);
+        let ansi = result.to_ansi();
+        assert!(ansi.contains("x"));
+        assert!(ansi.contains("y"));
+    }
+
+    #[test]
+    fn test_add_row_explicit_with_section() {
+        let mut table = Table::new();
+        table.add_column(Column::new("A"));
+        table.add_row_str(vec!["before".into()]);
+        let row = Row::new(vec![Cell::new("after")]).end_section(true);
+        table.add_row_explicit(row);
+        assert!(table.section_rows.contains(&1));
+    }
+
+    #[test]
+    fn test_builder_highlight() {
+        let table = Table::new().highlight(true);
+        assert!(table.highlight);
+    }
+
+    #[test]
+    fn test_builder_title_justify() {
+        let table = Table::new().title_justify(AlignMethod::Right);
+        assert_eq!(table.title_justify, AlignMethod::Right);
+    }
+
+    #[test]
+    fn test_builder_caption_justify() {
+        let table = Table::new().caption_justify(AlignMethod::Left);
+        assert_eq!(table.caption_justify, AlignMethod::Left);
+    }
+
+    #[test]
+    fn test_builder_row_styles() {
+        let s1 = Style::new().bold(true);
+        let s2 = Style::new().dim(true);
+        let table = Table::new().row_styles(vec![s1.clone(), s2.clone()]);
+        assert_eq!(table.row_styles.len(), 2);
+    }
+
+    #[test]
+    fn test_builder_show_edge() {
+        let table = Table::new().show_edge(false);
+        assert!(!table.show_edge);
+    }
+
+    #[test]
+    fn test_builder_collapse_padding() {
+        let table = Table::new().collapse_padding(true);
+        assert!(table.collapse_padding);
+    }
+
+    #[test]
+    fn test_builder_pad_edge() {
+        let table = Table::new().pad_edge(false);
+        assert!(!table.pad_edge);
+    }
+
+    #[test]
+    fn test_get_row_style_empty() {
+        let table = Table::new();
+        assert_eq!(table.get_row_style(0), None);
+    }
+
+    #[test]
+    fn test_get_row_style_with_styles() {
+        let s1 = Style::new().bold(true);
+        let s2 = Style::new().dim(true);
+        let table = Table::new().row_styles(vec![s1, s2]);
+        assert!(table.get_row_style(0).is_some());
+        assert!(table.get_row_style(1).is_some());
+        // Cycles
+        assert!(table.get_row_style(2).is_some());
+        assert!(table.get_row_style(3).is_some());
+    }
+
+    #[test]
+    fn test_add_section_returns_self() {
+        let mut table = Table::new();
+        table.add_column(Column::new("A"));
+        table.add_row_str(vec!["r1".into()]);
+        let ret = table.add_section();
+        // Verify the return value is &mut Self (can chain)
+        ret.add_row_str(vec!["r2".into()]);
+        assert_eq!(table.row_count(), 2);
+    }
+
+    #[test]
+    fn test_sections_field() {
+        let mut table = Table::new();
+        table.add_column(Column::new("A"));
+        table.add_row_str(vec!["r1".into()]);
+        table.add_section();
+        table.add_row_str(vec!["r2".into()]);
+        assert_eq!(table.sections.len(), 1);
+        assert_eq!(table.sections[0], 1);
+    }
+
+    #[test]
+    fn test_pad_edge_default() {
+        let table = Table::new();
+        assert!(table.pad_edge);
+    }
+
+    #[test]
+    fn test_grid_method() {
+        let table = Table::grid();
+        assert!(!table.show_edge);
+        assert!(!table.show_header);
     }
 }
