@@ -15,8 +15,8 @@
 //! let mut table = Table::new();
 //! table.add_column(Column::new("Name"));
 //! table.add_column(Column::new("Age"));
-//! table.add_row_str("Alice", "30");
-//! table.add_row_str("Bob", "25");
+//! table.add_row_str(vec!["Alice".into(), "30".into()]);
+//! table.add_row_str(vec!["Bob".into(), "25".into()]);
 //! ```
 //!
 //! # Colspan & Rowspan
@@ -476,11 +476,19 @@ impl Renderable for Table {
         let mut lines: Vec<Vec<Segment>> = Vec::new();
         let b = &box_style;
 
-        // Helper: make a border segment
+        // Helper: make a border segment for a single char (corners, dividers)
+        let border_ansi = self.border_style.to_ansi();
+        let border_reset = if border_ansi.is_empty() { "" } else { "\x1b[0m" };
         let bs = |ch: char| -> Segment {
-            let ansi = self.border_style.to_ansi();
-            let reset = if ansi.is_empty() { "" } else { "\x1b[0m" };
-            Segment::new(format!("{ansi}{ch}{reset}"))
+            Segment::new(format!("{border_ansi}{ch}{border_reset}"))
+        };
+        // Helper: repeated border character batched under one ANSI wrap
+        let bs_repeat = |ch: char, n: usize| -> Segment {
+            if border_ansi.is_empty() || n == 0 {
+                Segment::new(ch.to_string().repeat(n))
+            } else {
+                Segment::new(format!("{border_ansi}{}{border_reset}", ch.to_string().repeat(n)))
+            }
         };
 
         // -- Title --
@@ -494,7 +502,7 @@ impl Renderable for Table {
         if self.show_edge {
             let mut top_line = vec![bs(b.top_left)];
             for (i, w) in col_widths.iter().enumerate() {
-                top_line.push(Segment::new(b.top.to_string().repeat(*w)));
+                top_line.push(bs_repeat(b.top, *w));
                 if i < col_count - 1 {
                     top_line.push(bs(b.top_divider));
                 }
@@ -520,7 +528,7 @@ impl Renderable for Table {
             // Header separator
             let mut sep = vec![bs(b.head_row_left)];
             for (i, w) in col_widths.iter().enumerate() {
-                sep.push(Segment::new(b.head_row_horizontal.to_string().repeat(*w)));
+                sep.push(bs_repeat(b.head_row_horizontal, *w));
                 if i < col_count - 1 {
                     sep.push(bs(b.head_row_cross));
                 }
@@ -535,10 +543,12 @@ impl Renderable for Table {
         for (row_idx, row) in self.rows.iter().enumerate() {
             // Section separator
             if self.section_rows.contains(&row_idx) {
+                let sep_widths = Self::compute_span_widths(row, &col_widths);
+                let sc = sep_widths.len();
                 let mut sep = vec![bs(b.head_row_left)];
-                for (i, w) in col_widths.iter().enumerate() {
-                    sep.push(Segment::new(b.head_row_horizontal.to_string().repeat(*w)));
-                    if i < col_count - 1 {
+                for (i, w) in sep_widths.iter().enumerate() {
+                    sep.push(bs_repeat(b.head_row_horizontal, *w));
+                    if i < sc - 1 {
                         sep.push(bs(b.head_row_cross));
                     }
                 }
@@ -571,12 +581,14 @@ impl Renderable for Table {
                 &col_widths, row, &b, false, &mut rowspan_remaining,
             ));
 
-            // Row separator
+            // Row separator (respect colspan in current row)
             if self.show_lines && row_idx < self.rows.len() - 1 {
+                let sep_widths = Self::compute_span_widths(row, &col_widths);
+                let sc = sep_widths.len();
                 let mut sep = vec![bs(b.row_left)];
-                for (i, w) in col_widths.iter().enumerate() {
-                    sep.push(Segment::new(b.row_horizontal.to_string().repeat(*w)));
-                    if i < col_count - 1 {
+                for (i, w) in sep_widths.iter().enumerate() {
+                    sep.push(bs_repeat(b.row_horizontal, *w));
+                    if i < sc - 1 {
                         sep.push(bs(b.row_cross));
                     }
                 }
@@ -590,7 +602,7 @@ impl Renderable for Table {
         if self.show_footer && self.columns.iter().any(|c| !c.footer.is_empty()) {
             let mut sep = vec![bs(b.foot_row_left)];
             for (i, w) in col_widths.iter().enumerate() {
-                sep.push(Segment::new(b.foot_row_horizontal.to_string().repeat(*w)));
+                sep.push(bs_repeat(b.foot_row_horizontal, *w));
                 if i < col_count - 1 {
                     sep.push(bs(b.foot_row_cross));
                 }
@@ -607,10 +619,12 @@ impl Renderable for Table {
 
         // -- Bottom border --
         if self.show_edge {
+            let bottom_widths = self.compute_bottom_widths(&col_widths);
             let mut bot_line = vec![bs(b.bottom_left)];
-            for (i, w) in col_widths.iter().enumerate() {
-                bot_line.push(Segment::new(b.bottom.to_string().repeat(*w)));
-                if i < col_count - 1 {
+            let bc = bottom_widths.len();
+            for (i, w) in bottom_widths.iter().enumerate() {
+                bot_line.push(bs_repeat(b.bottom, *w));
+                if i < bc - 1 {
                     bot_line.push(bs(b.bottom_divider));
                 }
             }
@@ -623,6 +637,18 @@ impl Renderable for Table {
         if let Some(ref caption) = self.caption {
             let centered = self.caption_justify.align_text(caption, available_width.saturating_sub(2));
             lines.push(vec![Segment::new(&centered), Segment::line()]);
+        }
+
+        // Strip ANSI escapes when in ASCII-only mode so that raw escape
+        // sequences don't leak into the output (e.g. "[1m" instead of bold).
+        if options.ascii_only {
+            for line in &mut lines {
+                for seg in line.iter_mut() {
+                    if seg.text.contains('\x1b') {
+                        seg.text = crate::export::strip_ansi_escapes(&seg.text);
+                    }
+                }
+            }
         }
 
         RenderResult { lines, items: Vec::new() }
@@ -700,7 +726,7 @@ impl Table {
             Segment::new(format!("{ansi}{ch}{reset}"))
         };
 
-        line.push(bs(b.mid_vertical));
+        line.push(bs(b.mid_left));
 
         for (i, w) in widths.iter().enumerate() {
             let val = values.get(i).map(|s| s.as_str()).unwrap_or("");
@@ -774,7 +800,7 @@ impl Table {
             Segment::new(format!("{ansi}{ch}{reset}"))
         };
 
-        line.push(bs(b.mid_vertical));
+        line.push(bs(b.mid_left));
 
         let mut cell_idx = 0;
         let mut col: usize = 0;
@@ -782,17 +808,26 @@ impl Table {
         while col < col_count {
             // Check for active rowspan in this column
             if rowspan_remaining[col] > 0 {
-                rowspan_remaining[col] -= 1;
-                // Render an empty spanned cell for this column
-                let w = widths[col];
-                let (_pt, pr, _pb, pl) = self.padding;
-                let left_pad = if col == 0 && !self.pad_edge { 0 } else { pl };
-                let right_pad = if col == col_count - 1 && !self.pad_edge { 0 } else { pr };
-                line.push(Segment::new(" ".repeat(left_pad + w + right_pad)));
-                if col < col_count - 1 {
+                // A spanned cell from a previous row covers this column.
+                // Accumulate ALL consecutive columns that belong to the same
+                // rowspan group (originating from one cell with colspan=N)
+                // to avoid drawing stray vertical dividers inside the span.
+                let span_start = col;
+                let mut span_total_w = 0usize;
+                while col < col_count && rowspan_remaining[col] > 0 {
+                    rowspan_remaining[col] -= 1;
+                    span_total_w += widths[col];
+                    col += 1;
+                }
+                // Add the width of the internal separators that were removed
+                // (1 char each) so the total span matches the original colspan cell.
+                let num_spanned = col - span_start;
+                span_total_w += num_spanned.saturating_sub(1);
+                line.push(Segment::new(" ".repeat(span_total_w)));
+                // Only one vertical separator after the whole spanned group
+                if col < col_count {
                     line.push(bs(b.mid_vertical));
                 }
-                col += 1;
                 continue;
             }
 
@@ -814,7 +849,11 @@ impl Table {
             cell_idx += 1;
 
             let span_end = (col + cell.colspan).min(col_count);
-            let span_width: usize = widths[col..span_end].iter().sum();
+            let num_spanned = span_end - col;
+            // Include the width of internal separators that are removed by the
+            // colspan (1 char each) so the total row width stays consistent.
+            let span_width: usize = widths[col..span_end].iter().sum::<usize>()
+                + num_spanned.saturating_sub(1);
             let (_pt, pr, _pb, pl) = self.padding;
             let left_pad = if col == 0 && !self.pad_edge { 0 } else { pl };
             let right_pad = if span_end >= col_count && !self.pad_edge { 0 } else { pr };
@@ -884,6 +923,45 @@ impl Table {
         line
     }
 
+    /// Compute the effective column widths for a row, respecting colspan so
+    /// that border/separator divider characters only appear at real column
+    /// boundaries rather than mid-span.
+    fn compute_span_widths(cells: &[Cell], col_widths: &[usize]) -> Vec<usize> {
+        let col_count = col_widths.len();
+        if col_count == 0 {
+            return vec![];
+        }
+
+        let mut widths = Vec::new();
+        let mut col = 0usize;
+        for cell in cells {
+            if col >= col_count {
+                break;
+            }
+            let span = cell.colspan.min(col_count - col);
+            // Include internal separator widths (1 char each) removed by colspan
+            let w: usize = col_widths[col..col + span].iter().sum::<usize>()
+                + span.saturating_sub(1);
+            widths.push(w);
+            col += span;
+        }
+        // Fill remaining columns with original widths
+        while col < col_count {
+            widths.push(col_widths[col]);
+            col += 1;
+        }
+        widths
+    }
+
+    /// Compute the effective column widths for the bottom border, respecting
+    /// colspan in the last row.
+    fn compute_bottom_widths(&self, col_widths: &[usize]) -> Vec<usize> {
+        if self.rows.is_empty() {
+            return col_widths.to_vec();
+        }
+        Self::compute_span_widths(&self.rows[self.rows.len() - 1], col_widths)
+    }
+
     fn render_row_line(
         &self,
         widths: &[usize],
@@ -900,7 +978,9 @@ impl Table {
             Segment::new(format!("{ansi}{ch}{reset}"))
         };
 
-        line.push(bs(b.mid_vertical));
+        // Use mid_left for the outer left edge (not mid_vertical which is
+        // the internal column separator — they differ for asymmetric boxes).
+        line.push(bs(b.mid_left));
         for (i, w) in widths.iter().enumerate() {
             let (_pt, pr, _pb, pl) = self.padding;
             let left_pad = if i == 0 && !self.pad_edge { 0 } else { pl };

@@ -14,7 +14,7 @@ fn main() {
     console.clear();
     let mut title_text = Text::new("");
     title_text.append_styled("rusty-rich", Style::new().bold(true).color(Color::parse("bright_cyan").unwrap()));
-    title_text.append_styled(" v0.1.0", Style::new().dim(true));
+    title_text.append_styled(" v0.4.0", Style::new().dim(true));
 
     let banner = Panel::new(title_text)
         .box_style(BoxStyle::clone(&box_drawing::BOX_HEAVY_EDGE))

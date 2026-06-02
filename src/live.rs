@@ -32,7 +32,7 @@
 //! use std::io::Write;
 //!
 //! let mut live = Live::new(Panel::new("Status").title("App"));
-//! let mut writer = live.create_writer();
+//! let mut writer = Live::create_writer();
 //! live.start().unwrap();
 //!
 //! writeln!(writer, "Processing item 1...").unwrap();

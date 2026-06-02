@@ -27,8 +27,8 @@
 //! let mut table = Table::new();
 //! table.add_column(Column::new("Name"));
 //! table.add_column(Column::new("Age"));
-//! table.add_row_str("Alice", "30");
-//! table.add_row_str("Bob", "25");
+//! table.add_row_str(vec!["Alice".into(), "30".into()]);
+//! table.add_row_str(vec!["Bob".into(), "25".into()]);
 //! console.println(&table);
 //! ```
 //!
@@ -165,7 +165,7 @@
 //! use std::io::Write;
 //!
 //! let mut live = Live::new(Panel::new("Starting...").title("Status"));
-//! let mut writer = live.create_writer();
+//! let mut writer = Live::create_writer();
 //! live.start().unwrap();
 //!
 //! writeln!(writer, "Processing items...").unwrap();
@@ -241,7 +241,7 @@
 //! ```rust,no_run
 //! use rusty_rich::{export_svg, ExportSvgOptions};
 //!
-//! let svg = export_svg(ExportSvgOptions::default());
+//! let svg = export_svg(&ExportSvgOptions::default());
 //! std::fs::write("output.svg", svg).unwrap();
 //! ```
 //!

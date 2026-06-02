@@ -68,6 +68,16 @@ pub struct BoxStyle {
 }
 
 impl BoxStyle {
+    /// Returns true if this box has visible outer edges (non-space corners).
+    /// Edge-less styles like SIMPLE, MINIMAL, and MARKDOWN return `false`
+    /// because their corner characters are all spaces — they are designed
+    /// to be used in tables where internal separators provide structure.
+    pub fn has_visible_edges(&self) -> bool {
+        // A visible edge requires at least one non-space corner.
+        self.top_left != ' ' || self.top_right != ' '
+            || self.bottom_left != ' ' || self.bottom_right != ' '
+    }
+
     /// Parse a box style from an 8-line string.
     pub fn from_str(box_str: &str, ascii: bool) -> Self {
         let lines: Vec<&str> = box_str.lines().collect();
@@ -131,24 +141,24 @@ pub const ASCII: &str = "\
 |-+|
 |-+|
 | ||
-+-++";
++--+";
 
-/// ASCII with double edges.
+/// ASCII with double edges (no distinct header).
 pub const ASCII2: &str = "\
 +-++
 | ||
++-++
 | ||
-| ||
-| ||
-| ||
++-++
++-++
 | ||
 +-++";
 
 /// Square box with double horizontal header separator.
 pub const SQUARE_DOUBLE_HEAD: &str = "\
 ┌─┬┐
-│ ║│
-├─╪┤
+│ ││
+╞═╪╡
 │ ││
 ├─┼┤
 ├─┼┤
@@ -156,19 +166,19 @@ pub const SQUARE_DOUBLE_HEAD: &str = "\
 └─┴┘";
 
 /// Minimal box with double horizontal separator (head row only).
-pub const MINIMAL_DOUBLE_HEAD: &str = "  ═ \n  ═ \n  ═ \n    \n    \n    \n  ═ \n    ";
+pub const MINIMAL_DOUBLE_HEAD: &str = "  ╷ \n  │ \n ═╪ \n  │ \n ─┼ \n ─┼ \n  │ \n  ╵ ";
 
 /// Simple box with a single horizontal rule under the header.
-pub const SIMPLE_HEAD: &str = "    \n    \n    \n    \n    \n    \n ━┿ \n    ";
+pub const SIMPLE_HEAD: &str = "    \n    \n ── \n    \n    \n    \n    \n    ";
 
 /// ASCII box style with a double header line.
 pub const ASCII_DOUBLE_HEAD: &str = "\
 +-++
 | ||
-+=+|
++=++
 | ||
-|-+|
-|-+|
++-++
++-++
 | ||
 +-++";
 
@@ -255,27 +265,11 @@ pub const SIMPLE: &str = "    \n    \n ── \n    \n    \n ── \n    \n    
 /// Simple with heavy header.
 pub const SIMPLE_HEAVY: &str = "    \n    \n ━━ \n    \n    \n ━━ \n    \n    ";
 
-/// Minimal (just horizontal rule under header).
-pub const MINIMAL: &str = "\
-  ╌
-  ╌
-  ╌
+/// Minimal (thin rule, vertical separators, no outer edges).
+pub const MINIMAL: &str = "  ╷ \n  │ \n╶─┼╴\n  │ \n╶─┼╴\n╶─┼╴\n  │ \n  ╵ ";
 
-
-
-
-  ╌ ";
-
-/// Minimal with heavy header.
-pub const MINIMAL_HEAVY: &str = "\
-  ╍
-  ╍
-  ╍
-
-
-
-
-  ╍ ";
+/// Minimal with heavy header separator (matches Python Rich MINIMAL_HEAVY_HEAD).
+pub const MINIMAL_HEAVY: &str = "  ╷ \n  │ \n╺━┿╸\n  │ \n╶─┼╴\n╶─┼╴\n  │ \n  ╵ ";
 
 // ---------------------------------------------------------------------------
 // Box style constants (lazily parsed)
@@ -369,11 +363,12 @@ mod tests {
         // Spot-check characters
         let sq = &*BOX_SQUARE_DOUBLE_HEAD;
         assert_eq!(sq.top_left, '┌');
-        assert_eq!(sq.head_vertical, '║');
-        assert_eq!(sq.head_row_horizontal, '─');
+        assert_eq!(sq.head_row_horizontal, '═');
+        assert_eq!(sq.head_row_left, '╞');
 
         let ac = &*BOX_ASCII_DOUBLE_HEAD;
         assert_eq!(ac.head_row_left, '+');
         assert_eq!(ac.head_row_horizontal, '=');
+        assert_eq!(ac.row_left, '+');
     }
 }

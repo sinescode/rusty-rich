@@ -583,6 +583,10 @@ impl Console {
         let color_system = detect_color_system();
 
         let size = ConsoleDimensions::detect();
+        // Subtract 1 column from the width to prevent line wrapping in
+        // terminals where output that exactly fills the last column causes
+        // the cursor to advance and wrap visually before the newline.
+        let render_width = size.width.saturating_sub(1);
 
         Self {
             file: Box::new(io::stdout()) as Box<dyn Write + Send>,
@@ -591,7 +595,7 @@ impl Console {
             options: ConsoleOptions {
                 size,
                 is_terminal,
-                max_width: size.width,
+                max_width: render_width,
                 max_height: size.height,
                 ..Default::default()
             },
@@ -736,12 +740,27 @@ impl Console {
     }
 
     /// Print a single renderable followed by a newline.
+    ///
+    /// Re-detects the terminal size on each call so that the output
+    /// adapts when the user resizes the terminal window.
     pub fn println(&mut self, renderable: &dyn Renderable) {
         if self.quiet { return; }
+        self.refresh_size();
         let result = renderable.render(&self.options);
         let ansi = result.to_ansi();
         let _ = writeln!(self.file, "{ansi}");
         let _ = self.file.flush();
+    }
+
+    /// Update `max_width` / `max_height` from the current terminal size.
+    fn refresh_size(&mut self) {
+        if self.is_terminal {
+            let size = ConsoleDimensions::detect();
+            self.options.size = size;
+            // Subtract 1 column to prevent edge-of-screen line wrapping.
+            self.options.max_width = size.width.saturating_sub(1);
+            self.options.max_height = size.height;
+        }
     }
 
     /// Print a plain string (supports markup by default when `markup` is

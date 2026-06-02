@@ -180,12 +180,37 @@ impl Segment {
         Self::new("\n")
     }
 
-    /// Get the cell length of this segment's text (using Unicode width).
+    /// Get the visible cell length of this segment's text, excluding ANSI
+    /// escape sequences which occupy no terminal columns.
     pub fn cell_length(&self) -> usize {
         if self.control.is_some() {
             return 0;
         }
-        unicode_width::UnicodeWidthStr::width(self.text.as_str())
+        // Strip ANSI SGR sequences (\x1b[...m) before measuring
+        let text = &self.text;
+        if !text.contains('\x1b') {
+            return unicode_width::UnicodeWidthStr::width(text.as_str());
+        }
+        let mut width = 0usize;
+        let mut chars = text.chars().peekable();
+        while let Some(ch) = chars.next() {
+            if ch == '\x1b' {
+                // Skip the escape sequence: \x1b [ ... m
+                if let Some('[') = chars.peek() {
+                    chars.next(); // consume '['
+                    // Consume until 'm' (the terminator)
+                    for c in chars.by_ref() {
+                        if c == 'm' {
+                            break;
+                        }
+                    }
+                }
+                // Don't count any of this as width
+            } else {
+                width += unicode_width::UnicodeWidthChar::width(ch).unwrap_or(0);
+            }
+        }
+        width
     }
 
     /// Check if this segment has any text content.

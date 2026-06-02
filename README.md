@@ -10,7 +10,7 @@
   <a href="https://crates.io/crates/rusty-rich"><img src="https://img.shields.io/crates/v/rusty-rich?color=F74C00" alt="crates.io"></a>
   <a href="https://docs.rs/rusty-rich"><img src="https://img.shields.io/docsrs/rusty-rich?color=F74C00" alt="docs.rs"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
-  <a href="#"><img src="https://img.shields.io/badge/tests-475%20passed-brightgreen" alt="tests"></a>
+  <a href="#"><img src="https://img.shields.io/badge/tests-778%20passed-brightgreen" alt="tests"></a>
 </p>
 
 ---
@@ -59,7 +59,7 @@
 
 ```toml
 [dependencies]
-rusty-rich = "0.3"
+rusty-rich = "0.4"
 ```
 
 ## 🚀 Quick Start
@@ -485,9 +485,12 @@ src/
 ## 🧪 Testing
 
 ```bash
-cargo test                    # 475 unit tests (all passing)
-cargo test --test battle_test # Integration / battle tests
+cargo test                              # 475 unit tests
+cargo test --test battle_test           # 103 integration tests
+cargo test --test box_table_exhaustive  # 150 exhaustive box/table tests
 ```
+
+All 778 tests passing. The exhaustive test suite covers every box style × every feature combination (colspan, rowspan, sections, alignment, padding, etc.).
 
 ## 📄 License
 

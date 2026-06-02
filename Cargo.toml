@@ -1,6 +1,6 @@
 [package]
 name = "rusty-rich"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 description = "Rich text and beautiful formatting in the terminal — a Rust port of Python's Rich library"
 license = "MIT"
