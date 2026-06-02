@@ -46,7 +46,7 @@
 //! | [`measure`] | Width measurement protocol for layout negotiation |
 //! | [`align`] | Horizontal (Left/Center/Right/Full) and vertical (Top/Middle/Bottom) alignment |
 //! | [`markup`] | BBCode-like parser: `[bold red]text[/bold red]` |
-//! | [`highlighter`] | Regex-based and repr-style text highlighters |
+//! | [`highlighter`] | Regex/Repr/ISO8601/JSON/Path text highlighters |
 //! | [`ratio`] | Proportional space distribution with minimums and maximums |
 //!
 //! ### Console & Rendering
@@ -84,17 +84,39 @@
 //!
 //! | Module | Provides |
 //! |--------|----------|
-//! | [`syntax`] | Syntax highlighting via syntect (100+ languages) |
-//! | [`markdown`] | Markdown rendering via pulldown-cmark: headings, code, lists, blockquotes, tables |
+//! | [`syntax`] | Syntax highlighting via syntect (100+ languages), lexer guessing, stylize_range |
+//! | [`markdown`] | Markdown rendering via pulldown-cmark: headings, code, lists, blockquotes, tables, images |
 //! | [`json`] | Pretty-printed JSON with syntax-highlighted keys/values |
 //! | [`logging`] | [`RichHandler`] for the `log` crate with colored levels |
+//! | [`log_render`] | Standalone [`LogRender`] formatter for log records as Rich tables |
 //! | [`traceback`] | Rich exception tracebacks with locals, source code, frame suppression, panic hook |
 //!
-//! ### Interactive
+//! ### Interactive & Inspection
 //!
 //! | Module | Provides |
 //! |--------|----------|
 //! | [`prompt`] | 5 prompt types: [`Prompt`], [`IntPrompt`], [`FloatPrompt`], [`Confirm`], [`Select`] |
+//! | [`inspect`] | [`Inspect`] for structured object introspection with attribute/method tables |
+//! | [`control`] | [`Control`] for composable terminal escape sequences (cursor, screen, title, bell) |
+//!
+//! ### Additional Renderables
+//!
+//! | Module | Provides |
+//! |--------|----------|
+//! | [`pretty`] | [`Pretty`] printing with [`Node`] tree traversal, [`pprint`], [`pretty_repr`] |
+//! | [`emoji`] | 100+ `:shortcode:` → Unicode emoji replacement via [`Emoji`] |
+//! | [`pager`] | System pager integration (`$PAGER`/`less`) with [`PagerContext`] RAII |
+//! | [`bar`] | Horizontal [`BarChart`] with labels, colors, and auto-scaling |
+//! | [`palette`] | [`Palette`] generation: gradient, rainbow, monochrome |
+//! | [`ansi`] | [`AnsiDecoder`] — parse ANSI escape sequences into styled [`Text`] |
+//! | [`constrain`] | [`Constrain`] — cap the maximum width of any renderable |
+//! | [`styled`] | [`Styled`] — apply a style to all output of a renderable |
+//! | [`containers`] | [`Lines`] and [`Renderables`] for grouping renderables |
+//! | [`filesize`] | [`format_file_size`], [`format_transfer_speed`], [`decimal`] (SI units) |
+//! | [`scope`] | [`render_scope`] / [`scope_summary`] for variable inspection |
+//! | [`file_proxy`] | [`FileProxy`] — auto-refreshing file content display |
+//! | [`diagnose`] | Error diagnostics — [`report`] and [`diagnose`] |
+//! | [`repr`] | [`RichRepr`] trait, [`repr_auto`] / [`rich_repr`] for custom pretty-printing |
 //!
 //! ### Export
 //!
@@ -158,11 +180,48 @@
 //!
 //! // Install a global panic hook for rich tracebacks
 //! traceback::install();
+//! ```
 //!
-//! // Or render manually
-//! // let tb = Traceback::from_exception("MyError", "details", frames)
-//! //     .show_locals(true)
-//! //     .max_frames(5);
+//! ### Object Inspection
+//!
+//! ```rust,no_run
+//! use rusty_rich::Inspect;
+//!
+//! let value = vec![1, 2, 3];
+//! let insp = Inspect::new(&value)
+//!     .title("my_vec")
+//!     .add_attr("len", "usize", "3")
+//!     .add_method("push", "fn push(&mut self, value: T)")
+//!     .methods(true);
+//! ```
+//!
+//! ### Terminal Control Sequences
+//!
+//! ```rust,no_run
+//! use rusty_rich::control::{Control, control_home, control_clear};
+//!
+//! let clear = Control::clear_home();
+//! let title = Control::title("My App");
+//! let bell = Control::bell();
+//! ```
+//!
+//! ### Log Record Formatting
+//!
+//! ```rust,no_run
+//! use rusty_rich::LogRender;
+//!
+//! let mut renderer = LogRender::new()
+//!     .show_time(true)
+//!     .show_level(true)
+//!     .show_path(true);
+//!
+//! let record = renderer.render_log(
+//!     Some("10:30:00"),
+//!     "ERROR",
+//!     "Connection refused",
+//!     Some("src/main.rs"),
+//!     Some(42),
+//! );
 //! ```
 //!
 //! ### Full-Screen Applications
@@ -222,6 +281,7 @@
 //! ## Comparison with Python Rich
 //!
 //! rusty-rich achieves ~88% feature parity with Python Rich 14.x (475+ tests).
+//!
 //! ## Feature Flags
 //!
 //! No feature flags — all functionality is included by default. Dependencies are
@@ -229,18 +289,21 @@
 //!
 //! ## Crate Organization
 //!
-//! The crate is organized into 5 module groups:
+//! The crate is organized into 6 module groups across 48 source files:
 //!
 //! - **Core** ([`color`], [`style`], [`segment`], [`text`], [`theme`],
 //!   [`measure`], [`align`], [`markup`], [`ratio`], [`highlighter`],
 //!   [`cells`], [`console`], [`box_drawing`])
 //! - **Renderables** ([`panel`], [`table`], [`tree`], [`rule`],
-//!   [`padding`], [`columns`], [`layout`])
+//!   [`padding`], [`columns`], [`layout`], [`bar`], [`constrain`],
+//!   [`styled`], [`containers`])
 //! - **Dynamic** ([`prompt`], [`progress`], [`progress_columns`],
-//!   [`spinner`], [`status`], [`live`], [`screen`])
+//!   [`spinner`], [`status`], [`live`], [`screen`], [`control`])
 //! - **Content** ([`syntax`], [`markdown`], [`json`], [`logging`],
-//!   [`traceback`])
-//! - **Export** ([`export`])
+//!   [`log_render`], [`traceback`], [`pretty`], [`ansi`])
+//! - **Inspection** ([`inspect`], [`scope`], [`repr`], [`diagnose`])
+//! - **Export & I/O** ([`export`], [`pager`], [`emoji`], [`palette`],
+//!   [`filesize`], [`file_proxy`])
 //!
 //! Most commonly-used types are re-exported at the crate root for convenience.
 
