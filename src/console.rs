@@ -586,7 +586,7 @@ pub struct Console {
 impl Console {
     /// Create a new Console writing to stdout.
     pub fn new() -> Self {
-        let is_terminal = atty::is(atty::Stream::Stdout);
+        let is_terminal = std::io::stdout().is_terminal();
         let color_system = detect_color_system();
 
         let size = ConsoleDimensions::detect();
@@ -1462,7 +1462,7 @@ fn detect_color_system() -> ColorSystem {
         return ColorSystem::Standard;
     }
     // Default to true color on modern terminals
-    if atty::is(atty::Stream::Stdout) {
+    if std::io::stdout().is_terminal() {
         ColorSystem::TrueColor
     } else {
         ColorSystem::Standard
@@ -1606,7 +1606,7 @@ mod tests {
         let console = Console::new();
         // is_terminal depends on whether stdout is a terminal
         let detected = console.is_terminal();
-        assert_eq!(detected, atty::is(atty::Stream::Stdout));
+        assert_eq!(detected, std::io::stdout().is_terminal());
     }
 
     #[test]

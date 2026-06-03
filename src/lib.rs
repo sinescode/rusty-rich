@@ -329,29 +329,8 @@ pub mod align;
 pub mod markup;
 /// Proportional space distribution algorithms with minimums and maximums.
 pub mod ratio;
-/// Regex-based and repr-style text highlighters.
-#[cfg(feature = "syntax-highlighting")]
+/// Regex-based and repr-style text highlighters (always available, no syntect dependency).
 pub mod highlighter;
-#[cfg(not(feature = "syntax-highlighting"))]
-#[allow(missing_docs)]
-mod highlighter_stub {
-    use crate::text::Text;
-    pub trait Highlighter: Send + Sync { fn highlight(&self, text: &mut Text); }
-    pub struct ReprHighlighter;
-    impl Highlighter for ReprHighlighter { fn highlight(&self, _text: &mut Text) {} }
-    pub struct NullHighlighter;
-    impl Highlighter for NullHighlighter { fn highlight(&self, _text: &mut Text) {} }
-    pub struct RegexHighlighter;
-    impl Highlighter for RegexHighlighter { fn highlight(&self, _text: &mut Text) {} }
-    pub struct ISO8601Highlighter;
-    impl Highlighter for ISO8601Highlighter { fn highlight(&self, _text: &mut Text) {} }
-    pub struct JSONHighlighter;
-    impl Highlighter for JSONHighlighter { fn highlight(&self, _text: &mut Text) {} }
-    pub struct PathHighlighter;
-    impl Highlighter for PathHighlighter { fn highlight(&self, _text: &mut Text) {} }
-}
-#[cfg(not(feature = "syntax-highlighting"))]
-pub use highlighter_stub::*;
 /// Central rendering engine — Console, Renderable trait, capture, export.
 pub mod console;
 /// 17 box/border drawing styles from ASCII to heavy Unicode double-lines.
@@ -724,25 +703,13 @@ pub use traceback::Frame;
 pub use traceback::install;
 
 /// Trait for text highlighters — takes a [`Text`] and returns a styled [`Text`].
-#[cfg(feature = "syntax-highlighting")]
 pub use highlighter::Highlighter;
-#[cfg(not(feature = "syntax-highlighting"))]
-pub use highlighter_stub::Highlighter;
 /// Highlights Python-repr-like output: URLs, numbers, paths, quoted strings.
-#[cfg(feature = "syntax-highlighting")]
 pub use highlighter::ReprHighlighter;
-#[cfg(not(feature = "syntax-highlighting"))]
-pub use highlighter_stub::ReprHighlighter;
 /// A no-op highlighter that returns text unchanged.
-#[cfg(feature = "syntax-highlighting")]
 pub use highlighter::NullHighlighter;
-#[cfg(not(feature = "syntax-highlighting"))]
-pub use highlighter_stub::NullHighlighter;
 /// Highlights text using regex patterns mapped to styles.
-#[cfg(feature = "syntax-highlighting")]
 pub use highlighter::RegexHighlighter;
-#[cfg(not(feature = "syntax-highlighting"))]
-pub use highlighter_stub::RegexHighlighter;
 
 // -- Export ------------------------------------------------------------------
 
@@ -897,18 +864,9 @@ pub use progress::track;
 pub use progress::wrap_file;
 
 // Highlighter additional exports
-#[cfg(feature = "syntax-highlighting")]
 pub use highlighter::ISO8601Highlighter;
-#[cfg(feature = "syntax-highlighting")]
 pub use highlighter::JSONHighlighter;
-#[cfg(feature = "syntax-highlighting")]
 pub use highlighter::PathHighlighter;
-#[cfg(not(feature = "syntax-highlighting"))]
-pub use highlighter_stub::ISO8601Highlighter;
-#[cfg(not(feature = "syntax-highlighting"))]
-pub use highlighter_stub::JSONHighlighter;
-#[cfg(not(feature = "syntax-highlighting"))]
-pub use highlighter_stub::PathHighlighter;
 
 // Filesize additional exports
 pub use filesize::decimal as format_size_decimal;
