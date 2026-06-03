@@ -5,7 +5,7 @@
 //! styled output.
 
 use std::fmt;
-use std::io::{self, Write};
+use std::io::{self, Write, IsTerminal};
 use std::sync::{Arc, Mutex};
 
 use crate::align::AlignMethod;
