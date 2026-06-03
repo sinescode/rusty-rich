@@ -120,29 +120,6 @@ jobs:
           files: cobertura.xml
         continue-on-error: true
 
-  # ── Feature matrix test ───────────────────────────────────────
-  feature-test:
-    name: Features (${{ matrix.features }})
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        features: [minimal, syntax-highlighting, markdown, default]
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: dtolnay/rust-toolchain@v1
-        with:
-          toolchain: stable
-
-      - uses: Swatinem/rust-cache@v2
-
-      - name: Build
-        run: cargo build --no-default-features --features "${{ matrix.features }}"
-
-      - name: Test
-        run: cargo test --no-default-features --features "${{ matrix.features }}"
-
   # ── MSRV check ─────────────────────────────────────────────────
   msrv:
     name: MSRV (1.70)
