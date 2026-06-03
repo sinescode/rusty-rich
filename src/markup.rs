@@ -67,25 +67,29 @@ impl Tag {
 // ---------------------------------------------------------------------------
 
 /// Parse markup and return a `Text` with applied styles.
+///
+/// Uses byte-based scanning (since `[` and `]` are ASCII single-byte) to
+/// avoid allocating a `Vec<char>`.  Literal text is sanitized to prevent
+/// raw ANSI escape injection.
 pub fn render(markup: &str) -> Text {
     let mut text = Text::new("");
     let mut style_stack = StyleStack::new(Style::new());
+
+    let bytes = markup.as_bytes();
+    let len = bytes.len();
     let mut pos = 0usize;
 
-    let chars: Vec<char> = markup.chars().collect();
-    let len = chars.len();
-
     while pos < len {
-        if chars[pos] == '[' {
+        if bytes[pos] == b'[' {
             // Check for escaped `[[`
-            if pos + 1 < len && chars[pos + 1] == '[' {
+            if pos + 1 < len && bytes[pos + 1] == b'[' {
                 text.append_styled("[", style_stack.current());
                 pos += 2;
                 continue;
             }
 
             // Find the closing `]`
-            let end = match chars[pos..].iter().position(|&c| c == ']') {
+            let end = match bytes[pos..].iter().position(|&c| c == b']') {
                 Some(e) => pos + e,
                 None => {
                     // No closing bracket — treat as literal
@@ -95,7 +99,9 @@ pub fn render(markup: &str) -> Text {
                 }
             };
 
-            let tag_str: String = chars[pos + 1..end].iter().collect();
+            // Extract tag string (bytes between [ and ] are ASCII-safe)
+            let tag_str = std::str::from_utf8(&bytes[pos + 1..end])
+                .unwrap_or("");
             pos = end + 1;
 
             if tag_str.is_empty() {
@@ -103,7 +109,7 @@ pub fn render(markup: &str) -> Text {
             }
 
             // Parse the tag
-            let tag = parse_tag(&tag_str);
+            let tag = parse_tag(tag_str);
 
             if tag.is_closing() {
                 let closing = tag.closing_name();
@@ -113,23 +119,27 @@ pub fn render(markup: &str) -> Text {
                         style_stack.pop();
                     }
                 } else {
-                    // [/name] — pop until we find matching
-                    // Simplified: just pop one
-                    style_stack.pop();
+                    // [/name] — pop to matching opening tag
+                    style_stack.pop_to(closing);
                 }
             } else {
-                // Opening tag — push style
+                // Opening tag — push style with tag name for matching
                 let style = tag_to_style(&tag);
-                style_stack.push(style);
+                style_stack.push_named(tag.name.clone(), style);
             }
         } else {
             // Regular text — accumulate until next `[` or end
             let start = pos;
-            while pos < len && chars[pos] != '[' {
+            while pos < len && bytes[pos] != b'[' {
                 pos += 1;
             }
-            let chunk: String = chars[start..pos].iter().collect();
-            text.append_styled(chunk, style_stack.current());
+            // start..pos is at valid UTF-8 boundaries because we never split
+            // inside a multi-byte character (we stop at ASCII '[', and the
+            // range starts after a ']' or at the beginning of the string).
+            let chunk = &markup[start..pos];
+            // Sanitize to prevent raw ANSI escape injection in literal text
+            let sanitized = crate::export::strip_ansi_escapes(chunk);
+            text.append_styled(sanitized, style_stack.current());
         }
     }
 

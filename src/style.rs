@@ -521,9 +521,6 @@ impl Style {
         if self.set_attributes & Attributes::STRIKE != 0 {
             codes.push(if self.attributes.get(Attributes::STRIKE) { "9" } else { "29" }.into());
         }
-        if self.set_attributes & Attributes::CONCEAL != 0 {
-            codes.push(if self.attributes.get(Attributes::CONCEAL) { "8" } else { "28" }.into());
-        }
         if self.set_attributes & Attributes::UNDERLINE2 != 0 {
             codes.push(if self.attributes.get(Attributes::UNDERLINE2) { "21" } else { "24" }.into());
         }
@@ -862,9 +859,16 @@ fn color_to_name(c: &Color) -> Option<&'static str> {
 // ---------------------------------------------------------------------------
 
 /// A stack of styles, used when rendering nested markup.
+///
+/// Tracks tag names alongside styles to support proper close-tag matching
+/// (e.g., `[/bold]` inside `[italic][bold]...` correctly pops to bold,
+/// not just the top of the stack).
 #[derive(Debug, Clone)]
 pub struct StyleStack {
     stack: Vec<Style>,
+    /// Tag names corresponding to each pushed style. Used by `pop_to()`
+    /// to find and remove the matching opening tag.
+    tag_names: Vec<String>,
     default_style: Style,
 }
 
@@ -873,6 +877,7 @@ impl StyleStack {
     pub fn new(default_style: Style) -> Self {
         Self {
             stack: Vec::new(),
+            tag_names: Vec::new(),
             default_style,
         }
     }
@@ -886,14 +891,38 @@ impl StyleStack {
         combined
     }
 
-    /// Push a style onto the stack.
+    /// Push a style onto the stack (backward-compatible, no tag name).
     pub fn push(&mut self, style: Style) {
+        self.tag_names.push(String::new());
         self.stack.push(style);
     }
 
-    /// Pop the top style.
+    /// Push a style with an associated tag name for close-tag matching.
+    pub fn push_named(&mut self, name: String, style: Style) {
+        self.tag_names.push(name);
+        self.stack.push(style);
+    }
+
+    /// Pop the top style (and its tag name).
     pub fn pop(&mut self) -> Option<Style> {
+        self.tag_names.pop();
         self.stack.pop()
+    }
+
+    /// Pop styles until the matching opening tag is found and removed.
+    ///
+    /// Searches from the top of the stack for a tag with the given name.
+    /// If found, removes it and everything above it. If not found, pops
+    /// just one style as a fallback.
+    pub fn pop_to(&mut self, name: &str) {
+        if let Some(pos) = self.tag_names.iter().rposition(|n| n == name) {
+            self.stack.truncate(pos);
+            self.tag_names.truncate(pos);
+        } else {
+            // Tag not found — pop one as fallback
+            self.stack.pop();
+            self.tag_names.pop();
+        }
     }
 
     /// Get the depth.

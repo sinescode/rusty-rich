@@ -262,9 +262,14 @@ impl ProgressColumn for RenderableColumn {
 // ---------------------------------------------------------------------------
 
 /// A multi-task progress display.
+///
+/// Tasks are stored in a [`HashMap`] keyed by task ID for O(1) lookup.
+/// [`task_order`] maintains insertion order for rendering.
 #[derive(Debug)]
 pub struct Progress {
-    pub tasks: Vec<Task>,
+    pub tasks: HashMap<usize, Task>,
+    /// Insertion order of task IDs for stable iteration during rendering.
+    pub task_order: Vec<usize>,
     pub auto_refresh: bool,
     pub refresh_per_second: f64,
     pub transient: bool,
@@ -277,7 +282,8 @@ impl Progress {
     /// Create a new `Progress` instance with no tasks.
     pub fn new() -> Self {
         Self {
-            tasks: Vec::new(),
+            tasks: HashMap::new(),
+            task_order: Vec::new(),
             auto_refresh: true,
             refresh_per_second: 10.0,
             transient: false,
@@ -302,13 +308,14 @@ impl Progress {
     ) -> usize {
         let id = self.next_id;
         self.next_id += 1;
-        self.tasks.push(Task::new(id, description, total));
+        self.tasks.insert(id, Task::new(id, description, total));
+        self.task_order.push(id);
         id
     }
 
     /// Increase a task's completed count by `delta`.
     pub fn advance(&mut self, task_id: usize, delta: f64) {
-        if let Some(task) = self.tasks.iter_mut().find(|t| t.id == task_id) {
+        if let Some(task) = self.tasks.get_mut(&task_id) {
             task.completed += delta;
             if let Some(total) = task.total {
                 if task.completed > total {
@@ -320,14 +327,15 @@ impl Progress {
 
     /// Set a task's completed count directly (overwrites current value).
     pub fn update(&mut self, task_id: usize, completed: f64) {
-        if let Some(task) = self.tasks.iter_mut().find(|t| t.id == task_id) {
+        if let Some(task) = self.tasks.get_mut(&task_id) {
             task.completed = completed;
         }
     }
 
     /// Remove a task by its ID. No-op if the task does not exist.
     pub fn remove_task(&mut self, task_id: usize) {
-        self.tasks.retain(|t| t.id != task_id);
+        self.tasks.remove(&task_id);
+        self.task_order.retain(|id| *id != task_id);
     }
 
     /// Force a refresh/render of the progress display.
@@ -339,14 +347,14 @@ impl Progress {
 
     /// Mark a task as started (reset its start_time to now).
     pub fn start_task(&mut self, task_id: usize) {
-        if let Some(task) = self.tasks.iter_mut().find(|t| t.id == task_id) {
+        if let Some(task) = self.tasks.get_mut(&task_id) {
             task.start_time = Instant::now();
         }
     }
 
     /// Mark a task as stopped (set its stop_time to now).
     pub fn stop_task(&mut self, task_id: usize) {
-        if let Some(task) = self.tasks.iter_mut().find(|t| t.id == task_id) {
+        if let Some(task) = self.tasks.get_mut(&task_id) {
             task.stop_time = Some(Instant::now());
         }
     }
@@ -355,7 +363,7 @@ impl Progress {
     ///
     /// If `total` is `Some`, also updates the task's total.
     pub fn reset(&mut self, task_id: usize, total: Option<f64>) {
-        if let Some(task) = self.tasks.iter_mut().find(|t| t.id == task_id) {
+        if let Some(task) = self.tasks.get_mut(&task_id) {
             task.completed = 0.0;
             if let Some(t) = total {
                 task.total = Some(t);
@@ -365,7 +373,7 @@ impl Progress {
 
     /// Check if all tasks are finished.
     pub fn finished(&self) -> bool {
-        self.tasks.iter().all(|t| t.is_finished())
+        self.tasks.values().all(|t| t.is_finished())
     }
 
     /// Get the default column set for rendering.
@@ -384,8 +392,7 @@ impl Progress {
     /// Get the renderable for a specific task, if any.
     pub fn get_renderable(&self, task_id: usize) -> Option<&dyn Renderable> {
         self.tasks
-            .iter()
-            .find(|t| t.id == task_id)
+            .get(&task_id)
             .and_then(|t| t.renderable.as_ref())
             .map(|dr| dr as &dyn Renderable)
     }
@@ -393,7 +400,7 @@ impl Progress {
     /// Get all task renderables.
     pub fn get_renderables(&self) -> Vec<&dyn Renderable> {
         self.tasks
-            .iter()
+            .values()
             .filter_map(|t| t.renderable.as_ref())
             .map(|dr| dr as &dyn Renderable)
             .collect()
@@ -415,16 +422,18 @@ impl Progress {
             table.add_column(crate::table::Column::new(format!("Col {}", i)));
         }
 
-        for task in &self.tasks {
-            if !task.visible {
-                continue;
+        for id in &self.task_order {
+            if let Some(task) = self.tasks.get(id) {
+                if !task.visible {
+                    continue;
+                }
+                let elapsed = now.duration_since(task.start_time);
+                let cells: Vec<Cell> = columns
+                    .iter()
+                    .map(|col| Cell::new(col.render(task, 20, elapsed)))
+                    .collect();
+                table.add_row(cells);
             }
-            let elapsed = now.duration_since(task.start_time);
-            let cells: Vec<Cell> = columns
-                .iter()
-                .map(|col| Cell::new(col.render(task, 20, elapsed)))
-                .collect();
-            table.add_row(cells);
         }
 
         table
@@ -443,18 +452,20 @@ impl Progress {
     fn render_with_columns(&self, _width: usize, columns: &[Box<dyn crate::progress_columns::ProgressColumn>]) -> String {
         let mut out = String::new();
         let now = std::time::Instant::now();
-        for task in &self.tasks {
-            if !task.visible {
-                continue;
+        for id in &self.task_order {
+            if let Some(task) = self.tasks.get(id) {
+                if !task.visible {
+                    continue;
+                }
+                let elapsed = now.duration_since(task.start_time);
+                let mut line = String::new();
+                for (i, col) in columns.iter().enumerate() {
+                    if i > 0 { line.push(' '); }
+                    line.push_str(&col.render(task, 20, elapsed));
+                }
+                out.push_str(&line);
+                out.push('\n');
             }
-            let elapsed = now.duration_since(task.start_time);
-            let mut line = String::new();
-            for (i, col) in columns.iter().enumerate() {
-                if i > 0 { line.push(' '); }
-                line.push_str(&col.render(task, 20, elapsed));
-            }
-            out.push_str(&line);
-            out.push('\n');
         }
         out
     }
@@ -462,23 +473,25 @@ impl Progress {
     /// Default render (no columns).
     fn render_default(&self, width: usize) -> String {
         let mut out = String::new();
-        for task in &self.tasks {
-            if !task.visible {
-                continue;
-            }
-            let bar_width = width.saturating_sub(30).max(10);
-            let bar = self.render_task_bar(task, bar_width);
-            let pct = (task.progress() * 100.0) as usize;
-            let elapsed = format_duration(&task.elapsed());
-            let remaining = task
-                .time_remaining()
-                .map(|d| format_duration(&d))
-                .unwrap_or_else(|| "?".to_string());
+        for id in &self.task_order {
+            if let Some(task) = self.tasks.get(id) {
+                if !task.visible {
+                    continue;
+                }
+                let bar_width = width.saturating_sub(30).max(10);
+                let bar = self.render_task_bar(task, bar_width);
+                let pct = (task.progress() * 100.0) as usize;
+                let elapsed = format_duration(&task.elapsed());
+                let remaining = task
+                    .time_remaining()
+                    .map(|d| format_duration(&d))
+                    .unwrap_or_else(|| "?".to_string());
 
-            out.push_str(&format!(
-                "{desc:<20} {pct:>3}% {bar} {elapsed}<{remaining}\n",
-                desc = task.description.chars().take(20).collect::<String>(),
-            ));
+                out.push_str(&format!(
+                    "{desc:<20} {pct:>3}% {bar} {elapsed}<{remaining}\n",
+                    desc = task.description.chars().take(20).collect::<String>(),
+                ));
+            }
         }
         out
     }
@@ -653,7 +666,7 @@ impl ProgressFile {
 
     /// Sync the current read progress to a Progress instance.
     pub fn sync(&self, progress: &mut Progress) {
-        if let Some(task) = progress.tasks.iter_mut().find(|t| t.id == self.task_id) {
+        if let Some(task) = progress.tasks.get_mut(&self.task_id) {
             task.completed = self.bytes_read as f64;
         }
     }
@@ -706,7 +719,7 @@ mod tests {
         let id = p.add_task("Download", Some(100.0));
         assert_eq!(id, 1);
         p.advance(1, 50.0);
-        assert_eq!(p.tasks[0].completed, 50.0);
+        assert_eq!(p.tasks.get(&1).unwrap().completed, 50.0);
     }
 
     #[test]
@@ -714,7 +727,7 @@ mod tests {
         let mut p = Progress::new();
         let id = p.add_task("Download", Some(1000.0));
         p.advance_bytes(id, 256);
-        assert_eq!(p.tasks[0].completed, 256.0);
+        assert_eq!(p.tasks.get(&id).unwrap().completed, 256.0);
     }
 
     #[test]
@@ -740,7 +753,7 @@ mod tests {
 
         // Sync progress
         pf.sync(&mut p);
-        assert_eq!(p.tasks[0].completed, 5.0);
+        assert_eq!(p.tasks.get(&pf.task_id()).unwrap().completed, 5.0);
 
         // Read remaining bytes
         let mut buf = Vec::new();
@@ -749,7 +762,7 @@ mod tests {
 
         // Sync again
         pf.sync(&mut p);
-        assert_eq!(p.tasks[0].completed, 11.0);
+        assert_eq!(p.tasks.get(&pf.task_id()).unwrap().completed, 11.0);
 
         drop(pf);
         std::fs::remove_file(&path).unwrap();
@@ -780,7 +793,7 @@ mod tests {
         let id = p.add_task("test", Some(100.0));
         // start_task resets the start_time; just verify it doesn't panic
         p.start_task(id);
-        assert!(!p.tasks[0].elapsed().is_zero());
+        assert!(!p.tasks.get(&id).unwrap().elapsed().is_zero());
     }
 
     #[test]
@@ -788,7 +801,7 @@ mod tests {
         let mut p = Progress::new();
         let id = p.add_task("test", Some(100.0));
         p.stop_task(id);
-        assert!(p.tasks[0].stop_time.is_some());
+        assert!(p.tasks.get(&id).unwrap().stop_time.is_some());
     }
 
     #[test]
@@ -796,10 +809,10 @@ mod tests {
         let mut p = Progress::new();
         let id = p.add_task("test", Some(100.0));
         p.advance(id, 50.0);
-        assert_eq!(p.tasks[0].completed, 50.0);
+        assert_eq!(p.tasks.get(&id).unwrap().completed, 50.0);
         p.reset(id, Some(200.0));
-        assert_eq!(p.tasks[0].completed, 0.0);
-        assert_eq!(p.tasks[0].total, Some(200.0));
+        assert_eq!(p.tasks.get(&id).unwrap().completed, 0.0);
+        assert_eq!(p.tasks.get(&id).unwrap().total, Some(200.0));
     }
 
     #[test]

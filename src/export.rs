@@ -381,25 +381,62 @@ pub fn escape_xml(text: &str) -> String {
 }
 
 /// Strip ANSI escape sequences from text, returning plain text.
+///
+/// Handles all ECMA-48 / ISO 6429 escape sequence types:
+/// - CSI: `ESC [` parameter-bytes intermediate-bytes final-byte
+/// - OSC: `ESC ]` ... `BEL` or `ESC \\`
+/// - DCS: `ESC P` ... `ESC \\`
+/// - APC: `ESC _` ... `ESC \\`
+/// - PM:  `ESC ^` ... `ESC \\`
+/// - SOS: `ESC X` ... `ESC \\`
 pub fn strip_ansi_escapes(text: &str) -> String {
     let mut result = String::with_capacity(text.len());
     let mut chars = text.chars().peekable();
 
     while let Some(ch) = chars.next() {
         if ch == '\x1b' {
-            // Consume the escape sequence
-            if chars.peek() == Some(&'[') {
-                chars.next(); // consume '['
-                // Read parameter bytes (digits, semicolons, etc.)
-                while let Some(&c) = chars.peek() {
-                    if c.is_ascii_digit() || c == ';' || c == '?' || c == '!' {
-                        chars.next();
-                    } else {
-                        break;
+            match chars.peek() {
+                Some(&'[') => {
+                    chars.next(); // consume '['
+                    // Consume parameter bytes (0x30-0x3F: digits, ;, ?, !, >)
+                    while let Some(&c) = chars.peek() {
+                        if c.is_ascii_digit() || c == ';' || c == '?' || c == '!' || c == '>' {
+                            chars.next();
+                        } else {
+                            break;
+                        }
+                    }
+                    // Consume intermediate bytes (0x20-0x2F)
+                    while let Some(&c) = chars.peek() {
+                        if (0x20..=0x2F).contains(&(c as u32)) {
+                            chars.next();
+                        } else {
+                            break;
+                        }
+                    }
+                    // Consume final byte (0x40-0x7E)
+                    chars.next();
+                }
+                // OSC, DCS, APC, PM, SOS — terminated by BEL or ST
+                Some(&']') | Some(&'P') | Some(&'_') | Some(&'^') | Some(&'X') => {
+                    chars.next(); // consume the type byte
+                    while let Some(&c) = chars.peek() {
+                        if c == '\x07' {
+                            chars.next();
+                            break;
+                        } else if c == '\x1b' {
+                            chars.next();
+                            if chars.peek() == Some(&'\\') {
+                                chars.next();
+                                break;
+                            }
+                        } else {
+                            chars.next();
+                        }
                     }
                 }
-                // Consume the final byte (letter)
-                chars.next();
+                // Unknown escape type — just consume ESC
+                _ => {}
             }
         } else {
             result.push(ch);

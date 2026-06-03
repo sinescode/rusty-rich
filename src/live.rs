@@ -47,6 +47,7 @@
 //! disappears as if it was never there. Useful for "loading…" overlays.
 
 use std::io::{self, Write};
+use std::sync::{Arc, Mutex, atomic::{AtomicUsize, Ordering}};
 use std::time::Instant;
 
 use crate::console::{ConsoleOptions, DynRenderable, Renderable};
@@ -129,19 +130,23 @@ impl RenderHook {
 }
 
 /// Manages a live-updating region of the terminal.
+///
+/// Uses [`Arc`]`<`[`Mutex`]`<T>>` for interior mutability of shared state,
+/// making [`Live`] both [`Send`] and [`Sync`] so it can be safely shared
+/// across threads.
 pub struct Live {
-    renderable: Option<DynRenderable>,
+    renderable: Arc<Mutex<Option<DynRenderable>>>,
     screen: bool,
     auto_refresh: bool,
     refresh_per_second: f64,
     transient: bool,
     started: bool,
     started_at: Option<Instant>,
-    previous_line_count: usize,
+    previous_line_count: Arc<AtomicUsize>,
     redirect_stdout: bool,
     redirect_stderr: bool,
-    writers: Vec<LiveWriter>,
-    render_hooks: Vec<RenderHook>,
+    writers: Arc<Mutex<Vec<LiveWriter>>>,
+    render_hooks: Arc<Mutex<Vec<RenderHook>>>,
 }
 
 impl std::fmt::Debug for Live {
@@ -157,18 +162,18 @@ impl Live {
     /// Create a new `Live` display wrapping the given [`Renderable`].
     pub fn new(renderable: impl Renderable + Send + Sync + 'static) -> Self {
         Self {
-            renderable: Some(DynRenderable::new(renderable)),
+            renderable: Arc::new(Mutex::new(Some(DynRenderable::new(renderable)))),
             screen: false,
             auto_refresh: true,
             refresh_per_second: 4.0,
             transient: false,
             started: false,
             started_at: None,
-            previous_line_count: 0,
+            previous_line_count: Arc::new(AtomicUsize::new(0)),
             redirect_stdout: true,
             redirect_stderr: true,
-            writers: Vec::new(),
-            render_hooks: Vec::new(),
+            writers: Arc::new(Mutex::new(Vec::new())),
+            render_hooks: Arc::new(Mutex::new(Vec::new())),
         }
     }
 
@@ -186,7 +191,7 @@ impl Live {
     pub fn redirect_stderr(mut self, redirect: bool) -> Self { self.redirect_stderr = redirect; self }
 
     /// Register a writer whose captured content will be rendered during refresh.
-    pub fn add_writer(&mut self, writer: LiveWriter) { self.writers.push(writer); }
+    pub fn add_writer(&mut self, writer: LiveWriter) { self.writers.lock().unwrap().push(writer); }
 
     /// Create a LiveWriter that captures output while Live is active.
     pub fn create_writer() -> LiveWriter {
@@ -207,7 +212,8 @@ impl Live {
     /// Stop the live display: restore cursor, exit alternate screen, and clean up.
     pub fn stop(&mut self) -> io::Result<()> {
         if self.transient {
-            for _ in 0..self.previous_line_count {
+            let prev = self.previous_line_count.load(Ordering::Relaxed);
+            for _ in 0..prev {
                 write!(io::stdout(), "\x1b[1A\x1b[2K")?;
             }
         }
@@ -223,7 +229,7 @@ impl Live {
 
     /// Replace the displayed content and refresh immediately.
     pub fn update(&mut self, renderable: impl Renderable + Send + Sync + 'static) -> io::Result<()> {
-        self.renderable = Some(DynRenderable::new(renderable));
+        *self.renderable.lock().unwrap() = Some(DynRenderable::new(renderable));
         self.refresh()
     }
 
@@ -232,18 +238,22 @@ impl Live {
     /// If any [`RenderHook`]s are registered, they are applied to the rendered
     /// segment lines before the output is written to the terminal.
     pub fn refresh(&mut self) -> io::Result<()> {
-        if let Some(ref renderable) = self.renderable {
+        let renderable_guard = self.renderable.lock().unwrap();
+        if let Some(ref renderable) = *renderable_guard {
             let opts = ConsoleOptions::default();
             let result = renderable.render(&opts);
 
-            if self.previous_line_count > 0 {
-                write!(io::stdout(), "\x1b[{}F", self.previous_line_count)?;
+            let prev_lines = self.previous_line_count.load(Ordering::Relaxed);
+            if prev_lines > 0 {
+                write!(io::stdout(), "\x1b[{}F", prev_lines)?;
             }
+            drop(renderable_guard);
 
             // Apply render hooks to transform segment lines before output
-            let (ansi, line_count) = if !self.render_hooks.is_empty() {
+            let hooks_guard = self.render_hooks.lock().unwrap();
+            let (ansi, line_count) = if !hooks_guard.is_empty() {
                 let mut lines = result.lines.clone();
-                for hook in &self.render_hooks {
+                for hook in hooks_guard.iter() {
                     lines = hook.apply(&lines);
                 }
                 let mut out = String::new();
@@ -258,18 +268,20 @@ impl Live {
                 let c = s.lines().count();
                 (s, c)
             };
+            drop(hooks_guard);
 
             write!(io::stdout(), "{ansi}")?;
-            if line_count < self.previous_line_count {
-                for _ in line_count..self.previous_line_count {
+            if line_count < prev_lines {
+                for _ in line_count..prev_lines {
                     write!(io::stdout(), "\x1b[2K\n")?;
                 }
             }
 
-            self.previous_line_count = line_count;
+            self.previous_line_count.store(line_count, Ordering::Relaxed);
 
             // Write captured writer content
-            for writer in &self.writers {
+            let writers_guard = self.writers.lock().unwrap();
+            for writer in writers_guard.iter() {
                 let captured = String::from_utf8_lossy(writer.capture());
                 if !captured.is_empty() {
                     write!(io::stdout(), "{}", captured)?;
@@ -286,24 +298,14 @@ impl Live {
         self.started
     }
 
-    /// Get a reference to the current renderable.
-    ///
-    /// # Panics
-    ///
-    /// Panics if no renderable has been set (this should not happen with
-    /// normal usage, as `Live::new` always creates one).
-    pub fn get_renderable(&self) -> &dyn Renderable {
-        self.renderable.as_ref().unwrap() as &dyn Renderable
+    /// Get a clone of the current renderable, if any.
+    pub fn get_renderable(&self) -> Option<DynRenderable> {
+        self.renderable.lock().unwrap().clone()
     }
 
-    /// Get the current renderable being displayed.
-    ///
-    /// # Panics
-    ///
-    /// Panics if no renderable has been set (this should not happen with
-    /// normal usage, as `Live::new` always creates one).
-    pub fn renderable(&self) -> &dyn Renderable {
-        self.renderable.as_ref().unwrap() as &dyn Renderable
+    /// Get the current renderable being displayed, if any.
+    pub fn renderable(&self) -> Option<DynRenderable> {
+        self.renderable.lock().unwrap().clone()
     }
 
     /// Process multiple renderables through the Live display pipeline.
@@ -328,7 +330,7 @@ impl Live {
     /// Hooks are applied in registration order during each refresh, allowing
     /// transformation of the rendered segment lines before they are output.
     pub fn add_render_hook(&mut self, hook: RenderHook) {
-        self.render_hooks.push(hook);
+        self.render_hooks.lock().unwrap().push(hook);
     }
 }
 
@@ -356,8 +358,8 @@ mod tests {
     #[test]
     fn test_renderable_accessor() {
         let live = Live::new(Text::new("hello"));
-        let r = live.get_renderable();
-        // Verify we get a valid reference by rendering it
+        let r = live.get_renderable().expect("renderable should be set");
+        // Verify we get a valid renderable
         let opts = ConsoleOptions::default();
         let result = r.render(&opts);
         assert!(!result.to_ansi().is_empty());
@@ -412,6 +414,6 @@ mod tests {
         let mut live = Live::new(Text::new("test"));
         let hook = RenderHook::new(|segments| segments.to_vec());
         live.add_render_hook(hook);
-        assert_eq!(live.render_hooks.len(), 1);
+        assert_eq!(live.render_hooks.lock().unwrap().len(), 1);
     }
 }

@@ -778,7 +778,8 @@ impl Console {
             let parsed = crate::markup::render(text);
             parsed.render()
         } else {
-            text.to_string()
+            // Strip raw ANSI escapes from plain text to prevent injection
+            crate::export::strip_ansi_escapes(text)
         };
         let _ = write!(self.file, "{ansi}");
         let _ = self.file.flush();

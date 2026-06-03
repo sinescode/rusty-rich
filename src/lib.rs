@@ -330,7 +330,28 @@ pub mod markup;
 /// Proportional space distribution algorithms with minimums and maximums.
 pub mod ratio;
 /// Regex-based and repr-style text highlighters.
+#[cfg(feature = "syntax-highlighting")]
 pub mod highlighter;
+#[cfg(not(feature = "syntax-highlighting"))]
+#[allow(missing_docs)]
+mod highlighter_stub {
+    use crate::text::Text;
+    pub trait Highlighter: Send + Sync { fn highlight(&self, text: &mut Text); }
+    pub struct ReprHighlighter;
+    impl Highlighter for ReprHighlighter { fn highlight(&self, _text: &mut Text) {} }
+    pub struct NullHighlighter;
+    impl Highlighter for NullHighlighter { fn highlight(&self, _text: &mut Text) {} }
+    pub struct RegexHighlighter;
+    impl Highlighter for RegexHighlighter { fn highlight(&self, _text: &mut Text) {} }
+    pub struct ISO8601Highlighter;
+    impl Highlighter for ISO8601Highlighter { fn highlight(&self, _text: &mut Text) {} }
+    pub struct JSONHighlighter;
+    impl Highlighter for JSONHighlighter { fn highlight(&self, _text: &mut Text) {} }
+    pub struct PathHighlighter;
+    impl Highlighter for PathHighlighter { fn highlight(&self, _text: &mut Text) {} }
+}
+#[cfg(not(feature = "syntax-highlighting"))]
+pub use highlighter_stub::*;
 /// Central rendering engine — Console, Renderable trait, capture, export.
 pub mod console;
 /// 17 box/border drawing styles from ASCII to heavy Unicode double-lines.
@@ -373,9 +394,39 @@ pub mod screen;
 // -- Content rendering ------------------------------------------------------
 
 /// Syntax highlighting via syntect (100+ languages, Sublime Text theme support).
+#[cfg(feature = "syntax-highlighting")]
 pub mod syntax;
+#[cfg(not(feature = "syntax-highlighting"))]
+#[allow(missing_docs)]
+mod syntax_stub {
+    use crate::style::Style;
+    pub struct Syntax { pub code: String, pub lexer: String, pub theme: String, pub line_numbers: bool, pub word_wrap: bool, pub indent_guides: bool, pub background_color: Option<crate::color::Color>, pub padding: Option<crate::padding::Padding>, }
+    impl Syntax { pub fn new(code: impl Into<String>, lexer: impl Into<String>, theme: impl Into<String>) -> Self { Self { code: code.into(), lexer: lexer.into(), theme: theme.into(), line_numbers: false, word_wrap: false, indent_guides: false, background_color: None, padding: None } }
+    pub fn line_numbers(mut self, v: bool) -> Self { self.line_numbers = v; self } pub fn word_wrap(mut self, v: bool) -> Self { self.word_wrap = v; self } }
+    impl crate::console::Renderable for Syntax { fn render(&self, _: &crate::console::ConsoleOptions) -> crate::console::RenderResult { crate::console::RenderResult::from_text(&self.code) } }
+    pub struct SyntaxTheme;
+    pub struct ANSISyntaxTheme;
+    pub fn get_lexer_by_name(_: &str) -> Option<String> { None }
+    pub fn get_style_by_name(_: &str) -> Option<Vec<Style>> { None }
+    pub fn guess_lexer_for_filename(_: &str) -> Option<String> { None }
+}
+#[cfg(not(feature = "syntax-highlighting"))]
+pub use syntax_stub::*;
 /// Markdown rendering via pulldown-cmark: headings, code, lists, blockquotes, tables.
+#[cfg(feature = "markdown")]
 pub mod markdown;
+#[cfg(not(feature = "markdown"))]
+#[allow(missing_docs)]
+mod markdown_stub {
+    use crate::console::{ConsoleOptions, RenderResult, Renderable};
+    use crate::style::Style;
+    pub struct MarkdownRender { pub content: String, pub code_theme: String, pub inline_code_style: Option<Style>, pub hyperlinks: bool, }
+    impl MarkdownRender { pub fn new(content: impl Into<String>) -> Self { Self { content: content.into(), code_theme: String::new(), inline_code_style: None, hyperlinks: true } } }
+    impl Renderable for MarkdownRender { fn render(&self, _: &ConsoleOptions) -> RenderResult { RenderResult::from_text(&self.content) } }
+    pub fn render_markdown(md: impl Into<String>) -> MarkdownRender { MarkdownRender::new(md) }
+}
+#[cfg(not(feature = "markdown"))]
+pub use markdown_stub::*;
 /// Pretty-printed JSON with syntax-highlighted keys, strings, numbers, booleans.
 pub mod json;
 /// `RichHandler` for the `log` crate — colored log levels with file/line info.
@@ -639,11 +690,20 @@ pub use screen::ScreenUpdate;
 // -- Content rendering -------------------------------------------------------
 
 /// Syntax-highlighted code block — language, theme, line numbers, word wrap.
+#[cfg(feature = "syntax-highlighting")]
 pub use syntax::Syntax;
+#[cfg(not(feature = "syntax-highlighting"))]
+pub use syntax_stub::Syntax;
 /// Render a markdown string into a [`MarkdownRender`].
+#[cfg(feature = "markdown")]
 pub use markdown::render_markdown;
+#[cfg(not(feature = "markdown"))]
+pub use markdown_stub::render_markdown;
 /// A markdown document renderable — headings, code, lists, blockquotes, tables.
+#[cfg(feature = "markdown")]
 pub use markdown::MarkdownRender;
+#[cfg(not(feature = "markdown"))]
+pub use markdown_stub::MarkdownRender;
 /// Render a `serde_json::Value` into a [`JsonRender`].
 pub use json::render_json;
 /// Pretty-printed, syntax-highlighted JSON renderable.
@@ -664,13 +724,25 @@ pub use traceback::Frame;
 pub use traceback::install;
 
 /// Trait for text highlighters — takes a [`Text`] and returns a styled [`Text`].
+#[cfg(feature = "syntax-highlighting")]
 pub use highlighter::Highlighter;
+#[cfg(not(feature = "syntax-highlighting"))]
+pub use highlighter_stub::Highlighter;
 /// Highlights Python-repr-like output: URLs, numbers, paths, quoted strings.
+#[cfg(feature = "syntax-highlighting")]
 pub use highlighter::ReprHighlighter;
+#[cfg(not(feature = "syntax-highlighting"))]
+pub use highlighter_stub::ReprHighlighter;
 /// A no-op highlighter that returns text unchanged.
+#[cfg(feature = "syntax-highlighting")]
 pub use highlighter::NullHighlighter;
+#[cfg(not(feature = "syntax-highlighting"))]
+pub use highlighter_stub::NullHighlighter;
 /// Highlights text using regex patterns mapped to styles.
+#[cfg(feature = "syntax-highlighting")]
 pub use highlighter::RegexHighlighter;
+#[cfg(not(feature = "syntax-highlighting"))]
+pub use highlighter_stub::RegexHighlighter;
 
 // -- Export ------------------------------------------------------------------
 
@@ -781,11 +853,26 @@ pub use repr::ReprOptions;
 pub use repr::ReprError;
 
 // Syntax additional exports
+#[cfg(feature = "syntax-highlighting")]
 pub use syntax::SyntaxTheme;
+#[cfg(feature = "syntax-highlighting")]
 pub use syntax::ANSISyntaxTheme;
+#[cfg(feature = "syntax-highlighting")]
 pub use syntax::get_lexer_by_name;
+#[cfg(feature = "syntax-highlighting")]
 pub use syntax::get_style_by_name;
+#[cfg(feature = "syntax-highlighting")]
 pub use syntax::guess_lexer_for_filename;
+#[cfg(not(feature = "syntax-highlighting"))]
+pub use syntax_stub::SyntaxTheme;
+#[cfg(not(feature = "syntax-highlighting"))]
+pub use syntax_stub::ANSISyntaxTheme;
+#[cfg(not(feature = "syntax-highlighting"))]
+pub use syntax_stub::get_lexer_by_name;
+#[cfg(not(feature = "syntax-highlighting"))]
+pub use syntax_stub::get_style_by_name;
+#[cfg(not(feature = "syntax-highlighting"))]
+pub use syntax_stub::guess_lexer_for_filename;
 
 // Console additional exports
 pub use console::Capture;
@@ -810,9 +897,18 @@ pub use progress::track;
 pub use progress::wrap_file;
 
 // Highlighter additional exports
+#[cfg(feature = "syntax-highlighting")]
 pub use highlighter::ISO8601Highlighter;
+#[cfg(feature = "syntax-highlighting")]
 pub use highlighter::JSONHighlighter;
+#[cfg(feature = "syntax-highlighting")]
 pub use highlighter::PathHighlighter;
+#[cfg(not(feature = "syntax-highlighting"))]
+pub use highlighter_stub::ISO8601Highlighter;
+#[cfg(not(feature = "syntax-highlighting"))]
+pub use highlighter_stub::JSONHighlighter;
+#[cfg(not(feature = "syntax-highlighting"))]
+pub use highlighter_stub::PathHighlighter;
 
 // Filesize additional exports
 pub use filesize::decimal as format_size_decimal;
