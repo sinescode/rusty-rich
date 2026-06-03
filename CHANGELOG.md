@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.1 (2026-06-03)
+
+### Fixed
+- **ThemeContext lifetime safety** — added `PhantomData<&'a mut Console>` to `ThemeContext` to properly track borrow lifetimes and prevent use-after-free with the internal raw pointer
+- **Syntax theme fallback** — `Syntax` render no longer panics when the requested theme is missing; falls back to `base16-ocean.dark` instead of indexing into an absent key
+- **Layout divide-by-zero** — `Layout::render()` skips empty splits (`total_size == 0` or no children) instead of dividing by zero
+- **Text::stylize out-of-bounds** — `end` parameter is now clamped to `self.plain.len()` to prevent span index out-of-bounds
+
 ## 0.4.0 (2026-06-02)
 
 ### Fixed

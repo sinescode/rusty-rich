@@ -513,7 +513,13 @@ impl fmt::Debug for RenderHook {
 ///
 /// Created by [`Console::use_theme`]. While alive, the console uses the new
 /// theme. When the context is dropped, the original theme is restored.
-pub struct ThemeContext {
+// SAFETY: The PhantomData<'a mut Console> ensures the compiler enforces that
+// Console outlives ThemeContext. The raw pointer is valid because:
+// 1. ThemeContext is not Send or Sync (raw pointer prevents auto-derive)
+// 2. The pointer comes from a &'a mut reference
+// 3. PhantomData links the borrow lifetime to ThemeContext's lifetime
+pub struct ThemeContext<'a> {
+    _phantom: std::marker::PhantomData<&'a mut Console>,
     console_ptr: *mut Console,
     previous_theme: Theme,
 }
@@ -522,17 +528,18 @@ pub struct ThemeContext {
 // It must only be used on the same thread as the Console.
 // The pointer is valid because Console creates ThemeContext and outlives it.
 
-impl ThemeContext {
+impl<'a> ThemeContext<'a> {
     /// Create a new ThemeContext (internal — use [`Console::use_theme`]).
-    pub(crate) fn new(console: &mut Console, previous_theme: Theme) -> Self {
+    pub(crate) fn new(console: &'a mut Console, previous_theme: Theme) -> Self {
         Self {
+            _phantom: std::marker::PhantomData,
             console_ptr: console as *mut Console,
             previous_theme,
         }
     }
 }
 
-impl Drop for ThemeContext {
+impl<'a> Drop for ThemeContext<'a> {
     fn drop(&mut self) {
         unsafe {
             (*self.console_ptr).theme = std::mem::take(&mut self.previous_theme);
@@ -1353,7 +1360,7 @@ impl Console {
     /// }
     /// // original theme restored here
     /// ```
-    pub fn use_theme(&mut self, theme: Theme) -> ThemeContext {
+    pub fn use_theme(&mut self, theme: Theme) -> ThemeContext<'_> {
         let prev = std::mem::replace(&mut self.theme, theme);
         ThemeContext::new(self, prev)
     }

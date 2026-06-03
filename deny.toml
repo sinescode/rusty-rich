@@ -1,0 +1,50 @@
+# cargo-deny configuration for rusty-rich
+# See: https://embarkstudios.github.io/cargo-deny/
+
+# ── Advisory Database ────────────────────────────────────────────
+[advisories]
+vulnerability = "deny"
+unmaintained = "warn"
+unsound = "deny"
+yanked = "deny"
+notice = "warn"
+# RUSTSEC-2021-0145 (atty unmaintained) — known, being replaced by std::io::IsTerminal
+# RUSTSEC-2024-0320 (yaml-rust unmaintained) — transitive via syntect, only used at compile time
+ignore = [
+    "RUSTSEC-2021-0145",  # atty — actively migrating to std::io::IsTerminal
+    "RUSTSEC-2024-0320",  # yaml-rust — transitive via syntect, compile-time only
+]
+
+# ── License Compliance ───────────────────────────────────────────
+[licenses]
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "MPL-2.0",
+    "Unicode-3.0",
+    "Zlib",
+    "BSL-1.0",          # Boost Software License
+]
+# crates that use multiple-license expressions
+exceptions = [
+    { name = "unicode-ident", allow = ["Unicode-3.0", "MIT", "Apache-2.0"] },
+    { name = "syntect", allow = ["MIT"] },
+    { name = "onig", allow = ["MIT"] },
+    { name = "onig_sys", allow = ["MIT"] },
+]
+
+# ── Crate Sources ────────────────────────────────────────────────
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []
+
+# ── Bans / Duplicates ───────────────────────────────────────────
+[bans]
+multiple-versions = "warn"
+# When atty is replaced with std::io::IsTerminal, add it here:
+# deny = [{ name = "atty" }]

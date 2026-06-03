@@ -402,6 +402,8 @@ impl Text {
     /// Equivalent to Python's `Text.stylize()`.
     pub fn stylize(&mut self, style: Style, start: usize, end: Option<usize>) {
         let end = end.unwrap_or(self.plain.len());
+        // Clamp end to plain length to prevent out-of-bounds spans
+        let end = end.min(self.plain.len());
         if start < end && start < self.plain.len() {
             self.spans.push(Span::new(start, end, style));
         }

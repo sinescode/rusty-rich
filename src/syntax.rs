@@ -164,7 +164,9 @@ impl Renderable for Syntax {
             .or_else(|| ss.find_syntax_by_extension(&self.language))
             .unwrap_or_else(|| ss.find_syntax_plain_text());
 
-        let theme = &ts.themes[&self.theme];
+        let theme = ts.themes.get(&self.theme).unwrap_or_else(|| {
+            &ts.themes["base16-ocean.dark"]
+        });
 
         let mut highlighter = HighlightLines::new(syntax, theme);
 

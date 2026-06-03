@@ -360,6 +360,9 @@ impl Layout {
             }
             LayoutNode::Split { direction, sizes, children } => {
                 let total_size: usize = sizes.iter().sum();
+                if total_size == 0 || children.is_empty() {
+                    return;
+                }
                 let count = children.len();
 
                 match direction {

@@ -1,0 +1,44 @@
+version: 2
+updates:
+  # Cargo dependencies
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:30"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "rust"
+    assignees:
+      - "sinescode"
+    commit-message:
+      prefix: "cargo"
+      include: "scope"
+    groups:
+      # Group patch-level updates together to reduce PR noise
+      patch:
+        update-types:
+          - "patch"
+      minor:
+        update-types:
+          - "minor"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:45"
+      timezone: "UTC"
+    labels:
+      - "dependencies"
+      - "ci"
+    assignees:
+      - "sinescode"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
