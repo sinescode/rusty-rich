@@ -192,6 +192,12 @@ pub struct RenderResult {
     pub items: Vec<RenderItem>,
 }
 
+impl Default for RenderResult {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RenderResult {
     /// Create an empty [`RenderResult`].
     pub fn new() -> Self {
@@ -386,6 +392,12 @@ pub struct Group {
     pub children: Vec<DynRenderable>,
 }
 
+impl Default for Group {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Group {
     /// Create an empty [`Group`].
     pub fn new() -> Self {
@@ -512,9 +524,12 @@ impl Renderable for NoChange {
 // RenderHook — modify render output before display
 // ---------------------------------------------------------------------------
 
+/// Type alias for the render hook closure.
+pub type RenderHookFn = dyn Fn(&[Vec<Segment>]) -> Vec<Vec<Segment>> + Send;
+
 /// A hook that can modify render output before display.
 pub struct RenderHook {
-    hook: Box<dyn Fn(&[Vec<Segment>]) -> Vec<Vec<Segment>> + Send>,
+    hook: Box<RenderHookFn>,
 }
 
 impl RenderHook {
@@ -1121,31 +1136,28 @@ impl Console {
                 let mut buf = [0u8; 1];
                 let mut password = String::new();
 
-                loop {
-                    match handle.read_exact(&mut buf) {
-                        Ok(()) => match buf[0] {
-                            b'\r' | b'\n' => {
-                                let _ = writeln!(self.file);
-                                let _ = self.file.flush();
-                                break;
-                            }
-                            b'\x03' => {
-                                // Ctrl+C — break and return what we have
-                                let _ = writeln!(self.file);
-                                let _ = self.file.flush();
-                                break;
-                            }
-                            b'\x7f' | b'\x08' => {
-                                // Backspace
-                                password.pop();
-                            }
-                            c => {
-                                password.push(c as char);
-                                let _ = write!(self.file, "*");
-                                let _ = self.file.flush();
-                            }
-                        },
-                        Err(_) => break,
+                while let Ok(()) = handle.read_exact(&mut buf) {
+                    match buf[0] {
+                        b'\r' | b'\n' => {
+                            let _ = writeln!(self.file);
+                            let _ = self.file.flush();
+                            break;
+                        }
+                        b'\x03' => {
+                            // Ctrl+C — break and return what we have
+                            let _ = writeln!(self.file);
+                            let _ = self.file.flush();
+                            break;
+                        }
+                        b'\x7f' | b'\x08' => {
+                            // Backspace
+                            password.pop();
+                        }
+                        c => {
+                            password.push(c as char);
+                            let _ = write!(self.file, "*");
+                            let _ = self.file.flush();
+                        }
                     }
                 }
                 let _ = disable_raw_mode();
@@ -1323,7 +1335,7 @@ impl Console {
         // renderer would need std::panic::catch_unwind or custom error capture.
         // This method provides the API surface; for actual panic tracebacks
         // see crate::traceback::install().
-        let msg = format!("[bold red]Exception[/bold red]: No current exception info. ");
+        let msg = "[bold red]Exception[/bold red]: No current exception info. ";
         let msg_text = crate::text::Text::from_markup(&msg);
         let result = msg_text.render();
         let _ = writeln!(self.file, "{result}");
@@ -1410,7 +1422,7 @@ impl Console {
 
     /// Check if the terminal is a "dumb" terminal (no color support).
     pub fn is_dumb_terminal(&self) -> bool {
-        std::env::var("TERM").map_or(false, |t| t == "dumb")
+        std::env::var("TERM").is_ok_and(|t| t == "dumb")
     }
 
     /// Check if the console is currently in the alternate screen buffer.

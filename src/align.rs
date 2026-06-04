@@ -9,7 +9,7 @@ use std::fmt;
 // ---------------------------------------------------------------------------
 
 /// Horizontal alignment method.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum AlignMethod {
     /// Left-align (the default).
     Left,
@@ -62,6 +62,7 @@ impl AlignMethod {
     }
 
     /// Parse an alignment method from its string name (`"left"`, `"center"`, `"right"`, or `"full"`).
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(s: &str) -> Self {
         match s {
             "left" | "default" => Self::Left,
@@ -84,18 +85,12 @@ impl fmt::Display for AlignMethod {
     }
 }
 
-impl Default for AlignMethod {
-    fn default() -> Self {
-        Self::Left
-    }
-}
-
 // ---------------------------------------------------------------------------
 // VerticalAlignMethod
 // ---------------------------------------------------------------------------
 
 /// Vertical alignment method.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum VerticalAlignMethod {
     /// Align to the top edge.
     Top,
@@ -107,6 +102,7 @@ pub enum VerticalAlignMethod {
 
 impl VerticalAlignMethod {
     /// Parse a vertical alignment method from its string name (`"top"`, `"middle"`, or `"bottom"`).
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(s: &str) -> Self {
         match s {
             "top" => Self::Top,
@@ -124,12 +120,6 @@ impl fmt::Display for VerticalAlignMethod {
             Self::Middle => write!(f, "middle"),
             Self::Bottom => write!(f, "bottom"),
         }
-    }
-}
-
-impl Default for VerticalAlignMethod {
-    fn default() -> Self {
-        Self::Top
     }
 }
 

@@ -131,7 +131,7 @@ impl BoxStyle {
     }
 
     /// Get the plain text representation of the box definition.
-    pub fn to_string(&self) -> String {
+    pub fn to_plain_text(&self) -> String {
         format!(
             "{}{}{}{}\n{}{}{}{}\n{}{}{}{}\n{}{}{}{}\n{}{}{}{}\n{}{}{}{}\n{}{}{}{}\n{}{}{}{}",
             self.top_left,
@@ -172,7 +172,7 @@ impl BoxStyle {
 
 impl std::fmt::Display for BoxStyle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.to_string())
+        write!(f, "{}", self.to_plain_text())
     }
 }
 

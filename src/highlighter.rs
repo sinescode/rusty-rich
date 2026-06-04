@@ -59,6 +59,12 @@ impl Clone for RegexHighlighter {
     }
 }
 
+impl Default for RegexHighlighter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl RegexHighlighter {
     /// Create an empty regex highlighter with no rules.
     pub fn new() -> Self {
@@ -107,6 +113,12 @@ impl Highlighter for RegexHighlighter {
 #[derive(Debug, Clone)]
 pub struct ReprHighlighter {
     highlighter: Option<Box<RegexHighlighter>>,
+}
+
+impl Default for ReprHighlighter {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ReprHighlighter {
@@ -177,6 +189,12 @@ pub struct ISO8601Highlighter {
     highlighter: RegexHighlighter,
 }
 
+impl Default for ISO8601Highlighter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ISO8601Highlighter {
     /// Create a new ISO 8601 highlighter.
     pub fn new() -> Self {
@@ -213,6 +231,12 @@ impl Highlighter for ISO8601Highlighter {
 #[derive(Debug, Clone)]
 pub struct JSONHighlighter {
     highlighter: RegexHighlighter,
+}
+
+impl Default for JSONHighlighter {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl JSONHighlighter {
@@ -279,6 +303,12 @@ impl Highlighter for JSONHighlighter {
 #[derive(Debug, Clone)]
 pub struct PathHighlighter {
     highlighter: RegexHighlighter,
+}
+
+impl Default for PathHighlighter {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl PathHighlighter {

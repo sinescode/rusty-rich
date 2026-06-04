@@ -104,7 +104,6 @@ pub enum ColorType {
 // ---------------------------------------------------------------------------
 
 /// Full set of named ANSI colors. Use `Color::name_to_index()` to look up.
-
 // ---------------------------------------------------------------------------
 // Color
 // ---------------------------------------------------------------------------
@@ -205,8 +204,8 @@ impl Color {
             return Self::from_hex(&lower);
         }
         // Try "color<N>" format for 8-bit
-        if lower.starts_with("color") {
-            if let Ok(n) = lower[5..].parse::<u8>() {
+        if let Some(num_str) = lower.strip_prefix("color") {
+            if let Ok(n) = num_str.parse::<u8>() {
                 return Ok(Self::from_8bit(n));
             }
         }
@@ -666,9 +665,7 @@ pub static EIGHT_BIT_PALETTE: Lazy<[[u8; 3]; 256]> = Lazy::new(|| {
         [0, 255, 255],
         [255, 255, 255],
     ];
-    for i in 0..16 {
-        table[i] = std[i];
-    }
+    table[0..16].copy_from_slice(&std);
     let levels = [0u8, 95, 135, 175, 215, 255];
     for r in 0..6 {
         for g in 0..6 {
@@ -700,7 +697,7 @@ pub fn rgb_to_8bit(r: u8, g: u8, b: u8) -> u8 {
         if grey > 248 {
             return 231; // white
         }
-        return 232 + ((grey - 8) / 10) as u8;
+        return 232 + (grey - 8) / 10;
     }
 
     // Find nearest cube color
