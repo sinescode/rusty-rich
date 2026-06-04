@@ -180,12 +180,14 @@ fn main() {
     console.print_str("\n");
 
     // ── Syntax Highlighting ──────────────────────────────────────────────
-    let rule = Rule::new()
-        .title("Syntax Highlighting")
-        .style(Style::new().color(Color::parse("yellow").unwrap()));
-    console.println(&rule);
+    #[cfg(feature = "syntax-highlighting")]
+    {
+        let rule = Rule::new()
+            .title("Syntax Highlighting")
+            .style(Style::new().color(Color::parse("yellow").unwrap()));
+        console.println(&rule);
 
-    let rust_code = r#"use std::collections::HashMap;
+        let rust_code = r#"use std::collections::HashMap;
 
 /// A simple cache backed by a HashMap.
 pub struct Cache<K, V> {
@@ -215,23 +217,26 @@ impl<K: Eq + Hash, V> Cache<K, V> {
 }
 "#;
 
-    let syntax = Syntax::new(rust_code, "rust")
-        .theme("base16-ocean.dark");
-    let panel = Panel::new(syntax)
-        .title(" src/cache.rs ")
-        .box_style(BoxStyle::clone(&box_drawing::BOX_HEAVY_HEAD))
-        .border_style(Style::new().color(Color::parse("bright_black").unwrap()))
-        .padding(0, 2, 0, 2);
-    console.println(&panel);
-    console.print_str("\n");
+        let syntax = Syntax::new(rust_code, "rust")
+            .theme("base16-ocean.dark");
+        let panel = Panel::new(syntax)
+            .title(" src/cache.rs ")
+            .box_style(BoxStyle::clone(&box_drawing::BOX_HEAVY_HEAD))
+            .border_style(Style::new().color(Color::parse("bright_black").unwrap()))
+            .padding(0, 2, 0, 2);
+        console.println(&panel);
+        console.print_str("\n");
+    }
 
     // ── Markdown ──────────────────────────────────────────────────────────
-    let rule = Rule::new()
-        .title("Markdown Rendering")
-        .style(Style::new().color(Color::parse("yellow").unwrap()));
-    console.println(&rule);
+    #[cfg(feature = "markdown")]
+    {
+        let rule = Rule::new()
+            .title("Markdown Rendering")
+            .style(Style::new().color(Color::parse("yellow").unwrap()));
+        console.println(&rule);
 
-    let markdown_src = r#"# Hello from rusty-rich!
+        let markdown_src = r#"# Hello from rusty-rich!
 
 This is a **Markdown** renderer built in Rust.
 
@@ -258,14 +263,15 @@ fn main() {
 Made with ❤️ using Rust.
 "#;
 
-    let md = markdown::render_markdown(markdown_src);
-    let panel = Panel::new(md)
-        .title(" README.md ")
-        .box_style(BoxStyle::clone(&box_drawing::BOX_ROUNDED))
-        .border_style(Style::new().color(Color::parse("bright_magenta").unwrap()))
-        .padding(1, 3, 1, 3);
-    console.println(&panel);
-    console.print_str("\n");
+        let md = markdown::render_markdown(markdown_src);
+        let panel = Panel::new(md)
+            .title(" README.md ")
+            .box_style(BoxStyle::clone(&box_drawing::BOX_ROUNDED))
+            .border_style(Style::new().color(Color::parse("bright_magenta").unwrap()))
+            .padding(1, 3, 1, 3);
+        console.println(&panel);
+        console.print_str("\n");
+    }
 
     // ── Progress ──────────────────────────────────────────────────────────
     let rule = Rule::new()

@@ -3,7 +3,9 @@
 
 # ── Advisory Database ────────────────────────────────────────────
 [advisories]
-severity = { vulnerability = "deny", yanked = "deny", notice = "warn" }
+vulnerability = "deny"
+yanked = "deny"
+notice = "warn"
 # RUSTSEC-2024-0320 (yaml-rust unmaintained) — transitive via syntect, only used at compile time
 ignore = [
     "RUSTSEC-2024-0320",  # yaml-rust — transitive via syntect, compile-time only
