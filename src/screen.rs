@@ -244,7 +244,7 @@ where
 /// ```rust,no_run
 /// # use rusty_rich::Console;
 /// let mut console = Console::new();
-/// let ctx = console.screen();
+/// let mut ctx = console.screen();
 /// ctx.update("Hello from alt-screen!");
 /// std::thread::sleep(std::time::Duration::from_secs(2));
 /// // ctx drops → exits alt screen
