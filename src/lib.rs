@@ -96,7 +96,7 @@
 //! | Module | Provides |
 //! |--------|----------|
 //! | [`prompt`] | 5 prompt types: [`Prompt`], [`IntPrompt`], [`FloatPrompt`], [`Confirm`], [`Select`] |
-//! | `inspect` | [`Inspect`] for structured object introspection with attribute/method tables |
+//! | [`inspect`] | [`Inspect`] for structured object introspection with attribute/method tables |
 //! | [`control`] | [`Control`] for composable terminal escape sequences (cursor, screen, title, bell) |
 //!
 //! ### Additional Renderables
@@ -115,7 +115,7 @@
 //! | [`filesize`] | [`format_file_size`], [`format_transfer_speed`], `decimal` (SI units) |
 //! | [`scope`] | [`render_scope`] / [`scope_summary`] for variable inspection |
 //! | [`file_proxy`] | [`FileProxy`] — auto-refreshing file content display |
-//! | `diagnose` | Error diagnostics — [`report`] and `diagnose()` |
+//! | [`diagnose`] | Error diagnostics — [`report`] and [`diagnose`] |
 //! | [`repr`] | [`RichRepr`] trait, [`repr_auto`] / [`rich_repr`] for custom pretty-printing |
 //!
 //! ### Export
