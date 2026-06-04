@@ -9,6 +9,7 @@ use crate::spinner::Spinner;
 ///
 /// Usage:
 /// ```rust,no_run
+/// # use rusty_rich::Status;
 /// let status = Status::new("Working...");
 /// status.start();
 /// // do work...

@@ -242,6 +242,7 @@ where
 /// # Example
 ///
 /// ```rust,no_run
+/// # use rusty_rich::Console;
 /// let mut console = Console::new();
 /// let ctx = console.screen();
 /// ctx.update("Hello from alt-screen!");
