@@ -119,84 +119,6 @@
 | .github/workflows/security-audit.yml | https://raw.githubusercontent.com/sinescode/rusty-rich/master/.github/workflows/security-audit.yml |
 | .github/dependabot.yml | https://raw.githubusercontent.com/sinescode/rusty-rich/master/.github/dependabot.yml |
 
----
-
-## 🔐 Security Posture & Vulnerability Tracker
-
-> **Audit date**: 2026-06-04 — based on Full_audit.md Part 2 (10 vulnerabilities)  
-> **Overall grade**: **A−** (was B — all actionable findings resolved)  
-> **cargo-deny**: ✅ Running in CI, passes all checks (advisories, bans, licenses, sources)
-
-### Vulnerability Status
-
-| ID | Severity | Category | Description | Status |
-|----|----------|----------|-------------|--------|
-| VULN-001 | ~~HIGH~~ | Supply Chain | `atty 0.2` unmaintained (RUSTSEC-2021-0145) | ✅ **FIXED** — migrated to `std::io::IsTerminal` (Rust 1.70+) |
-| VULN-002 | MEDIUM | ANSI Injection | Raw `\x1b[` bytes in literal text pass-through | ✅ **FIXED** — `print_str()` strips via `export::strip_ansi_escapes`, markup sanitizes |
-| VULN-003 | MEDIUM | ANSI Bypass | `strip_ansi_escapes` regex misses OSC/DCS sequences | ✅ **FIXED** — pager uses `export::strip_ansi_escapes` (hand-written FSM, covers OSC/DCS) |
-| VULN-004 | ~~HIGH~~ | Concurrency | `Live` not `Send + Sync` — data race on update/refresh | ✅ **FIXED** — `Arc<Mutex<Option<DynRenderable>>>` + `Arc<AtomicUsize>` |
-| VULN-005 | MEDIUM | Unsafe Code | `ThemeContext` raw pointer — potential Send/Sync | ⚠️ **MITIGATED** — raw `*mut Console` + `PhantomData` prevents auto-derive; not `Send`/`Sync` |
-| VULN-006 | LOW | Panic Surface | `get_renderable()` / `renderable()` unconditional `.unwrap()` | ✅ **FIXED** — return `Option<DynRenderable>` |
-| VULN-007 | LOW | Command Injection | `$PAGER` env var passed unsplit to `Command::new()` | ✅ **FIXED** — `split_pager_command()` splits into program + args |
-| VULN-008 | MEDIUM | Supply Chain | `yaml-rust` unmaintained (RUSTSEC-2024-0320, transitive via `syntect`) | ⚠️ **MONITOR** — `syntect 5.3` still uses `yaml-rust`; no user-controlled theme loading exposed |
-| VULN-009 | MEDIUM | Resource | `Regex::new()` compiled per call in pager (DoS vector) | ✅ **FIXED** — removed regex; pager calls `export::strip_ansi_escapes` (FSM, no regex) |
-| VULN-010 | LOW | Path Traversal | `save_html/svg/text()` — no path validation | ⚠️ **DOCUMENTED** — caller responsibility; paths must be validated by caller |
-
-### Current Bug/Vulnerability Summary
-
-| Status | Count | Items |
-|--------|-------|-------|
-| ✅ Fixed | 7 | VULN-001, 002, 003, 004, 006, 007, 009 |
-| ⚠️ Mitigated/Monitor | 3 | VULN-005 (ThemeContext safe by design), VULN-008 (yaml-rust transitive), VULN-010 (caller responsibility) |
-| ❌ Open (CRITICAL/HIGH) | 0 | None |
-| ❌ Open (MEDIUM/LOW) | 0 | None |
-
-### Security Infrastructure
-
-| Component | Status |
-|-----------|--------|
-| `deny.toml` | ✅ Configured — checks advisories, bans, licenses, sources |
-| `cargo-deny` in CI | ✅ Running on every push |
-| `dependabot.yml` | ✅ Enabled |
-| `cargo fmt --check` | ✅ CI gate |
-| `cargo clippy -- -D warnings` | ✅ CI gate (0 warnings) |
-| `cargo doc` (warnings as errors) | ✅ CI gate |
-| Unsafe blocks | 1 (ThemeContext, documented with SAFETY comment) |
-| Dependency count | 10 runtime + 2 dev (minimal surface) |
-
----
-
-## 📈 Upgrade Roadmap
-
-### v0.5.0 — Polish + Safety (Recommended Next)
-- [x] `atty` → `std::io::IsTerminal` (VULN-001)
-- [x] Thread-safe `Live` (VULN-004)  
-- [x] `$PAGER` command sanitization (VULN-007)
-- [x] `strip_ansi_escapes` dedup + OSC/DCS coverage (VULN-003)
-- [x] ANSI escape injection prevention (VULN-002)
-- [x] Markup close-tag matching (StyleStack::pop_to)
-- [x] HTML export color preservation
-- [ ] Monitor `yaml-rust` → `yaml-rust2` in syntect (VULN-008)
-- [ ] CSS color name completion (remaining gaps)
-
-### v0.6.0 — Performance + DX
-- [x] `Style::to_ansi()` optimization (push_code! macro)
-- [x] Feature flags for compile time (`syntax-highlighting`, `markdown`, `minimal`)
-- [ ] Property-based tests (proptest/quickcheck)
-- [ ] Fuzz targets for markup, Color::parse, progress
-- [ ] Thread-safe Live refresh loop
-- [ ] `once_cell` → `std::sync::OnceLock` (Rust 1.70+)
-
-### v1.0.0 — Full Parity
-- [ ] Missing spinners (55/80 → 80/80)
-- [ ] SVG terminal chrome (window frame rendering)
-- [ ] Traceback locals via `std::panic::Location`
-- [ ] Full CSS color names (any gaps from 148 name map)
-- [ ] `is_jupyter` detection
-- [ ] `force_terminal` / `force_jupyter`
-
----
-
 ### 📚 Docs (all pages)
 | File | Raw URL |
 |------|---------|
@@ -251,7 +173,7 @@ terminal UI libraries and cross-language API design.
 Perform an exhaustive, XDD-level (eXtreme Detail Density) comparison between:
 
   A. rusty-rich v0.4.1 — a Rust port of Python's Rich library
-     Repo: https://github.com/sinescode/rusty-rich (MIT, ~21,400 lines, 48 modules, 778 tests)
+     Repo: https://github.com/sinescode/rusty-rich (MIT, ~25,500 lines, 51 modules, 742+ tests)
      Dependency chain: crossterm + syntect + pulldown-cmark + palette + serde_json
 
   B. Python Rich v14.x — the original terminal formatting library
@@ -514,7 +436,7 @@ You are a principal Rust software architect reviewing a mid-size crate for code
 quality, API design, performance, and maintainability.
 
 ## Target
-rusty-rich v0.4.1 — Rust terminal formatting library (~21,400 LOC, 48 modules, 778 tests)
+rusty-rich v0.4.1 — Rust terminal formatting library (~25,500 LOC, 51 modules, 778 tests)
 Repo: https://github.com/sinescode/rusty-rich
 
 ## Source Files — Read ALL of these
@@ -592,7 +514,7 @@ Config:
 - Is the re-export strategy in lib.rs clean? (~150 re-exports)
 - Does the public API surface have a coherent "story"? Is it discoverable?
 - Are there breaking-change opportunities for a 0.5.0 release?
-- Is the module boundary design right? (48 modules — too many? too few?)
+- Is the module boundary design right? (51 modules — too many? too few?)
 - Are trait bounds minimal? (no unnecessary Send/Sync/Clone requirements)
 - Are error types consistent? (String errors vs proper enum Error types)
 
