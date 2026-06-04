@@ -10,7 +10,7 @@
 //!
 //! # Quick Example
 //!
-//! ```rust,ignore
+//! ```rust,no_run
 //! use rusty_rich::inspect::Inspect;
 //!
 //! let obj = vec![1, 2, 3];

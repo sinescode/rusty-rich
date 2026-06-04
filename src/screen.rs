@@ -241,7 +241,7 @@ where
 ///
 /// # Example
 ///
-/// ```ignore
+/// ```rust,no_run
 /// let mut console = Console::new();
 /// let ctx = console.screen();
 /// ctx.update("Hello from alt-screen!");

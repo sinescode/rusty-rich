@@ -24,7 +24,7 @@ use crate::table::{Column, Table};
 ///
 /// # Examples
 ///
-/// ```rust,ignore
+/// ```rust,no_run
 /// use rusty_rich::log_render::LogRender;
 ///
 /// let mut renderer = LogRender::new()

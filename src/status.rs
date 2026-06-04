@@ -8,7 +8,7 @@ use crate::spinner::Spinner;
 /// A status message rendered with an animated spinner.
 ///
 /// Usage:
-/// ```ignore
+/// ```rust,no_run
 /// let status = Status::new("Working...");
 /// status.start();
 /// // do work...

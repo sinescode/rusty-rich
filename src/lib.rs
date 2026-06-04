@@ -128,7 +128,7 @@
 //!
 //! ### Markdown with Tables
 //!
-//! ```rust,ignore
+//! ```rust,no_run
 //! use rusty_rich::{render_markdown, Console};
 //!
 //! let md = render_markdown("# Report\n\n| Item | Qty |\n|------|-----|\n| A    | 10  |\n| B    | 5   |");
