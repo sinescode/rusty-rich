@@ -1,6 +1,7 @@
 //! Rich repr protocol — equivalent to Python rich's `repr.py`.
 //! Provides `__rich_repr__`-like functionality for Rust types.
 
+#[cfg(feature = "syntax-highlighting")]
 use crate::highlighter::ReprHighlighter;
 use crate::style::Style;
 use crate::text::Text;

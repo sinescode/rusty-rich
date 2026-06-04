@@ -412,6 +412,7 @@ impl Write for CaptureWriter {
 }
 
 /// Captured console output. Created by [`Console::end_capture`].
+#[derive(Debug)]
 pub struct Capture {
     buf: Arc<Mutex<Vec<u8>>>,
 }

@@ -26,6 +26,7 @@ use crate::panel::Panel;
 use crate::segment::Segment;
 use crate::style::Style;
 use crate::table::{Column, Table};
+#[cfg(feature = "syntax-highlighting")]
 use crate::highlighter::ReprHighlighter;
 
 // ---------------------------------------------------------------------------

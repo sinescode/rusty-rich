@@ -103,7 +103,7 @@
 //!
 //! | Module | Provides |
 //! |--------|----------|
-//! | [`pretty`] | [`Pretty`] printing with [`Node`] tree traversal, [`pprint`], [`pretty_repr`] |
+//! | [`pretty`] | [`Pretty`] printing with node tree traversal, [`pprint`], [`pretty_repr`] |
 //! | [`emoji`] | 100+ `:shortcode:` → Unicode emoji replacement via [`Emoji`] |
 //! | [`pager`] | System pager integration (`$PAGER`/`less`) with [`PagerContext`] RAII |
 //! | [`bar`] | Horizontal [`BarChart`] with labels, colors, and auto-scaling |

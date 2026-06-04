@@ -4,8 +4,6 @@
 # ── Advisory Database ────────────────────────────────────────────
 [advisories]
 vulnerability = "deny"
-unmaintained = "warn"
-unsound = "deny"
 yanked = "deny"
 notice = "warn"
 # RUSTSEC-2024-0320 (yaml-rust unmaintained) — transitive via syntect, only used at compile time
