@@ -139,36 +139,39 @@ impl Renderable for Panel {
         let has_edge = box_style.has_visible_edges();
         // Only reserve space for borders if the box actually draws them.
         let edge_width: usize = if has_edge { 2 } else { 0 };
-        let inner_max_width = options.max_width.saturating_sub(edge_width + padding.1 + padding.3);
+        let inner_max_width = options
+            .max_width
+            .saturating_sub(edge_width + padding.1 + padding.3);
 
         // Render the content
-        let inner_options = options
-            .update_width(inner_max_width.max(1));
+        let inner_options = options.update_width(inner_max_width.max(1));
         let content = self.renderable.render(&inner_options);
 
         // Calculate content width and height
         let content_width: usize = content
             .lines
             .iter()
-            .map(|line| {
-                line.iter()
-                    .map(|s| s.cell_length())
-                    .sum::<usize>()
-            })
+            .map(|line| line.iter().map(|s| s.cell_length()).sum::<usize>())
             .max()
             .unwrap_or(0);
 
         let panel_width = if self.expand {
             options.max_width
         } else {
-            (content_width + edge_width + padding.1 + padding.3).min(options.max_width).max(3)
+            (content_width + edge_width + padding.1 + padding.3)
+                .min(options.max_width)
+                .max(3)
         };
 
         // Build the panel
         let mut lines: Vec<Vec<Segment>> = Vec::new();
         let border = &box_style;
         let border_ansi = self.border_style.to_ansi();
-        let border_reset = if border_ansi.is_empty() { "" } else { "\x1b[0m" };
+        let border_reset = if border_ansi.is_empty() {
+            ""
+        } else {
+            "\x1b[0m"
+        };
 
         // Helper: create a border segment
         let bs = |ch: char| -> Segment {
@@ -215,19 +218,21 @@ impl Renderable for Panel {
                 let aligned = self.subtitle_align.align_text(subtitle, panel_width);
                 lines.push(vec![Segment::new(&aligned), Segment::line()]);
             }
-            return RenderResult { lines, items: Vec::new() };
+            return RenderResult {
+                lines,
+                items: Vec::new(),
+            };
         }
 
         // -- Bordered mode (original path) --
         // Top border (with optional title)
-        let top_line = self.render_top_border(
-            &box_style, panel_width, &border_ansi, &border_reset,
-        );
+        let top_line = self.render_top_border(&box_style, panel_width, &border_ansi, &border_reset);
         lines.push(top_line);
 
         // Pad top
         for _ in 0..padding.0 {
-            let pad_line = self.render_pad_line(&box_style, panel_width, &border_ansi, &border_reset);
+            let pad_line =
+                self.render_pad_line(&box_style, panel_width, &border_ansi, &border_reset);
             lines.push(pad_line);
         }
 
@@ -264,17 +269,20 @@ impl Renderable for Panel {
 
         // Pad bottom
         for _ in 0..padding.2 {
-            let pad_line = self.render_pad_line(&box_style, panel_width, &border_ansi, &border_reset);
+            let pad_line =
+                self.render_pad_line(&box_style, panel_width, &border_ansi, &border_reset);
             lines.push(pad_line);
         }
 
         // Bottom border (with optional subtitle)
-        let bottom_line = self.render_bottom_border(
-            &box_style, panel_width, &border_ansi, &border_reset,
-        );
+        let bottom_line =
+            self.render_bottom_border(&box_style, panel_width, &border_ansi, &border_reset);
         lines.push(bottom_line);
 
-        RenderResult { lines, items: Vec::new() }
+        RenderResult {
+            lines,
+            items: Vec::new(),
+        }
     }
 }
 
@@ -306,8 +314,14 @@ impl Panel {
                 // Batch repeated horizontal chars under a single ANSI wrap
                 let bl = format!("{border_ansi}{}{border_reset}", b.top_left);
                 let br = format!("{border_ansi}{}{border_reset}", b.top_right);
-                let bt_left = format!("{border_ansi}{}{border_reset}", b.top.to_string().repeat(left_w));
-                let bt_right = format!("{border_ansi}{}{border_reset}", b.top.to_string().repeat(right_w));
+                let bt_left = format!(
+                    "{border_ansi}{}{border_reset}",
+                    b.top.to_string().repeat(left_w)
+                );
+                let bt_right = format!(
+                    "{border_ansi}{}{border_reset}",
+                    b.top.to_string().repeat(right_w)
+                );
 
                 line.push(Segment::new(bl));
                 line.push(Segment::new(bt_left));
@@ -322,7 +336,10 @@ impl Panel {
         // No title, or title too long
         let bl = format!("{border_ansi}{}{border_reset}", b.top_left);
         let br = format!("{border_ansi}{}{border_reset}", b.top_right);
-        let bt = format!("{border_ansi}{}{border_reset}", b.top.to_string().repeat(inner));
+        let bt = format!(
+            "{border_ansi}{}{border_reset}",
+            b.top.to_string().repeat(inner)
+        );
 
         line.push(Segment::new(bl));
         line.push(Segment::new(bt));
@@ -357,8 +374,14 @@ impl Panel {
 
                 let bl = format!("{border_ansi}{}{border_reset}", b.bottom_left);
                 let br = format!("{border_ansi}{}{border_reset}", b.bottom_right);
-                let bb_left = format!("{border_ansi}{}{border_reset}", b.bottom.to_string().repeat(left_w));
-                let bb_right = format!("{border_ansi}{}{border_reset}", b.bottom.to_string().repeat(right_w));
+                let bb_left = format!(
+                    "{border_ansi}{}{border_reset}",
+                    b.bottom.to_string().repeat(left_w)
+                );
+                let bb_right = format!(
+                    "{border_ansi}{}{border_reset}",
+                    b.bottom.to_string().repeat(right_w)
+                );
 
                 line.push(Segment::new(bl));
                 line.push(Segment::new(bb_left));
@@ -372,7 +395,10 @@ impl Panel {
 
         let bl = format!("{border_ansi}{}{border_reset}", b.bottom_left);
         let br = format!("{border_ansi}{}{border_reset}", b.bottom_right);
-        let bb = format!("{border_ansi}{}{border_reset}", b.bottom.to_string().repeat(inner));
+        let bb = format!(
+            "{border_ansi}{}{border_reset}",
+            b.bottom.to_string().repeat(inner)
+        );
 
         line.push(Segment::new(bl));
         line.push(Segment::new(bb));

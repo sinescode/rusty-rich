@@ -4,7 +4,7 @@
 //! highlight support, and [`Renderables`] for rendering a sequence of
 //! independent renderables one after another.
 
-use crate::console::{ConsoleOptions, DynRenderable, Renderable, RenderResult};
+use crate::console::{ConsoleOptions, DynRenderable, RenderResult, Renderable};
 use crate::segment::Segment;
 use crate::style::Style;
 
@@ -138,9 +138,7 @@ impl Default for Renderables {
 impl Renderables {
     /// Create a new empty [`Renderables`] container.
     pub fn new() -> Self {
-        Self {
-            items: Vec::new(),
-        }
+        Self { items: Vec::new() }
     }
 
     /// Add a renderable to the container.

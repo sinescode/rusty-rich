@@ -463,17 +463,15 @@ impl IntPrompt {
                 continue;
             }
             if !self.base.check_choice(&value) {
-                let _ = self.base.write_output(&format!(
-                    "Invalid choice: '{}'. Please try again.\n",
-                    value
-                ));
+                let _ = self
+                    .base
+                    .write_output(&format!("Invalid choice: '{}'. Please try again.\n", value));
                 continue;
             }
             match value.parse::<i64>() {
                 Ok(n) => return Ok(n),
                 Err(_) => {
-                    let _ =
-                        self.base.write_output("Please enter a valid integer.\n");
+                    let _ = self.base.write_output("Please enter a valid integer.\n");
                 }
             }
         }
@@ -552,17 +550,15 @@ impl FloatPrompt {
                 continue;
             }
             if !self.base.check_choice(&value) {
-                let _ = self.base.write_output(&format!(
-                    "Invalid choice: '{}'. Please try again.\n",
-                    value
-                ));
+                let _ = self
+                    .base
+                    .write_output(&format!("Invalid choice: '{}'. Please try again.\n", value));
                 continue;
             }
             match value.parse::<f64>() {
                 Ok(n) => return Ok(n),
                 Err(_) => {
-                    let _ =
-                        self.base.write_output("Please enter a valid number.\n");
+                    let _ = self.base.write_output("Please enter a valid number.\n");
                 }
             }
         }
@@ -614,11 +610,7 @@ impl Confirm {
     ///
     /// Displays `[y/N]` or `[Y/n]` depending on the default, followed by `: `.
     fn make_confirm_prompt(&self) -> String {
-        let (yes, no) = if self.default {
-            ("Y", "n")
-        } else {
-            ("y", "N")
-        };
+        let (yes, no) = if self.default { ("Y", "n") } else { ("y", "N") };
         let styled_prompt = apply_style(&self.base.prompt, "prompt");
         let styled_choices = apply_style(&format!("[{}/{}]", yes, no), "prompt.choices");
         format!("{} {}: ", styled_prompt, styled_choices)
@@ -643,8 +635,7 @@ impl Confirm {
                 "y" | "yes" | "true" | "1" => return Ok(true),
                 "n" | "no" | "false" | "0" => return Ok(false),
                 _ => {
-                    let _ =
-                        self.base.write_output("Please answer y or n.\n");
+                    let _ = self.base.write_output("Please answer y or n.\n");
                 }
             }
         }
@@ -746,9 +737,7 @@ impl<T: fmt::Display + Clone> Select<T> {
     /// Returns `PromptError::InvalidResponse` if there are no choices.
     pub fn ask(&self) -> Result<T, PromptError> {
         if self.choices.is_empty() {
-            return Err(PromptError::InvalidResponse(
-                "no choices available".into(),
-            ));
+            return Err(PromptError::InvalidResponse("no choices available".into()));
         }
 
         let prompt_str = self.render();
@@ -957,7 +946,9 @@ mod tests {
 
     #[test]
     fn test_prompt_builder() {
-        let p = Prompt::new("Enter value").password(false).show_choices(true);
+        let p = Prompt::new("Enter value")
+            .password(false)
+            .show_choices(true);
         let rendered = p.render();
         assert!(rendered.contains("Enter value"));
     }

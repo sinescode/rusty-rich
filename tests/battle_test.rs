@@ -18,9 +18,22 @@ fn color_default() {
 #[test]
 fn color_names_all_16() {
     let names = [
-        "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white",
-        "bright_black", "bright_red", "bright_green", "bright_yellow",
-        "bright_blue", "bright_magenta", "bright_cyan", "bright_white",
+        "black",
+        "red",
+        "green",
+        "yellow",
+        "blue",
+        "magenta",
+        "cyan",
+        "white",
+        "bright_black",
+        "bright_red",
+        "bright_green",
+        "bright_yellow",
+        "bright_blue",
+        "bright_magenta",
+        "bright_cyan",
+        "bright_white",
     ];
     for name in &names {
         let c = Color::parse(name).expect(&format!("should parse {name}"));
@@ -285,9 +298,7 @@ fn measurement_basic() {
 
 #[test]
 fn measurement_clamp_chains() {
-    let m = Measurement::new(5, 200)
-        .with_minimum(20)
-        .with_maximum(100);
+    let m = Measurement::new(5, 200).with_minimum(20).with_maximum(100);
     assert_eq!(m.minimum, 20);
     assert_eq!(m.maximum, 100);
 }
@@ -397,7 +408,10 @@ fn panel_empty_content() {
 #[test]
 fn panel_title_shorter_than_width() {
     let panel = Panel::new("content").title("T");
-    let opts = ConsoleOptions { max_width: 40, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 40,
+        ..Default::default()
+    };
     let result = panel.render(&opts);
     let ansi = result.to_ansi();
     assert!(ansi.contains("T"));
@@ -406,7 +420,10 @@ fn panel_title_shorter_than_width() {
 #[test]
 fn panel_title_longer_than_width() {
     let panel = Panel::new("c").title("This title is way way way too long for the panel");
-    let opts = ConsoleOptions { max_width: 10, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 10,
+        ..Default::default()
+    };
     let result = panel.render(&opts);
     // Should not panic — title is just skipped
     assert!(!result.lines.is_empty());
@@ -415,7 +432,10 @@ fn panel_title_longer_than_width() {
 #[test]
 fn panel_subtitle() {
     let panel = Panel::new("content").subtitle("footer");
-    let opts = ConsoleOptions { max_width: 30, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 30,
+        ..Default::default()
+    };
     let result = panel.render(&opts);
     let ansi = result.to_ansi();
     assert!(ansi.contains("footer"));
@@ -424,7 +444,10 @@ fn panel_subtitle() {
 #[test]
 fn panel_with_padding() {
     let panel = Panel::new("x").padding(2, 3, 2, 3);
-    let opts = ConsoleOptions { max_width: 40, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 40,
+        ..Default::default()
+    };
     let result = panel.render(&opts);
     // Should have at least top border + 2 top pad + content + 2 bottom pad + bottom border
     assert!(result.lines.len() >= 7);
@@ -433,7 +456,10 @@ fn panel_with_padding() {
 #[test]
 fn panel_fit_mode() {
     let panel = Panel::new("hi").fit();
-    let opts = ConsoleOptions { max_width: 80, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 80,
+        ..Default::default()
+    };
     let result = panel.render(&opts);
     // In fit mode, width should be smaller than max_width
     assert!(result.lines.len() >= 3);
@@ -452,7 +478,10 @@ fn table_multiple_columns() {
     table.add_row(vec!["Alice".into(), "30".into(), "NYC".into()]);
     table.add_row(vec!["Bob".into(), "25".into(), "LA".into()]);
 
-    let opts = ConsoleOptions { max_width: 80, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 80,
+        ..Default::default()
+    };
     let result = table.render(&opts);
     let ansi = result.to_ansi();
     assert!(ansi.contains("Alice"));
@@ -468,7 +497,10 @@ fn table_with_title_and_caption() {
     table.add_row(vec!["Widget".into()]);
     let table = table.title("Products").caption("All prices in USD");
 
-    let opts = ConsoleOptions { max_width: 40, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 40,
+        ..Default::default()
+    };
     let result = table.render(&opts);
     let ansi = result.to_ansi();
     assert!(ansi.contains("Products"));
@@ -490,7 +522,10 @@ fn table_fixed_column_widths() {
     table.add_column(Column::new("B").width(10));
     table.add_row(vec!["1".into(), "2".into()]);
 
-    let opts = ConsoleOptions { max_width: 80, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 80,
+        ..Default::default()
+    };
     let result = table.render(&opts);
     assert!(!result.lines.is_empty());
 }
@@ -502,7 +537,10 @@ fn table_hide_header() {
     table.add_row(vec!["data".into()]);
     let table = table.hide_header();
 
-    let opts = ConsoleOptions { max_width: 40, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 40,
+        ..Default::default()
+    };
     let result = table.render(&opts);
     let ansi = result.to_ansi();
     assert!(!ansi.contains("Hidden"));
@@ -518,7 +556,10 @@ fn table_show_lines() {
     table.add_row(vec!["c".into()]);
     let table = table.show_lines();
 
-    let opts = ConsoleOptions { max_width: 30, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 30,
+        ..Default::default()
+    };
     let result = table.render(&opts);
     // show_lines adds separators between rows => more lines
     assert!(result.lines.len() > 5);
@@ -575,7 +616,10 @@ fn tree_ascii_mode() {
     let mut tree = Tree::new("Root");
     tree.add("Child");
 
-    let opts = ConsoleOptions { ascii_only: true, ..Default::default() };
+    let opts = ConsoleOptions {
+        ascii_only: true,
+        ..Default::default()
+    };
     let result = tree.render(&opts);
     let ansi = result.to_ansi();
     // ASCII guides use + and ` not ├ and └
@@ -589,7 +633,10 @@ fn tree_ascii_mode() {
 #[test]
 fn rule_default() {
     let rule = Rule::new();
-    let opts = ConsoleOptions { max_width: 40, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 40,
+        ..Default::default()
+    };
     let result = rule.render(&opts);
     let ansi = result.to_ansi();
     assert!(ansi.contains('─'));
@@ -598,7 +645,10 @@ fn rule_default() {
 #[test]
 fn rule_left_aligned_title() {
     let rule = Rule::new().title("Chapter 1").align(AlignMethod::Left);
-    let opts = ConsoleOptions { max_width: 40, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 40,
+        ..Default::default()
+    };
     let result = rule.render(&opts);
     let ansi = result.to_ansi();
     assert!(ansi.starts_with("Chapter 1") || ansi.contains("Chapter 1"));
@@ -607,7 +657,11 @@ fn rule_left_aligned_title() {
 #[test]
 fn rule_ascii_mode() {
     let rule = Rule::new().title("Test");
-    let opts = ConsoleOptions { max_width: 40, ascii_only: true, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 40,
+        ascii_only: true,
+        ..Default::default()
+    };
     let result = rule.render(&opts);
     let ansi = result.to_ansi();
     assert!(ansi.contains('-'));
@@ -616,7 +670,10 @@ fn rule_ascii_mode() {
 #[test]
 fn rule_zero_width() {
     let rule = Rule::new();
-    let opts = ConsoleOptions { max_width: 0, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 0,
+        ..Default::default()
+    };
     let result = rule.render(&opts);
     // Should not panic
     let _ = result.to_ansi();
@@ -629,7 +686,10 @@ fn rule_zero_width() {
 #[test]
 fn padding_indent() {
     let p = Padding::new("text").indent(4);
-    let opts = ConsoleOptions { max_width: 40, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 40,
+        ..Default::default()
+    };
     let result = p.render(&opts);
     let ansi = result.to_ansi();
     assert!(ansi.contains("text"));
@@ -638,7 +698,10 @@ fn padding_indent() {
 #[test]
 fn padding_all_sides() {
     let p = Padding::new("x").pad(2, 3, 4, 5);
-    let opts = ConsoleOptions { max_width: 40, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 40,
+        ..Default::default()
+    };
     let result = p.render(&opts);
     // 2 top + content + 4 bottom
     assert!(result.lines.len() >= 7);
@@ -654,7 +717,10 @@ fn columns_side_by_side() {
     cols.add("Left");
     cols.add("Right");
 
-    let opts = ConsoleOptions { max_width: 80, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 80,
+        ..Default::default()
+    };
     let result = cols.render(&opts);
     let ansi = result.to_ansi();
     assert!(ansi.contains("Left"));
@@ -799,7 +865,10 @@ fn json_deeply_nested() {
         "a": {"b": {"c": {"d": {"e": "deep"}}}}
     });
     let rendered = json::render_json(&v);
-    let opts = ConsoleOptions { max_width: 80, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 80,
+        ..Default::default()
+    };
     let result = rendered.render(&opts);
     let ansi = result.to_ansi();
     assert!(ansi.contains("deep"));
@@ -813,7 +882,10 @@ fn json_deeply_nested() {
 #[cfg(feature = "markdown")]
 fn markdown_h1() {
     let md = markdown::render_markdown("# Hello\n");
-    let opts = ConsoleOptions { max_width: 60, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 60,
+        ..Default::default()
+    };
     let result = md.render(&opts);
     let ansi = result.to_ansi();
     assert!(ansi.contains("Hello"));
@@ -823,7 +895,10 @@ fn markdown_h1() {
 #[cfg(feature = "markdown")]
 fn markdown_h2() {
     let md = markdown::render_markdown("## Section\n");
-    let opts = ConsoleOptions { max_width: 60, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 60,
+        ..Default::default()
+    };
     let result = md.render(&opts);
     let ansi = result.to_ansi();
     assert!(ansi.contains("Section"));
@@ -833,7 +908,10 @@ fn markdown_h2() {
 #[cfg(feature = "markdown")]
 fn markdown_list() {
     let md = markdown::render_markdown("* one\n* two\n* three\n");
-    let opts = ConsoleOptions { max_width: 60, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 60,
+        ..Default::default()
+    };
     let result = md.render(&opts);
     let ansi = result.to_ansi();
     assert!(ansi.contains("one"));
@@ -844,7 +922,10 @@ fn markdown_list() {
 #[cfg(feature = "markdown")]
 fn markdown_code_block() {
     let md = markdown::render_markdown("```\nlet x = 1;\n```\n");
-    let opts = ConsoleOptions { max_width: 60, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 60,
+        ..Default::default()
+    };
     let result = md.render(&opts);
     let ansi = result.to_ansi();
     assert!(ansi.contains("let x = 1"));
@@ -854,7 +935,10 @@ fn markdown_code_block() {
 #[cfg(feature = "markdown")]
 fn markdown_blockquote() {
     let md = markdown::render_markdown("> quoted text\n");
-    let opts = ConsoleOptions { max_width: 60, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 60,
+        ..Default::default()
+    };
     let result = md.render(&opts);
     let ansi = result.to_ansi();
     assert!(ansi.contains("quoted text"));
@@ -877,7 +961,10 @@ fn markdown_empty() {
 #[cfg(feature = "syntax-highlighting")]
 fn syntax_rust_code() {
     let s = Syntax::new("fn main() { println!(\"hello\"); }", "rust");
-    let opts = ConsoleOptions { max_width: 80, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 80,
+        ..Default::default()
+    };
     let result = s.render(&opts);
     let ansi = result.to_ansi();
     assert!(ansi.contains("fn"));
@@ -899,7 +986,10 @@ fn syntax_unknown_language() {
 #[cfg(feature = "syntax-highlighting")]
 fn syntax_line_numbers_enabled() {
     let s = Syntax::new("line1\nline2\nline3\n", "rust").line_numbers();
-    let opts = ConsoleOptions { max_width: 80, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 80,
+        ..Default::default()
+    };
     let result = s.render(&opts);
     let ansi = result.to_ansi();
     assert!(ansi.contains("1"));
@@ -949,7 +1039,9 @@ fn dyn_renderable_creation() {
 #[test]
 fn styled_text_pipeline() {
     // Full pipeline: Style → Text → Segment → ANSI
-    let style = Style::new().bold(true).color(Color::parse("green").unwrap());
+    let style = Style::new()
+        .bold(true)
+        .color(Color::parse("green").unwrap());
     let mut text = Text::new("Success!");
     text.style = style.clone();
     assert_eq!(text.plain, "Success!");
@@ -965,7 +1057,10 @@ fn markup_to_panel_pipeline() {
     // Markup → Text → Panel → Render → ANSI
     let text = markup::render("[bold]Bordered[/bold]");
     let panel = Panel::new(text).title("Info");
-    let opts = ConsoleOptions { max_width: 40, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 40,
+        ..Default::default()
+    };
     let result = panel.render(&opts);
     let ansi = result.to_ansi();
     assert!(ansi.contains("Bordered"));
@@ -978,7 +1073,10 @@ fn markup_to_panel_pipeline() {
 
 #[test]
 fn very_wide_terminal() {
-    let opts = ConsoleOptions { max_width: 500, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 500,
+        ..Default::default()
+    };
 
     let mut table = Table::new();
     table.add_column(Column::new("X"));
@@ -994,7 +1092,10 @@ fn very_wide_terminal() {
 
 #[test]
 fn very_narrow_terminal() {
-    let opts = ConsoleOptions { max_width: 5, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 5,
+        ..Default::default()
+    };
 
     let mut table = Table::new();
     table.add_column(Column::new("Narrow"));
@@ -1026,10 +1127,7 @@ fn many_style_combinations() {
     for bold in [false, true] {
         for italic in [false, true] {
             for underline in [false, true] {
-                let s = Style::new()
-                    .bold(bold)
-                    .italic(italic)
-                    .underline(underline);
+                let s = Style::new().bold(bold).italic(italic).underline(underline);
                 let ansi = s.to_ansi();
                 // Should always produce valid ANSI or empty string
                 if ansi.is_empty() {

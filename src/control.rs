@@ -234,22 +234,34 @@ impl Control {
 // ---------------------------------------------------------------------------
 
 /// Ring the terminal bell.
-pub fn control_bell() -> Control { Control::bell() }
+pub fn control_bell() -> Control {
+    Control::bell()
+}
 
 /// Move cursor to home position.
-pub fn control_home() -> Control { Control::home() }
+pub fn control_home() -> Control {
+    Control::home()
+}
 
 /// Clear the entire screen.
-pub fn control_clear() -> Control { Control::clear() }
+pub fn control_clear() -> Control {
+    Control::clear()
+}
 
 /// Move cursor to an absolute position.
-pub fn control_move_to(row: u16, col: u16) -> Control { Control::cursor_to(row, col) }
+pub fn control_move_to(row: u16, col: u16) -> Control {
+    Control::cursor_to(row, col)
+}
 
 /// Show or hide the cursor.
-pub fn control_show_cursor(show: bool) -> Control { Control::show_cursor(show) }
+pub fn control_show_cursor(show: bool) -> Control {
+    Control::show_cursor(show)
+}
 
 /// Set terminal window title.
-pub fn control_title(title: impl Into<String>) -> Control { Control::title(title) }
+pub fn control_title(title: impl Into<String>) -> Control {
+    Control::title(title)
+}
 
 // ---------------------------------------------------------------------------
 // Strip/escape control characters

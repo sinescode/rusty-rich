@@ -237,21 +237,26 @@ impl<T: crate::console::Renderable + Clone> crate::console::Renderable for Align
                             .map(|_| vec![Segment::new(" ".repeat(width)), Segment::line()])
                             .collect();
                         result.extend(lines);
-                        result.extend((0..bottom_h).map(|_| {
-                            vec![Segment::new(" ".repeat(width)), Segment::line()]
-                        }));
+                        result.extend(
+                            (0..bottom_h)
+                                .map(|_| vec![Segment::new(" ".repeat(width)), Segment::line()]),
+                        );
                         lines = result;
                     }
                     VerticalAlignMethod::Top => {
-                        lines.extend((0..empty_lines).map(|_| {
-                            vec![Segment::new(" ".repeat(width)), Segment::line()]
-                        }));
+                        lines.extend(
+                            (0..empty_lines)
+                                .map(|_| vec![Segment::new(" ".repeat(width)), Segment::line()]),
+                        );
                     }
                 }
             }
         }
 
-        RenderResult { lines, items: Vec::new() }
+        RenderResult {
+            lines,
+            items: Vec::new(),
+        }
     }
 }
 

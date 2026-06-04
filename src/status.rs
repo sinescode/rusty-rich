@@ -41,7 +41,10 @@ impl Status {
     }
 
     /// Builder: replace the default spinner with a custom [`Spinner`].
-    pub fn spinner(mut self, spinner: Spinner) -> Self { self.spinner = spinner; self }
+    pub fn spinner(mut self, spinner: Spinner) -> Self {
+        self.spinner = spinner;
+        self
+    }
 
     /// Start displaying the status.
     pub fn start(&mut self) -> io::Result<()> {

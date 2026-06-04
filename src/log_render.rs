@@ -115,31 +115,38 @@ impl LogRender {
         use crate::theme::default_theme;
         let theme = default_theme();
         let key = format!("logging.level.{}", level.to_lowercase());
-        theme.get(&key).cloned().unwrap_or_else(|| match level.to_lowercase().as_str() {
-            "debug" => Style::new().color(
-                crate::color::Color::parse("bright_black").unwrap_or_else(|_| Color::default()),
-            ),
-            "info" => Style::new().color(
-                crate::color::Color::parse("bright_cyan").unwrap_or_else(|_| Color::default()),
-            ),
-            "warning" => Style::new().color(
-                crate::color::Color::parse("bright_yellow").unwrap_or_else(|_| Color::default()),
-            ),
-            "error" => Style::new().color(
-                crate::color::Color::parse("bright_red").unwrap_or_else(|_| Color::default()),
-            ).bold(true),
-            "critical" => Style::new().color(
-                crate::color::Color::parse("red").unwrap_or_else(|_| Color::default()),
-            ).bold(true).reverse(true),
-            _ => Style::new(),
-        })
+        theme
+            .get(&key)
+            .cloned()
+            .unwrap_or_else(|| match level.to_lowercase().as_str() {
+                "debug" => Style::new().color(
+                    crate::color::Color::parse("bright_black").unwrap_or_else(|_| Color::default()),
+                ),
+                "info" => Style::new().color(
+                    crate::color::Color::parse("bright_cyan").unwrap_or_else(|_| Color::default()),
+                ),
+                "warning" => Style::new().color(
+                    crate::color::Color::parse("bright_yellow")
+                        .unwrap_or_else(|_| Color::default()),
+                ),
+                "error" => Style::new()
+                    .color(
+                        crate::color::Color::parse("bright_red")
+                            .unwrap_or_else(|_| Color::default()),
+                    )
+                    .bold(true),
+                "critical" => Style::new()
+                    .color(crate::color::Color::parse("red").unwrap_or_else(|_| Color::default()))
+                    .bold(true)
+                    .reverse(true),
+                _ => Style::new(),
+            })
     }
 
     /// Get the style for the time column.
     pub fn get_time_style() -> Style {
-        Style::new().color(
-            crate::color::Color::parse("bright_black").unwrap_or_else(|_| Color::default()),
-        )
+        Style::new()
+            .color(crate::color::Color::parse("bright_black").unwrap_or_else(|_| Color::default()))
     }
 
     /// Get the style for the message column.
@@ -149,9 +156,8 @@ impl LogRender {
 
     /// Get the style for the path column.
     pub fn get_path_style() -> Style {
-        Style::new().color(
-            crate::color::Color::parse("bright_black").unwrap_or_else(|_| Color::default()),
-        )
+        Style::new()
+            .color(crate::color::Color::parse("bright_black").unwrap_or_else(|_| Color::default()))
     }
 
     /// Format a single log record and return a [`LogRecord`] renderable.
@@ -229,9 +235,7 @@ impl LogRender {
     ) -> LogTable {
         let rendered: Vec<LogRecord> = records
             .iter()
-            .map(|(time, level, msg, path, line)| {
-                self.render_log(*time, level, msg, *path, *line)
-            })
+            .map(|(time, level, msg, path, line)| self.render_log(*time, level, msg, *path, *line))
             .collect();
         LogTable { records: rendered }
     }
@@ -349,7 +353,8 @@ impl Renderable for LogTable {
             }
 
             if record.show_level {
-                let level_str = LogRender::get_level_style(record.level.trim()).render(&record.level);
+                let level_str =
+                    LogRender::get_level_style(record.level.trim()).render(&record.level);
                 cells.push(crate::table::Cell::new(level_str));
             }
 

@@ -100,8 +100,7 @@ pub fn render(markup: &str) -> Text {
             };
 
             // Extract tag string (bytes between [ and ] are ASCII-safe)
-            let tag_str = std::str::from_utf8(&bytes[pos + 1..end])
-                .unwrap_or("");
+            let tag_str = std::str::from_utf8(&bytes[pos + 1..end]).unwrap_or("");
             pos = end + 1;
 
             if tag_str.is_empty() {
@@ -187,9 +186,8 @@ fn tag_to_style(tag: &Tag) -> Style {
         "reverse" | "r" => Style::new().reverse(true),
         "strike" | "s" => Style::new().strike(true),
 
-        "/bold" | "/b" | "/dim" | "/d" | "/italic" | "/i"
-        | "/underline" | "/u" | "/blink" | "/reverse" | "/r"
-        | "/strike" | "/s" => Style::null(),
+        "/bold" | "/b" | "/dim" | "/d" | "/italic" | "/i" | "/underline" | "/u" | "/blink"
+        | "/reverse" | "/r" | "/strike" | "/s" => Style::null(),
 
         _ => {
             // Try as color name, including "on <color>"

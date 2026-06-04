@@ -41,7 +41,6 @@
 //! Call [`Table::add_section`] to insert a section divider between groups of
 //! rows.
 
-
 use crate::align::{AlignMethod, VerticalAlignMethod};
 use crate::box_drawing::{get_safe_box, BoxStyle, BOX_HEAVY_HEAD};
 use crate::console::{ConsoleOptions, OverflowMethod, RenderResult, Renderable};
@@ -79,19 +78,32 @@ impl Cell {
     }
 
     /// Builder: set style.
-    pub fn style(mut self, s: Style) -> Self { self.style = Some(s); self }
+    pub fn style(mut self, s: Style) -> Self {
+        self.style = Some(s);
+        self
+    }
     /// Builder: set colspan.
-    pub fn colspan(mut self, c: usize) -> Self { self.colspan = c; self }
+    pub fn colspan(mut self, c: usize) -> Self {
+        self.colspan = c;
+        self
+    }
     /// Builder: set rowspan.
-    pub fn rowspan(mut self, r: usize) -> Self { self.rowspan = r; self }
+    pub fn rowspan(mut self, r: usize) -> Self {
+        self.rowspan = r;
+        self
+    }
 }
 
 impl From<String> for Cell {
-    fn from(s: String) -> Self { Cell::new(s) }
+    fn from(s: String) -> Self {
+        Cell::new(s)
+    }
 }
 
 impl From<&str> for Cell {
-    fn from(s: &str) -> Self { Cell::new(s) }
+    fn from(s: &str) -> Self {
+        Cell::new(s)
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -150,21 +162,45 @@ impl Column {
     }
 
     /// Builder: set justify.
-    pub fn justify(mut self, j: AlignMethod) -> Self { self.justify = j; self }
+    pub fn justify(mut self, j: AlignMethod) -> Self {
+        self.justify = j;
+        self
+    }
     /// Builder: set width.
-    pub fn width(mut self, w: usize) -> Self { self.width = Some(w); self }
+    pub fn width(mut self, w: usize) -> Self {
+        self.width = Some(w);
+        self
+    }
     /// Builder: set min width.
-    pub fn min_width(mut self, w: usize) -> Self { self.min_width = Some(w); self }
+    pub fn min_width(mut self, w: usize) -> Self {
+        self.min_width = Some(w);
+        self
+    }
     /// Builder: set max width.
-    pub fn max_width(mut self, w: usize) -> Self { self.max_width = Some(w); self }
+    pub fn max_width(mut self, w: usize) -> Self {
+        self.max_width = Some(w);
+        self
+    }
     /// Builder: set style.
-    pub fn style(mut self, s: Style) -> Self { self.style = s; self }
+    pub fn style(mut self, s: Style) -> Self {
+        self.style = s;
+        self
+    }
     /// Builder: set header style.
-    pub fn header_style(mut self, s: Style) -> Self { self.header_style = s; self }
+    pub fn header_style(mut self, s: Style) -> Self {
+        self.header_style = s;
+        self
+    }
     /// Builder: set ratio.
-    pub fn ratio(mut self, r: usize) -> Self { self.ratio = Some(r); self }
+    pub fn ratio(mut self, r: usize) -> Self {
+        self.ratio = Some(r);
+        self
+    }
     /// Builder: set overflow.
-    pub fn overflow(mut self, o: OverflowMethod) -> Self { self.overflow = o; self }
+    pub fn overflow(mut self, o: OverflowMethod) -> Self {
+        self.overflow = o;
+        self
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -182,7 +218,11 @@ pub struct Row {
 impl Row {
     /// Create a new Row from a list of [`Cell`]s.
     pub fn new(cells: Vec<Cell>) -> Self {
-        Self { cells, style: None, end_section: false }
+        Self {
+            cells,
+            style: None,
+            end_section: false,
+        }
     }
 
     /// Builder: set the row style.
@@ -353,58 +393,112 @@ impl Table {
     }
 
     /// Builder: add a column and return self.
-    pub fn column(mut self, col: Column) -> Self { self.add_column(col); self }
+    pub fn column(mut self, col: Column) -> Self {
+        self.add_column(col);
+        self
+    }
 
     /// Builder: add a row of Cells and return self.
-    pub fn row(mut self, row: Vec<Cell>) -> Self { self.add_row(row); self }
+    pub fn row(mut self, row: Vec<Cell>) -> Self {
+        self.add_row(row);
+        self
+    }
 
     /// Builder: add a row of strings and return self.
-    pub fn row_str(mut self, row: Vec<String>) -> Self { self.add_row_str(row); self }
+    pub fn row_str(mut self, row: Vec<String>) -> Self {
+        self.add_row_str(row);
+        self
+    }
 
     /// Builder: add a pre-built [`Row`] and return self.
-    pub fn row_explicit(mut self, row: Row) -> Self { self.add_row_explicit(row); self }
+    pub fn row_explicit(mut self, row: Row) -> Self {
+        self.add_row_explicit(row);
+        self
+    }
 
     /// Builder: set title.
-    pub fn title(mut self, t: impl Into<String>) -> Self { self.title = Some(t.into()); self }
+    pub fn title(mut self, t: impl Into<String>) -> Self {
+        self.title = Some(t.into());
+        self
+    }
 
     /// Builder: set caption.
-    pub fn caption(mut self, t: impl Into<String>) -> Self { self.caption = Some(t.into()); self }
+    pub fn caption(mut self, t: impl Into<String>) -> Self {
+        self.caption = Some(t.into());
+        self
+    }
 
     /// Builder: set box style.
-    pub fn box_style(mut self, bs: BoxStyle) -> Self { self.box_style = bs; self }
+    pub fn box_style(mut self, bs: BoxStyle) -> Self {
+        self.box_style = bs;
+        self
+    }
 
     /// Builder: set border style.
-    pub fn border_style(mut self, s: Style) -> Self { self.border_style = s; self }
+    pub fn border_style(mut self, s: Style) -> Self {
+        self.border_style = s;
+        self
+    }
 
     /// Builder: hide the header.
-    pub fn hide_header(mut self) -> Self { self.show_header = false; self }
+    pub fn hide_header(mut self) -> Self {
+        self.show_header = false;
+        self
+    }
 
     /// Builder: show lines.
-    pub fn show_lines(mut self) -> Self { self.show_lines = true; self }
+    pub fn show_lines(mut self) -> Self {
+        self.show_lines = true;
+        self
+    }
 
     /// Builder: set leading (blank lines between rows).
-    pub fn leading(mut self, l: usize) -> Self { self.leading = l; self }
+    pub fn leading(mut self, l: usize) -> Self {
+        self.leading = l;
+        self
+    }
 
     /// Builder: enable row highlighting.
-    pub fn highlight(mut self, value: bool) -> Self { self.highlight = value; self }
+    pub fn highlight(mut self, value: bool) -> Self {
+        self.highlight = value;
+        self
+    }
 
     /// Builder: set title alignment.
-    pub fn title_justify(mut self, justify: AlignMethod) -> Self { self.title_justify = justify; self }
+    pub fn title_justify(mut self, justify: AlignMethod) -> Self {
+        self.title_justify = justify;
+        self
+    }
 
     /// Builder: set caption alignment.
-    pub fn caption_justify(mut self, justify: AlignMethod) -> Self { self.caption_justify = justify; self }
+    pub fn caption_justify(mut self, justify: AlignMethod) -> Self {
+        self.caption_justify = justify;
+        self
+    }
 
     /// Builder: set alternating row styles.
-    pub fn row_styles(mut self, styles: Vec<Style>) -> Self { self.row_styles = styles; self }
+    pub fn row_styles(mut self, styles: Vec<Style>) -> Self {
+        self.row_styles = styles;
+        self
+    }
 
     /// Builder: show/hide outer edge border.
-    pub fn show_edge(mut self, value: bool) -> Self { self.show_edge = value; self }
+    pub fn show_edge(mut self, value: bool) -> Self {
+        self.show_edge = value;
+        self
+    }
 
     /// Builder: collapse padding between cells.
-    pub fn collapse_padding(mut self, value: bool) -> Self { self.collapse_padding = value; self }
+    pub fn collapse_padding(mut self, value: bool) -> Self {
+        self.collapse_padding = value;
+        self
+    }
 
     /// Builder: pad the outer edge of the table.
-    pub fn pad_edge(mut self, value: bool) -> Self { self.pad_edge = value; self }
+    pub fn pad_edge(mut self, value: bool) -> Self {
+        self.pad_edge = value;
+        self
+    }
 
     /// Get the style for a specific row (cycling through `row_styles` if set).
     pub fn get_row_style(&self, row_index: usize) -> Option<Style> {
@@ -457,7 +551,9 @@ impl Table {
     }
 
     /// Get the row count.
-    pub fn row_count(&self) -> usize { self.rows.len() }
+    pub fn row_count(&self) -> usize {
+        self.rows.len()
+    }
 }
 
 impl Renderable for Table {
@@ -478,24 +574,36 @@ impl Renderable for Table {
 
         // Helper: make a border segment for a single char (corners, dividers)
         let border_ansi = self.border_style.to_ansi();
-        let border_reset = if border_ansi.is_empty() { "" } else { "\x1b[0m" };
-        let bs = |ch: char| -> Segment {
-            Segment::new(format!("{border_ansi}{ch}{border_reset}"))
+        let border_reset = if border_ansi.is_empty() {
+            ""
+        } else {
+            "\x1b[0m"
         };
+        let bs = |ch: char| -> Segment { Segment::new(format!("{border_ansi}{ch}{border_reset}")) };
         // Helper: repeated border character batched under one ANSI wrap
         let bs_repeat = |ch: char, n: usize| -> Segment {
             if border_ansi.is_empty() || n == 0 {
                 Segment::new(ch.to_string().repeat(n))
             } else {
-                Segment::new(format!("{border_ansi}{}{border_reset}", ch.to_string().repeat(n)))
+                Segment::new(format!(
+                    "{border_ansi}{}{border_reset}",
+                    ch.to_string().repeat(n)
+                ))
             }
         };
 
         // -- Title --
         if let Some(ref title) = self.title {
             let _tw = UnicodeWidthStr::width(title.as_str());
-            let centered = self.title_justify.align_text(title, available_width.saturating_sub(2));
-            lines.push(vec![bs(b.top_left), Segment::new(&centered[1..centered.len()-1]), bs(b.top_right), Segment::line()]);
+            let centered = self
+                .title_justify
+                .align_text(title, available_width.saturating_sub(2));
+            lines.push(vec![
+                bs(b.top_left),
+                Segment::new(&centered[1..centered.len() - 1]),
+                bs(b.top_right),
+                Segment::line(),
+            ]);
         }
 
         // -- Top border --
@@ -520,9 +628,7 @@ impl Renderable for Table {
                 lines.push(self.render_row_line(&col_widths, &[], &b, available_width, false));
             }
 
-            let header_cells: Vec<String> = self.columns.iter()
-                .map(|c| c.header.clone())
-                .collect();
+            let header_cells: Vec<String> = self.columns.iter().map(|c| c.header.clone()).collect();
             lines.push(self.render_cell_line(&col_widths, &header_cells, &b, true));
 
             // Header separator
@@ -578,7 +684,11 @@ impl Renderable for Table {
             };
 
             lines.push(self.render_cell_line_with_rowspan(
-                &col_widths, row, &b, false, &mut rowspan_remaining,
+                &col_widths,
+                row,
+                &b,
+                false,
+                &mut rowspan_remaining,
             ));
 
             // Row separator (respect colspan in current row)
@@ -611,9 +721,7 @@ impl Renderable for Table {
             sep.push(Segment::line());
             lines.push(sep);
 
-            let footer_cells: Vec<String> = self.columns.iter()
-                .map(|c| c.footer.clone())
-                .collect();
+            let footer_cells: Vec<String> = self.columns.iter().map(|c| c.footer.clone()).collect();
             lines.push(self.render_cell_line(&col_widths, &footer_cells, &b, false));
         }
 
@@ -635,7 +743,9 @@ impl Renderable for Table {
 
         // -- Caption --
         if let Some(ref caption) = self.caption {
-            let centered = self.caption_justify.align_text(caption, available_width.saturating_sub(2));
+            let centered = self
+                .caption_justify
+                .align_text(caption, available_width.saturating_sub(2));
             lines.push(vec![Segment::new(&centered), Segment::line()]);
         }
 
@@ -651,7 +761,10 @@ impl Renderable for Table {
             }
         }
 
-        RenderResult { lines, items: Vec::new() }
+        RenderResult {
+            lines,
+            items: Vec::new(),
+        }
     }
 }
 
@@ -683,7 +796,8 @@ impl Table {
         let _flex_count = flex_cols.len();
 
         // Distribute remaining width using ratios if available
-        let total_ratio: usize = flex_cols.iter()
+        let total_ratio: usize = flex_cols
+            .iter()
             .map(|&i| self.columns[i].ratio.unwrap_or(1))
             .sum();
 
@@ -736,7 +850,11 @@ impl Table {
 
             // Adjust edge padding based on pad_edge
             let left_pad = if i == 0 && !self.pad_edge { 0 } else { pl };
-            let right_pad = if i == col_count - 1 && !self.pad_edge { 0 } else { pr };
+            let right_pad = if i == col_count - 1 && !self.pad_edge {
+                0
+            } else {
+                pr
+            };
 
             // Pad left
             line.push(Segment::new(" ".repeat(left_pad)));
@@ -746,9 +864,12 @@ impl Table {
             let disp = justify.align_text(val, content_w);
             // Truncate if needed
             let disp_trunc = if UnicodeWidthStr::width(disp.as_str()) > content_w {
-                let mut truncated = disp.chars().take(
-                    content_w.saturating_sub(1) // leave room for ellipsis
-                ).collect::<String>();
+                let mut truncated = disp
+                    .chars()
+                    .take(
+                        content_w.saturating_sub(1), // leave room for ellipsis
+                    )
+                    .collect::<String>();
                 truncated.push('…');
                 truncated
             } else {
@@ -836,7 +957,11 @@ impl Table {
                 let w = widths[col];
                 let (_pt, pr, _pb, pl) = self.padding;
                 let left_pad = if col == 0 && !self.pad_edge { 0 } else { pl };
-                let right_pad = if col == col_count - 1 && !self.pad_edge { 0 } else { pr };
+                let right_pad = if col == col_count - 1 && !self.pad_edge {
+                    0
+                } else {
+                    pr
+                };
                 line.push(Segment::new(" ".repeat(left_pad + w + right_pad)));
                 if col < col_count - 1 {
                     line.push(bs(b.mid_vertical));
@@ -852,11 +977,15 @@ impl Table {
             let num_spanned = span_end - col;
             // Include the width of internal separators that are removed by the
             // colspan (1 char each) so the total row width stays consistent.
-            let span_width: usize = widths[col..span_end].iter().sum::<usize>()
-                + num_spanned.saturating_sub(1);
+            let span_width: usize =
+                widths[col..span_end].iter().sum::<usize>() + num_spanned.saturating_sub(1);
             let (_pt, pr, _pb, pl) = self.padding;
             let left_pad = if col == 0 && !self.pad_edge { 0 } else { pl };
-            let right_pad = if span_end >= col_count && !self.pad_edge { 0 } else { pr };
+            let right_pad = if span_end >= col_count && !self.pad_edge {
+                0
+            } else {
+                pr
+            };
             let content_width = span_width.saturating_sub(left_pad + right_pad);
 
             let col_def = self.columns.get(col);
@@ -865,7 +994,8 @@ impl Table {
             // Align and truncate content
             let disp_text = justify.align_text(&cell.content, content_width);
             let disp_trunc = if UnicodeWidthStr::width(disp_text.as_str()) > content_width {
-                let mut truncated: String = disp_text.chars()
+                let mut truncated: String = disp_text
+                    .chars()
                     .take(content_width.saturating_sub(1))
                     .collect();
                 truncated.push('…');
@@ -940,8 +1070,8 @@ impl Table {
             }
             let span = cell.colspan.min(col_count - col);
             // Include internal separator widths (1 char each) removed by colspan
-            let w: usize = col_widths[col..col + span].iter().sum::<usize>()
-                + span.saturating_sub(1);
+            let w: usize =
+                col_widths[col..col + span].iter().sum::<usize>() + span.saturating_sub(1);
             widths.push(w);
             col += span;
         }
@@ -984,7 +1114,11 @@ impl Table {
         for (i, w) in widths.iter().enumerate() {
             let (_pt, pr, _pb, pl) = self.padding;
             let left_pad = if i == 0 && !self.pad_edge { 0 } else { pl };
-            let right_pad = if i == col_count - 1 && !self.pad_edge { 0 } else { pr };
+            let right_pad = if i == col_count - 1 && !self.pad_edge {
+                0
+            } else {
+                pr
+            };
             line.push(Segment::new(" ".repeat(left_pad + w + right_pad)));
             if i < col_count - 1 {
                 line.push(bs(b.mid_vertical));

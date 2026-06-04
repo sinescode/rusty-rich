@@ -73,8 +73,14 @@ pub fn ratio_resolve(
     }
 
     let remaining = total.saturating_sub(used);
-    let flex_ratios: Vec<usize> = flex_indices.iter().map(|&i| ratios.get(i).copied().unwrap_or(1)).collect();
-    let flex_minimums: Vec<usize> = flex_indices.iter().map(|&i| minimums.get(i).copied().unwrap_or(1)).collect();
+    let flex_ratios: Vec<usize> = flex_indices
+        .iter()
+        .map(|&i| ratios.get(i).copied().unwrap_or(1))
+        .collect();
+    let flex_minimums: Vec<usize> = flex_indices
+        .iter()
+        .map(|&i| minimums.get(i).copied().unwrap_or(1))
+        .collect();
 
     let distributed = ratio_distribute(remaining, &flex_ratios, &flex_minimums);
 
@@ -89,7 +95,12 @@ pub fn ratio_resolve(
 /// respecting `maximums`.
 ///
 /// Equivalent to Python Rich's `ratio_reduce()`.
-pub fn ratio_reduce(total: usize, ratios: &[usize], maximums: &[usize], values: &[usize]) -> Vec<usize> {
+pub fn ratio_reduce(
+    total: usize,
+    ratios: &[usize],
+    maximums: &[usize],
+    values: &[usize],
+) -> Vec<usize> {
     let n = values.len();
     if n == 0 {
         return Vec::new();

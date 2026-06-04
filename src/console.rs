@@ -5,7 +5,7 @@
 //! styled output.
 
 use std::fmt;
-use std::io::{self, Write, IsTerminal};
+use std::io::{self, IsTerminal, Write};
 use std::sync::{Arc, Mutex};
 
 use crate::align::AlignMethod;
@@ -170,11 +170,15 @@ impl fmt::Debug for RenderItem {
 }
 
 impl From<Segment> for RenderItem {
-    fn from(s: Segment) -> Self { Self::Segment(s) }
+    fn from(s: Segment) -> Self {
+        Self::Segment(s)
+    }
 }
 
 impl From<DynRenderable> for RenderItem {
-    fn from(r: DynRenderable) -> Self { Self::Nested(r) }
+    fn from(r: DynRenderable) -> Self {
+        Self::Nested(r)
+    }
 }
 
 /// The result of rendering: a list of lines, each line being a list of
@@ -191,7 +195,10 @@ pub struct RenderResult {
 impl RenderResult {
     /// Create an empty [`RenderResult`].
     pub fn new() -> Self {
-        Self { lines: Vec::new(), items: Vec::new() }
+        Self {
+            lines: Vec::new(),
+            items: Vec::new(),
+        }
     }
 
     /// Create a [`RenderResult`] from a plain text string.
@@ -206,18 +213,30 @@ impl RenderResult {
 
     /// Create a [`RenderResult`] from a list of [`Segment`]s on a single line.
     pub fn from_segments(segments: Vec<Segment>) -> Self {
-        let items: Vec<RenderItem> = segments.iter().map(|s| RenderItem::Segment(s.clone())).collect();
-        Self { lines: vec![segments], items }
+        let items: Vec<RenderItem> = segments
+            .iter()
+            .map(|s| RenderItem::Segment(s.clone()))
+            .collect();
+        Self {
+            lines: vec![segments],
+            items,
+        }
     }
 
     /// Create a [`RenderResult`] from pre-computed lines of [`Segment`]s.
     pub fn from_lines(lines: Vec<Vec<Segment>>) -> Self {
-        Self { lines, items: Vec::new() }
+        Self {
+            lines,
+            items: Vec::new(),
+        }
     }
 
     /// Create a [`RenderResult`] from [`RenderItem`]s for recursive flattening.
     pub fn from_items(items: Vec<RenderItem>) -> Self {
-        Self { lines: Vec::new(), items }
+        Self {
+            lines: Vec::new(),
+            items,
+        }
     }
 
     /// Push a segment item.
@@ -317,11 +336,11 @@ impl Renderable for Text {
     fn render(&self, _options: &ConsoleOptions) -> RenderResult {
         let rendered = self.render();
         // Simple: just treat the rendered ANSI string as one segment per line
-        let lines: Vec<Vec<Segment>> = rendered
-            .lines()
-            .map(|l| vec![Segment::new(l)])
-            .collect();
-        RenderResult { lines, items: Vec::new() }
+        let lines: Vec<Vec<Segment>> = rendered.lines().map(|l| vec![Segment::new(l)]).collect();
+        RenderResult {
+            lines,
+            items: Vec::new(),
+        }
     }
 }
 
@@ -370,7 +389,9 @@ pub struct Group {
 impl Group {
     /// Create an empty [`Group`].
     pub fn new() -> Self {
-        Self { children: Vec::new() }
+        Self {
+            children: Vec::new(),
+        }
     }
 
     /// Add a renderable child to the group.
@@ -387,7 +408,10 @@ impl Renderable for Group {
             let result = child.render(options);
             all_lines.extend(result.lines);
         }
-        RenderResult { lines: all_lines, items: Vec::new() }
+        RenderResult {
+            lines: all_lines,
+            items: Vec::new(),
+        }
     }
 }
 
@@ -420,7 +444,9 @@ pub struct Capture {
 impl Capture {
     /// Create an empty Capture (not connected to any console).
     pub fn new(_console: &Console) -> Self {
-        Self { buf: Arc::new(Mutex::new(Vec::new())) }
+        Self {
+            buf: Arc::new(Mutex::new(Vec::new())),
+        }
     }
 
     /// Get the captured text.
@@ -631,7 +657,10 @@ impl Console {
             color_system: ColorSystem::Standard,
             theme: crate::theme::default_theme(),
             options: ConsoleOptions {
-                size: ConsoleDimensions { width: 80, height: 25 },
+                size: ConsoleDimensions {
+                    width: 80,
+                    height: 25,
+                },
                 is_terminal: false,
                 max_width: 80,
                 max_height: 25,
@@ -706,16 +735,13 @@ impl Console {
 
     /// Look up a style by name from the theme.
     pub fn get_style(&self, name: &str, default: &str) -> Option<Style> {
-        self.theme
-            .get(name)
-            .cloned()
-            .or_else(|| {
-                if !default.is_empty() {
-                    Some(Style::from_str(default))
-                } else {
-                    None
-                }
-            })
+        self.theme.get(name).cloned().or_else(|| {
+            if !default.is_empty() {
+                Some(Style::from_str(default))
+            } else {
+                None
+            }
+        })
     }
 
     /// Render a string (with optional style).
@@ -735,7 +761,9 @@ impl Console {
     /// Print one or more renderable objects, separated by `sep`, ending with
     /// `end`.
     pub fn print(&mut self, objects: &[&dyn Renderable], sep: &str, end: &str) {
-        if self.quiet { return; }
+        if self.quiet {
+            return;
+        }
         let mut first = true;
         for obj in objects {
             if !first {
@@ -755,7 +783,9 @@ impl Console {
     /// Re-detects the terminal size on each call so that the output
     /// adapts when the user resizes the terminal window.
     pub fn println(&mut self, renderable: &dyn Renderable) {
-        if self.quiet { return; }
+        if self.quiet {
+            return;
+        }
         self.refresh_size();
         let result = renderable.render(&self.options);
         let ansi = result.to_ansi();
@@ -777,7 +807,9 @@ impl Console {
     /// Print a plain string (supports markup by default when `markup` is
     /// enabled).
     pub fn print_str(&mut self, text: &str) {
-        if self.quiet { return; }
+        if self.quiet {
+            return;
+        }
         let ansi = if self.options.markup {
             let parsed = crate::markup::render(text);
             parsed.render()
@@ -791,7 +823,9 @@ impl Console {
 
     /// Print formatted JSON.
     pub fn print_json(&mut self, data: &serde_json::Value) {
-        if self.quiet { return; }
+        if self.quiet {
+            return;
+        }
         let formatted = crate::json::render_json(data);
         let result = formatted.render(&self.options);
         let ansi = result.to_ansi();
@@ -801,7 +835,9 @@ impl Console {
 
     /// Clear the screen.
     pub fn clear(&mut self) {
-        if self.quiet { return; }
+        if self.quiet {
+            return;
+        }
         let _ = write!(self.file, "{}", crate::control::CLEAR_HOME);
         let _ = self.file.flush();
     }
@@ -822,7 +858,13 @@ impl Console {
 
     /// Set the terminal window title.
     pub fn set_window_title(&mut self, title: &str) {
-        let _ = write!(self.file, "{}{}{}", crate::control::OSC, title, crate::control::ST);
+        let _ = write!(
+            self.file,
+            "{}{}{}",
+            crate::control::OSC,
+            title,
+            crate::control::ST
+        );
         let _ = self.file.flush();
     }
 
@@ -845,15 +887,16 @@ impl Console {
 
     /// Measure a renderable's width constraints.
     /// Equivalent to Python Rich's `Measurement.get(console, options, renderable)`.
-    pub fn measure(&self, renderable: &dyn Renderable, options: &ConsoleOptions) -> crate::measure::Measurement {
+    pub fn measure(
+        &self,
+        renderable: &dyn Renderable,
+        options: &ConsoleOptions,
+    ) -> crate::measure::Measurement {
         if let Some(m) = renderable.measure(options) {
             return m;
         }
         let segments = self.render(renderable, options);
-        let max_w = segments.iter()
-            .map(|s| s.cell_length())
-            .max()
-            .unwrap_or(0);
+        let max_w = segments.iter().map(|s| s.cell_length()).max().unwrap_or(0);
         crate::measure::Measurement::new(max_w, options.max_width)
     }
 
@@ -868,11 +911,19 @@ impl Console {
         style: Option<Style>,
         align: Option<AlignMethod>,
     ) {
-        if self.quiet { return; }
+        if self.quiet {
+            return;
+        }
         let mut rule = crate::rule::Rule::new().title(title);
-        if let Some(chars) = characters { rule = rule.characters(chars); }
-        if let Some(st) = style { rule = rule.style(st); }
-        if let Some(a) = align { rule = rule.align(a); }
+        if let Some(chars) = characters {
+            rule = rule.characters(chars);
+        }
+        if let Some(st) = style {
+            rule = rule.style(st);
+        }
+        if let Some(a) = align {
+            rule = rule.align(a);
+        }
         let result = rule.render(&self.options);
         let ansi = result.to_ansi();
         let _ = write!(self.file, "{ansi}");
@@ -881,14 +932,18 @@ impl Console {
 
     /// Output a bell character.
     pub fn bell(&mut self) {
-        if self.quiet { return; }
+        if self.quiet {
+            return;
+        }
         let _ = write!(self.file, "\x07");
         let _ = self.file.flush();
     }
 
     /// Output blank lines.
     pub fn line(&mut self, count: usize) {
-        if self.quiet { return; }
+        if self.quiet {
+            return;
+        }
         for _ in 0..count {
             let _ = writeln!(self.file);
         }
@@ -897,7 +952,9 @@ impl Console {
 
     /// Output a log entry with timestamp, caller info.
     pub fn log(&mut self, objects: &[&dyn Renderable]) {
-        if self.quiet { return; }
+        if self.quiet {
+            return;
+        }
         let now = chrono::Local::now();
         let time_str = format!("[{}]", now.format("%H:%M:%S"));
         let _ = write!(self.file, "{} ", Style::new().dim(true).to_ansi());
@@ -933,7 +990,8 @@ impl Console {
     /// and wraps in a full HTML document. Colors and styles are preserved.
     pub fn export_html(&self, renderable: &dyn Renderable) -> String {
         let segments = self.render(renderable, &self.options);
-        let code = crate::export::segments_to_html(&segments, &crate::export::ExportTheme::default());
+        let code =
+            crate::export::segments_to_html(&segments, &crate::export::ExportTheme::default());
         crate::export::export_html(&crate::export::ExportHtmlOptions {
             code,
             ..Default::default()
@@ -941,7 +999,11 @@ impl Console {
     }
 
     /// Save rendered output as an HTML file.
-    pub fn save_html(&self, path: impl AsRef<std::path::Path>, renderable: &dyn Renderable) -> std::io::Result<()> {
+    pub fn save_html(
+        &self,
+        path: impl AsRef<std::path::Path>,
+        renderable: &dyn Renderable,
+    ) -> std::io::Result<()> {
         let html = self.export_html(renderable);
         std::fs::write(path.as_ref(), html)
     }
@@ -953,7 +1015,8 @@ impl Console {
     /// `<tspan>` elements, and wraps in a full SVG document.
     pub fn export_svg(&self, renderable: &dyn Renderable) -> String {
         let segments = self.render(renderable, &self.options);
-        let code = crate::export::segments_to_svg(&segments, &crate::export::ExportTheme::default());
+        let code =
+            crate::export::segments_to_svg(&segments, &crate::export::ExportTheme::default());
         crate::export::export_svg(&crate::export::ExportSvgOptions {
             code,
             ..Default::default()
@@ -961,12 +1024,19 @@ impl Console {
     }
 
     /// Save rendered output as an SVG file.
-    pub fn save_svg(&self, path: impl AsRef<std::path::Path>, renderable: &dyn Renderable) -> std::io::Result<()> {
+    pub fn save_svg(
+        &self,
+        path: impl AsRef<std::path::Path>,
+        renderable: &dyn Renderable,
+    ) -> std::io::Result<()> {
         let svg = self.export_svg(renderable);
-        crate::export::save_svg(path, &crate::export::ExportSvgOptions {
-            code: svg,
-            ..Default::default()
-        })
+        crate::export::save_svg(
+            path,
+            &crate::export::ExportSvgOptions {
+                code: svg,
+                ..Default::default()
+            },
+        )
     }
 
     /// Export the current console output as plain text (strips ANSI).
@@ -980,12 +1050,19 @@ impl Console {
     }
 
     /// Save rendered output as a plain text file.
-    pub fn save_text(&self, path: impl AsRef<std::path::Path>, renderable: &dyn Renderable) -> std::io::Result<()> {
+    pub fn save_text(
+        &self,
+        path: impl AsRef<std::path::Path>,
+        renderable: &dyn Renderable,
+    ) -> std::io::Result<()> {
         let text = self.export_text(renderable);
-        crate::export::save_text(path, &crate::export::ExportTextOptions {
-            text,
-            strip_ansi: false,
-        })
+        crate::export::save_text(
+            path,
+            &crate::export::ExportTextOptions {
+                text,
+                strip_ansi: false,
+            },
+        )
     }
 
     // -- Quiet / Soft-wrap setters ------------------------------------------
@@ -1239,14 +1316,14 @@ impl Console {
     /// and `extra_lines` controls how many lines of source context to show
     /// around each frame.
     pub fn print_exception(&mut self, _width: Option<usize>, _extra_lines: usize) {
-        if self.quiet { return; }
+        if self.quiet {
+            return;
+        }
         // Note: Rust does not have Python's sys.exc_info(). A full traceback
         // renderer would need std::panic::catch_unwind or custom error capture.
         // This method provides the API surface; for actual panic tracebacks
         // see crate::traceback::install().
-        let msg = format!(
-            "[bold red]Exception[/bold red]: No current exception info. "
-        );
+        let msg = format!("[bold red]Exception[/bold red]: No current exception info. ");
         let msg_text = crate::text::Text::from_markup(&msg);
         let result = msg_text.render();
         let _ = writeln!(self.file, "{result}");
@@ -1258,7 +1335,9 @@ impl Console {
     /// Pretty-print a JSON string. Parses the string and renders it with
     /// syntax highlighting.
     pub fn print_json_str(&mut self, json: &str) {
-        if self.quiet { return; }
+        if self.quiet {
+            return;
+        }
         if let Ok(value) = serde_json::from_str::<serde_json::Value>(json) {
             self.print_json(&value);
         } else {
@@ -1414,7 +1493,11 @@ impl Console {
     ///
     /// Takes already-rendered lines and displays them as the full screen
     /// content, clearing existing content first.
-    pub fn update_screen_lines(&mut self, lines: &[Vec<Segment>], options: Option<&ConsoleOptions>) {
+    pub fn update_screen_lines(
+        &mut self,
+        lines: &[Vec<Segment>],
+        options: Option<&ConsoleOptions>,
+    ) {
         let _ = options;
         let mut output = String::new();
         for line in lines {
@@ -1482,9 +1565,7 @@ fn detect_color_system() -> ColorSystem {
 
 use once_cell::sync::Lazy;
 
-static GLOBAL_CONSOLE: Lazy<Mutex<Console>> = Lazy::new(|| {
-    Mutex::new(Console::new())
-});
+static GLOBAL_CONSOLE: Lazy<Mutex<Console>> = Lazy::new(|| Mutex::new(Console::new()));
 
 /// Get a reference to the global Console.
 pub fn get_console() -> std::sync::MutexGuard<'static, Console> {
@@ -1526,11 +1607,7 @@ pub fn print_json_val(data: &serde_json::Value) {
 /// * `width` — New terminal width (None to keep current).
 /// * `height` — New terminal height (None to keep current).
 /// * `color_system` — New color system level (None to keep current).
-pub fn reconfigure(
-    width: Option<usize>,
-    height: Option<usize>,
-    color_system: Option<ColorSystem>,
-) {
+pub fn reconfigure(width: Option<usize>, height: Option<usize>, color_system: Option<ColorSystem>) {
     let mut console = GLOBAL_CONSOLE.lock().unwrap();
     if let Some(w) = width {
         console.set_width(w);
@@ -1691,9 +1768,11 @@ mod tests {
     #[test]
     fn test_capture_with_closure() {
         let mut console = Console::with_file(Box::new(std::io::sink()));
-        let output = console.capture(|c| {
-            let _ = write!(c.file, "hello from capture");
-        }).unwrap();
+        let output = console
+            .capture(|c| {
+                let _ = write!(c.file, "hello from capture");
+            })
+            .unwrap();
         assert_eq!(output, "hello from capture");
     }
 
@@ -1732,11 +1811,14 @@ mod tests {
     fn test_render_hook() {
         let hook = RenderHook::new(|lines| {
             // Add a bold "HOOKED" segment to every line
-            let hooked: Vec<Vec<Segment>> = lines.iter().map(|line| {
-                let mut new_line = line.clone();
-                new_line.push(Segment::styled("HOOKED", Style::new().bold(true)));
-                new_line
-            }).collect();
+            let hooked: Vec<Vec<Segment>> = lines
+                .iter()
+                .map(|line| {
+                    let mut new_line = line.clone();
+                    new_line.push(Segment::styled("HOOKED", Style::new().bold(true)));
+                    new_line
+                })
+                .collect();
             hooked
         });
         let lines = vec![vec![Segment::new("test")]];

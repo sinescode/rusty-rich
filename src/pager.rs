@@ -284,10 +284,7 @@ mod tests {
 
     #[test]
     fn test_pager_builder() {
-        let pager = Pager::new()
-            .enabled(false)
-            .command("more")
-            .color(false);
+        let pager = Pager::new().enabled(false).command("more").color(false);
         assert!(!pager.is_enabled());
         assert!(!pager.is_color());
         assert_eq!(pager.command_str(), "more");

@@ -38,35 +38,39 @@ pub const SPINNER_DOTS3: SpinnerFrames = SpinnerFrames {
 };
 
 pub const SPINNER_DOTS4: SpinnerFrames = SpinnerFrames {
-    frames: &["⠄", "⠆", "⠇", "⠋", "⠙", "⠸", "⠰", "⠠", "⠰", "⠸", "⠙", "⠋", "⠇", "⠆"],
+    frames: &[
+        "⠄", "⠆", "⠇", "⠋", "⠙", "⠸", "⠰", "⠠", "⠰", "⠸", "⠙", "⠋", "⠇", "⠆",
+    ],
     interval: 0.08,
 };
 
 pub const SPINNER_DOTS5: SpinnerFrames = SpinnerFrames {
-    frames: &["⠋", "⠙", "⠚", "⠒", "⠂", "⠂", "⠒", "⠲", "⠴", "⠦", "⠖", "⠒", "⠐", "⠐", "⠒", "⠓", "⠋"],
+    frames: &[
+        "⠋", "⠙", "⠚", "⠒", "⠂", "⠂", "⠒", "⠲", "⠴", "⠦", "⠖", "⠒", "⠐", "⠐", "⠒", "⠓", "⠋",
+    ],
     interval: 0.08,
 };
 
 pub const SPINNER_DOTS6: SpinnerFrames = SpinnerFrames {
     frames: &[
-        "⠁", "⠉", "⠙", "⠚", "⠒", "⠂", "⠂", "⠒", "⠲", "⠴", "⠤", "⠄", "⠄", "⠤", "⠴", "⠲", "⠒",
-        "⠂", "⠂", "⠒", "⠚", "⠙", "⠉", "⠁",
+        "⠁", "⠉", "⠙", "⠚", "⠒", "⠂", "⠂", "⠒", "⠲", "⠴", "⠤", "⠄", "⠄", "⠤", "⠴", "⠲", "⠒", "⠂",
+        "⠂", "⠒", "⠚", "⠙", "⠉", "⠁",
     ],
     interval: 0.08,
 };
 
 pub const SPINNER_DOTS7: SpinnerFrames = SpinnerFrames {
     frames: &[
-        "⠈", "⠉", "⠋", "⠓", "⠒", "⠐", "⠐", "⠒", "⠖", "⠦", "⠤", "⠠", "⠠", "⠤", "⠦", "⠖", "⠒",
-        "⠐", "⠐", "⠒", "⠓", "⠋", "⠉", "⠈",
+        "⠈", "⠉", "⠋", "⠓", "⠒", "⠐", "⠐", "⠒", "⠖", "⠦", "⠤", "⠠", "⠠", "⠤", "⠦", "⠖", "⠒", "⠐",
+        "⠐", "⠒", "⠓", "⠋", "⠉", "⠈",
     ],
     interval: 0.08,
 };
 
 pub const SPINNER_DOTS8: SpinnerFrames = SpinnerFrames {
     frames: &[
-        "⠁", "⠁", "⠉", "⠙", "⠚", "⠒", "⠂", "⠂", "⠒", "⠲", "⠴", "⠤", "⠄", "⠄", "⠤", "⠠", "⠠",
-        "⠤", "⠦", "⠖", "⠒", "⠐", "⠐", "⠒", "⠓", "⠋", "⠉", "⠈", "⠈",
+        "⠁", "⠁", "⠉", "⠙", "⠚", "⠒", "⠂", "⠂", "⠒", "⠲", "⠴", "⠤", "⠄", "⠄", "⠤", "⠠", "⠠", "⠤",
+        "⠦", "⠖", "⠒", "⠐", "⠐", "⠒", "⠓", "⠋", "⠉", "⠈", "⠈",
     ],
     interval: 0.08,
 };
@@ -130,13 +134,21 @@ pub const SPINNER_ARROW3: SpinnerFrames = SpinnerFrames {
 };
 
 pub const SPINNER_BOUNCING_BAR: SpinnerFrames = SpinnerFrames {
-    frames: &["[    ]", "[=   ]", "[==  ]", "[=== ]", "[ ===]", "[  ==]", "[   =]", "[    ]"],
+    frames: &[
+        "[    ]", "[=   ]", "[==  ]", "[=== ]", "[ ===]", "[  ==]", "[   =]", "[    ]",
+    ],
     interval: 0.15,
 };
 
 pub const SPINNER_BOUNCING_BALL: SpinnerFrames = SpinnerFrames {
     frames: &[
-        "( ●    )", "(  ●   )", "(   ●  )", "(    ● )", "(     ●)", "(    ● )", "(   ●  )",
+        "( ●    )",
+        "(  ●   )",
+        "(   ●  )",
+        "(    ● )",
+        "(     ●)",
+        "(    ● )",
+        "(   ●  )",
         "(  ●   )",
     ],
     interval: 0.15,
@@ -170,12 +182,16 @@ pub const SPINNER_GRENADE: SpinnerFrames = SpinnerFrames {
 };
 
 pub const SPINNER_GROW_HORIZONTAL: SpinnerFrames = SpinnerFrames {
-    frames: &["▏", "▎", "▍", "▌", "▋", "▊", "▉", "▉", "▊", "▋", "▌", "▍", "▎", "▏"],
+    frames: &[
+        "▏", "▎", "▍", "▌", "▋", "▊", "▉", "▉", "▊", "▋", "▌", "▍", "▎", "▏",
+    ],
     interval: 0.08,
 };
 
 pub const SPINNER_GROW_VERTICAL: SpinnerFrames = SpinnerFrames {
-    frames: &["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█", "▇", "▆", "▅", "▄", "▃", "▁"],
+    frames: &[
+        "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█", "▇", "▆", "▅", "▄", "▃", "▁",
+    ],
     interval: 0.08,
 };
 
@@ -185,12 +201,16 @@ pub const SPINNER_HAMBURGER: SpinnerFrames = SpinnerFrames {
 };
 
 pub const SPINNER_HEARTS: SpinnerFrames = SpinnerFrames {
-    frames: &["🩷", "❤️", "🧡", "💛", "💚", "💙", "🩵", "💜", "🤎", "🖤", "🩶", "🤍"],
+    frames: &[
+        "🩷", "❤️", "🧡", "💛", "💚", "💙", "🩵", "💜", "🤎", "🖤", "🩶", "🤍",
+    ],
     interval: 0.12,
 };
 
 pub const SPINNER_MONKEY: SpinnerFrames = SpinnerFrames {
-    frames: &["🐒", "🐒", "🐒", "🐒", "🙈", "🙉", "🙊", "🐒", "🐒", "🐒", "🐒"],
+    frames: &[
+        "🐒", "🐒", "🐒", "🐒", "🙈", "🙉", "🙊", "🐒", "🐒", "🐒", "🐒",
+    ],
     interval: 0.15,
 };
 
@@ -201,14 +221,36 @@ pub const SPINNER_NOISE: SpinnerFrames = SpinnerFrames {
 
 pub const SPINNER_PONG: SpinnerFrames = SpinnerFrames {
     frames: &[
-        "▐⠂       ▌", "▐⠈       ▌", "▐ ⠂      ▌", "▐ ⠠      ▌",
-        "▐  ⡀     ▌", "▐  ⠠     ▌", "▐   ⠂    ▌", "▐   ⠈    ▌",
-        "▐    ⠂   ▌", "▐    ⠠   ▌", "▐     ⡀  ▌", "▐     ⠠  ▌",
-        "▐      ⠂ ▌", "▐      ⠈ ▌", "▐       ⠂▌", "▐       ⠠▌",
-        "▐       ⡀▌", "▐      ⠠ ▌", "▐      ⠂ ▌", "▐     ⠈  ▌",
-        "▐     ⠂  ▌", "▐    ⠠   ▌", "▐    ⡀   ▌", "▐   ⠠    ▌",
-        "▐   ⠂    ▌", "▐  ⠈     ▌", "▐  ⠂     ▌", "▐ ⠠      ▌",
-        "▐ ⠂      ▌", "▐⠈       ▌",
+        "▐⠂       ▌",
+        "▐⠈       ▌",
+        "▐ ⠂      ▌",
+        "▐ ⠠      ▌",
+        "▐  ⡀     ▌",
+        "▐  ⠠     ▌",
+        "▐   ⠂    ▌",
+        "▐   ⠈    ▌",
+        "▐    ⠂   ▌",
+        "▐    ⠠   ▌",
+        "▐     ⡀  ▌",
+        "▐     ⠠  ▌",
+        "▐      ⠂ ▌",
+        "▐      ⠈ ▌",
+        "▐       ⠂▌",
+        "▐       ⠠▌",
+        "▐       ⡀▌",
+        "▐      ⠠ ▌",
+        "▐      ⠂ ▌",
+        "▐     ⠈  ▌",
+        "▐     ⠂  ▌",
+        "▐    ⠠   ▌",
+        "▐    ⡀   ▌",
+        "▐   ⠠    ▌",
+        "▐   ⠂    ▌",
+        "▐  ⠈     ▌",
+        "▐  ⠂     ▌",
+        "▐ ⠠      ▌",
+        "▐ ⠂      ▌",
+        "▐⠈       ▌",
     ],
     interval: 0.08,
 };
@@ -234,7 +276,9 @@ pub const SPINNER_TRIANGLE: SpinnerFrames = SpinnerFrames {
 };
 
 pub const SPINNER_VERTICAL_BARS: SpinnerFrames = SpinnerFrames {
-    frames: &["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█", "▇", "▆", "▅", "▄", "▃", "▂", "▁"],
+    frames: &[
+        "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█", "▇", "▆", "▅", "▄", "▃", "▂", "▁",
+    ],
     interval: 0.08,
 };
 
@@ -585,7 +629,11 @@ mod tests {
     fn test_spinners_list_all_accessible() {
         for (name, frames) in SPINNERS {
             let found = get_spinner(name).unwrap();
-            assert!(!frames.frames.is_empty(), "spinner '{}' has no frames", name);
+            assert!(
+                !frames.frames.is_empty(),
+                "spinner '{}' has no frames",
+                name
+            );
             // Compare frame content rather than raw pointers, since `const`
             // values may be inlined at different addresses by the compiler.
             assert_eq!(
@@ -734,21 +782,48 @@ mod tests {
     }
 
     #[test]
-    fn test_spinner_dots12() { assert!(!SPINNER_DOTS12.frames.is_empty()); assert!(SPINNER_DOTS12.interval > 0.0); }
+    fn test_spinner_dots12() {
+        assert!(!SPINNER_DOTS12.frames.is_empty());
+        assert!(SPINNER_DOTS12.interval > 0.0);
+    }
     #[test]
-    fn test_spinner_dots13() { assert!(!SPINNER_DOTS13.frames.is_empty()); assert!(SPINNER_DOTS13.interval > 0.0); }
+    fn test_spinner_dots13() {
+        assert!(!SPINNER_DOTS13.frames.is_empty());
+        assert!(SPINNER_DOTS13.interval > 0.0);
+    }
     #[test]
-    fn test_spinner_star() { assert!(!SPINNER_STAR.frames.is_empty()); assert!(SPINNER_STAR.interval > 0.0); }
+    fn test_spinner_star() {
+        assert!(!SPINNER_STAR.frames.is_empty());
+        assert!(SPINNER_STAR.interval > 0.0);
+    }
     #[test]
-    fn test_spinner_flip() { assert!(!SPINNER_FLIP.frames.is_empty()); assert!(SPINNER_FLIP.interval > 0.0); }
+    fn test_spinner_flip() {
+        assert!(!SPINNER_FLIP.frames.is_empty());
+        assert!(SPINNER_FLIP.interval > 0.0);
+    }
     #[test]
-    fn test_spinner_balloon() { assert!(!SPINNER_BALLOON.frames.is_empty()); assert!(SPINNER_BALLOON.interval > 0.0); }
+    fn test_spinner_balloon() {
+        assert!(!SPINNER_BALLOON.frames.is_empty());
+        assert!(SPINNER_BALLOON.interval > 0.0);
+    }
     #[test]
-    fn test_spinner_pipe() { assert!(!SPINNER_PIPE.frames.is_empty()); assert!(SPINNER_PIPE.interval > 0.0); }
+    fn test_spinner_pipe() {
+        assert!(!SPINNER_PIPE.frames.is_empty());
+        assert!(SPINNER_PIPE.interval > 0.0);
+    }
     #[test]
-    fn test_spinner_pulse() { assert!(!SPINNER_PULSE.frames.is_empty()); assert!(SPINNER_PULSE.interval > 0.0); }
+    fn test_spinner_pulse() {
+        assert!(!SPINNER_PULSE.frames.is_empty());
+        assert!(SPINNER_PULSE.interval > 0.0);
+    }
     #[test]
-    fn test_spinner_windows() { assert!(!SPINNER_WINDOWS.frames.is_empty()); assert!(SPINNER_WINDOWS.interval > 0.0); }
+    fn test_spinner_windows() {
+        assert!(!SPINNER_WINDOWS.frames.is_empty());
+        assert!(SPINNER_WINDOWS.interval > 0.0);
+    }
     #[test]
-    fn test_spinner_shaded_blocks() { assert!(!SPINNER_SHADED_BLOCKS.frames.is_empty()); assert!(SPINNER_SHADED_BLOCKS.interval > 0.0); }
+    fn test_spinner_shaded_blocks() {
+        assert!(!SPINNER_SHADED_BLOCKS.frames.is_empty());
+        assert!(SPINNER_SHADED_BLOCKS.interval > 0.0);
+    }
 }

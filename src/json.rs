@@ -1,10 +1,10 @@
 //! JSON pretty printing — equivalent to Rich's `json.py`.
 
-use serde_json::Value;
 use crate::console::{ConsoleOptions, RenderResult, Renderable};
 use crate::segment::Segment;
 use crate::style::Style;
 use crate::theme::Theme;
+use serde_json::Value;
 
 /// Render a JSON value with syntax highlighting.
 pub fn render_json(value: &Value) -> JsonRender {
@@ -27,15 +27,20 @@ pub struct JsonRender {
 
 impl JsonRender {
     /// Set the indentation width (number of spaces per level, default 2).
-    pub fn indent(mut self, n: usize) -> Self { self.indent = n; self }
+    pub fn indent(mut self, n: usize) -> Self {
+        self.indent = n;
+        self
+    }
     /// Set a custom theme for syntax highlighting colours.
-    pub fn theme(mut self, t: Theme) -> Self { self.theme = Some(t); self }
+    pub fn theme(mut self, t: Theme) -> Self {
+        self.theme = Some(t);
+        self
+    }
 
     fn style_for(&self, name: &str) -> Style {
         if let Some(ref t) = self.theme {
             t.get(name).cloned().unwrap_or(Style::new())
         } else {
-            
             let theme = crate::theme::default_theme();
             theme.get(name).cloned().unwrap_or(Style::new())
         }
@@ -44,18 +49,17 @@ impl JsonRender {
 
 impl Renderable for JsonRender {
     fn render(&self, _options: &ConsoleOptions) -> RenderResult {
-        let formatted = format_json_value(
-            &self.value,
-            self.indent,
-            0,
-            self.highlight,
-            &|name| self.style_for(name),
-        );
+        let formatted = format_json_value(&self.value, self.indent, 0, self.highlight, &|name| {
+            self.style_for(name)
+        });
         let lines: Vec<Vec<Segment>> = formatted
             .lines()
             .map(|line| vec![Segment::new(line)])
             .collect();
-        RenderResult { lines, items: Vec::new() }
+        RenderResult {
+            lines,
+            items: Vec::new(),
+        }
     }
 }
 
@@ -85,7 +89,12 @@ fn format_json_value(
         }
         Value::String(s) => {
             let st = get_style("json.str");
-            format!("{}\"{}\"{}", st.to_ansi(), s.escape_default(), st.reset_ansi())
+            format!(
+                "{}\"{}\"{}",
+                st.to_ansi(),
+                s.escape_default(),
+                st.reset_ansi()
+            )
         }
         Value::Array(arr) => {
             if arr.is_empty() {

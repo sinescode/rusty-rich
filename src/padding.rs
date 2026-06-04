@@ -20,17 +20,32 @@ pub struct PaddingDimensions {
 impl PaddingDimensions {
     /// Create from a single value (all sides equal).
     pub fn all(pad: usize) -> Self {
-        Self { top: pad, right: pad, bottom: pad, left: pad }
+        Self {
+            top: pad,
+            right: pad,
+            bottom: pad,
+            left: pad,
+        }
     }
 
     /// Create from (vertical, horizontal).
     pub fn symmetric(vertical: usize, horizontal: usize) -> Self {
-        Self { top: vertical, right: horizontal, bottom: vertical, left: horizontal }
+        Self {
+            top: vertical,
+            right: horizontal,
+            bottom: vertical,
+            left: horizontal,
+        }
     }
 
     /// Create from (top, right, bottom, left).
     pub fn new(top: usize, right: usize, bottom: usize, left: usize) -> Self {
-        Self { top, right, bottom, left }
+        Self {
+            top,
+            right,
+            bottom,
+            left,
+        }
     }
 }
 
@@ -82,14 +97,15 @@ impl Padding {
     }
 
     /// Builder: set the style.
-    pub fn style(mut self, style: Style) -> Self { self.style = style; self }
+    pub fn style(mut self, style: Style) -> Self {
+        self.style = style;
+        self
+    }
 }
 
 impl std::fmt::Debug for Padding {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Padding")
-            .field("pad", &self.pad)
-            .finish()
+        f.debug_struct("Padding").field("pad", &self.pad).finish()
     }
 }
 
@@ -106,7 +122,9 @@ impl Renderable for Padding {
         let inner_width = width.saturating_sub(pad.left + pad.right);
         let inner_opts = options.update_width(inner_width.max(1));
 
-        let inner_height = options.height.map(|h| h.saturating_sub(pad.top + pad.bottom));
+        let inner_height = options
+            .height
+            .map(|h| h.saturating_sub(pad.top + pad.bottom));
         let inner_opts = if let Some(h) = inner_height {
             inner_opts.update_height(h)
         } else {
@@ -118,10 +136,7 @@ impl Renderable for Padding {
 
         // Top padding
         for _ in 0..pad.top {
-            lines.push(vec![
-                Segment::new(" ".repeat(width)),
-                Segment::line(),
-            ]);
+            lines.push(vec![Segment::new(" ".repeat(width)), Segment::line()]);
         }
 
         // Content lines with left/right padding
@@ -140,13 +155,13 @@ impl Renderable for Padding {
 
         // Bottom padding
         for _ in 0..pad.bottom {
-            lines.push(vec![
-                Segment::new(" ".repeat(width)),
-                Segment::line(),
-            ]);
+            lines.push(vec![Segment::new(" ".repeat(width)), Segment::line()]);
         }
 
-        RenderResult { lines, items: Vec::new() }
+        RenderResult {
+            lines,
+            items: Vec::new(),
+        }
     }
 }
 

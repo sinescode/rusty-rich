@@ -34,16 +34,28 @@ impl Rule {
     }
 
     /// Builder: set the title.
-    pub fn title(mut self, title: impl Into<String>) -> Self { self.title = title.into(); self }
+    pub fn title(mut self, title: impl Into<String>) -> Self {
+        self.title = title.into();
+        self
+    }
 
     /// Builder: set the characters.
-    pub fn characters(mut self, chars: impl Into<String>) -> Self { self.characters = chars.into(); self }
+    pub fn characters(mut self, chars: impl Into<String>) -> Self {
+        self.characters = chars.into();
+        self
+    }
 
     /// Builder: set the style.
-    pub fn style(mut self, style: Style) -> Self { self.style = style; self }
+    pub fn style(mut self, style: Style) -> Self {
+        self.style = style;
+        self
+    }
 
     /// Builder: set the alignment.
-    pub fn align(mut self, align: AlignMethod) -> Self { self.align = align; self }
+    pub fn align(mut self, align: AlignMethod) -> Self {
+        self.align = align;
+        self
+    }
 }
 
 impl Renderable for Rule {
@@ -74,7 +86,11 @@ impl Renderable for Rule {
         }
 
         let title_w = UnicodeWidthStr::width(self.title.as_str());
-        let required_space = if matches!(self.align, AlignMethod::Center) { 4 } else { 2 };
+        let required_space = if matches!(self.align, AlignMethod::Center) {
+            4
+        } else {
+            2
+        };
         let available = width.saturating_sub(required_space);
 
         if available < 1 {
@@ -93,7 +109,10 @@ impl Renderable for Rule {
             AlignMethod::Center => {
                 let side = (width.saturating_sub(title_w)) / 2;
                 let left_w = side.saturating_sub(1);
-                let right_w = width.saturating_sub(left_w).saturating_sub(title_w).saturating_sub(2);
+                let right_w = width
+                    .saturating_sub(left_w)
+                    .saturating_sub(title_w)
+                    .saturating_sub(2);
 
                 let left = chars.repeat((left_w / char_w).max(1));
                 let right = chars.repeat((right_w / char_w).max(1));
@@ -145,7 +164,10 @@ mod tests {
     #[test]
     fn test_plain_rule() {
         let rule = Rule::new();
-        let opts = ConsoleOptions { max_width: 40, ..Default::default() };
+        let opts = ConsoleOptions {
+            max_width: 40,
+            ..Default::default()
+        };
         let result = rule.render(&opts);
         let ansi = result.to_ansi();
         assert!(ansi.contains('─'));
@@ -154,7 +176,10 @@ mod tests {
     #[test]
     fn test_rule_with_title() {
         let rule = Rule::new().title("Section");
-        let opts = ConsoleOptions { max_width: 40, ..Default::default() };
+        let opts = ConsoleOptions {
+            max_width: 40,
+            ..Default::default()
+        };
         let result = rule.render(&opts);
         let ansi = result.to_ansi();
         assert!(ansi.contains("Section"));

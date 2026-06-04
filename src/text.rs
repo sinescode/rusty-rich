@@ -263,11 +263,8 @@ impl Text {
 
         // If a style is given, add a span for the appended text
         if let Some(st) = style {
-            self.spans.push(Span::new(
-                offset,
-                offset + text.plain.len(),
-                st,
-            ));
+            self.spans
+                .push(Span::new(offset, offset + text.plain.len(), st));
         }
     }
 
@@ -283,7 +280,8 @@ impl Text {
         let text = text.into();
         let offset = self.plain.len();
         self.plain.push_str(&text);
-        self.spans.push(Span::new(offset, offset + text.len(), style));
+        self.spans
+            .push(Span::new(offset, offset + text.len(), style));
     }
 
     /// Get the cell length of the plain text.
@@ -521,10 +519,19 @@ impl Text {
         text.style = self.style.clone();
         for span in &self.spans {
             if span.start < end && span.end > start {
-                let s_start = if span.start > start { span.start - start } else { 0 };
-                let s_end = if span.end < end { span.end - start } else { end - start };
+                let s_start = if span.start > start {
+                    span.start - start
+                } else {
+                    0
+                };
+                let s_end = if span.end < end {
+                    span.end - start
+                } else {
+                    end - start
+                };
                 if s_start < s_end {
-                    text.spans.push(Span::new(s_start, s_end, span.style.clone()));
+                    text.spans
+                        .push(Span::new(s_start, s_end, span.style.clone()));
                 }
             }
         }
@@ -697,7 +704,11 @@ impl Text {
         let mut out = String::new();
         let chars: Vec<(usize, char)> = self.plain.char_indices().collect();
         let default_ansi = self.style.to_ansi();
-        let reset = if default_ansi.is_empty() { "" } else { "\x1b[0m" };
+        let reset = if default_ansi.is_empty() {
+            ""
+        } else {
+            "\x1b[0m"
+        };
 
         if !default_ansi.is_empty() {
             out.push_str(&default_ansi);
@@ -912,28 +923,72 @@ fn apply_sgr(style: &mut Style, params: &str) {
     let mut i = 0usize;
     while i < parts.len() {
         match parts[i] {
-            "1" => { *style = style.clone().bold(true); }
-            "2" => { *style = style.clone().dim(true); }
-            "3" => { *style = style.clone().italic(true); }
-            "4" => { *style = style.clone().underline(true); }
-            "5" => { *style = style.clone().blink(true); }
-            "6" => { *style = style.clone().blink2(true); }
-            "7" => { *style = style.clone().reverse(true); }
-            "8" => { *style = style.clone().conceal(true); }
-            "9" => { *style = style.clone().strike(true); }
-            "21" => { *style = style.clone().underline2(true); }
-            "22" => { *style = style.clone().bold(false).dim(false); }
-            "23" => { *style = style.clone().italic(false); }
-            "24" => { *style = style.clone().underline(false); }
-            "25" => { *style = style.clone().blink(false).blink2(false); }
-            "27" => { *style = style.clone().reverse(false); }
-            "28" => { *style = style.clone().conceal(false); }
-            "29" => { *style = style.clone().strike(false); }
-            "51" => { *style = style.clone().frame(true); }
-            "52" => { *style = style.clone().encircle(true); }
-            "53" => { *style = style.clone().overline(true); }
-            "54" => { *style = style.clone().frame(false).encircle(false); }
-            "55" => { *style = style.clone().overline(false); }
+            "1" => {
+                *style = style.clone().bold(true);
+            }
+            "2" => {
+                *style = style.clone().dim(true);
+            }
+            "3" => {
+                *style = style.clone().italic(true);
+            }
+            "4" => {
+                *style = style.clone().underline(true);
+            }
+            "5" => {
+                *style = style.clone().blink(true);
+            }
+            "6" => {
+                *style = style.clone().blink2(true);
+            }
+            "7" => {
+                *style = style.clone().reverse(true);
+            }
+            "8" => {
+                *style = style.clone().conceal(true);
+            }
+            "9" => {
+                *style = style.clone().strike(true);
+            }
+            "21" => {
+                *style = style.clone().underline2(true);
+            }
+            "22" => {
+                *style = style.clone().bold(false).dim(false);
+            }
+            "23" => {
+                *style = style.clone().italic(false);
+            }
+            "24" => {
+                *style = style.clone().underline(false);
+            }
+            "25" => {
+                *style = style.clone().blink(false).blink2(false);
+            }
+            "27" => {
+                *style = style.clone().reverse(false);
+            }
+            "28" => {
+                *style = style.clone().conceal(false);
+            }
+            "29" => {
+                *style = style.clone().strike(false);
+            }
+            "51" => {
+                *style = style.clone().frame(true);
+            }
+            "52" => {
+                *style = style.clone().encircle(true);
+            }
+            "53" => {
+                *style = style.clone().overline(true);
+            }
+            "54" => {
+                *style = style.clone().frame(false).encircle(false);
+            }
+            "55" => {
+                *style = style.clone().overline(false);
+            }
             "38" => {
                 // Extended foreground color
                 if i + 1 < parts.len() {
@@ -952,7 +1007,8 @@ fn apply_sgr(style: &mut Style, params: &str) {
                                 let r = parts[i + 2].parse::<u8>().unwrap_or(0);
                                 let g = parts[i + 3].parse::<u8>().unwrap_or(0);
                                 let b = parts[i + 4].parse::<u8>().unwrap_or(0);
-                                *style = style.clone().color(crate::color::Color::from_rgb(r, g, b));
+                                *style =
+                                    style.clone().color(crate::color::Color::from_rgb(r, g, b));
                                 i += 4;
                             }
                         }
@@ -978,7 +1034,9 @@ fn apply_sgr(style: &mut Style, params: &str) {
                                 let r = parts[i + 2].parse::<u8>().unwrap_or(0);
                                 let g = parts[i + 3].parse::<u8>().unwrap_or(0);
                                 let b = parts[i + 4].parse::<u8>().unwrap_or(0);
-                                *style = style.clone().bgcolor(crate::color::Color::from_rgb(r, g, b));
+                                *style = style
+                                    .clone()
+                                    .bgcolor(crate::color::Color::from_rgb(r, g, b));
                                 i += 4;
                             }
                         }
@@ -986,8 +1044,12 @@ fn apply_sgr(style: &mut Style, params: &str) {
                     }
                 }
             }
-            "39" => { style.color = None; }
-            "49" => { style.bgcolor = None; }
+            "39" => {
+                style.color = None;
+            }
+            "49" => {
+                style.bgcolor = None;
+            }
             n => {
                 // Standard colors (30-37, 40-47, 90-97, 100-107)
                 if let Ok(num) = n.parse::<u8>() {

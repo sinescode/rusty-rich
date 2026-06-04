@@ -101,10 +101,18 @@ impl Attributes {
 
 /// All 13 style attribute bits in order (for iteration).
 pub const STYLE_BITS: &[u32] = &[
-    Attributes::BOLD, Attributes::DIM, Attributes::ITALIC,
-    Attributes::UNDERLINE, Attributes::BLINK, Attributes::REVERSE,
-    Attributes::STRIKE, Attributes::UNDERLINE2, Attributes::FRAME,
-    Attributes::ENCIRCLE, Attributes::OVERLINE, Attributes::BLINK2,
+    Attributes::BOLD,
+    Attributes::DIM,
+    Attributes::ITALIC,
+    Attributes::UNDERLINE,
+    Attributes::BLINK,
+    Attributes::REVERSE,
+    Attributes::STRIKE,
+    Attributes::UNDERLINE2,
+    Attributes::FRAME,
+    Attributes::ENCIRCLE,
+    Attributes::OVERLINE,
+    Attributes::BLINK2,
     Attributes::CONCEAL,
 ];
 
@@ -128,15 +136,33 @@ pub const STYLE_ATTRIBUTES: &[(&str, u32)] = &[
 impl fmt::Display for Attributes {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut parts: Vec<&str> = Vec::new();
-        if self.get(Self::BOLD) { parts.push("bold"); }
-        if self.get(Self::DIM) { parts.push("dim"); }
-        if self.get(Self::ITALIC) { parts.push("italic"); }
-        if self.get(Self::UNDERLINE) { parts.push("underline"); }
-        if self.get(Self::BLINK) { parts.push("blink"); }
-        if self.get(Self::REVERSE) { parts.push("reverse"); }
-        if self.get(Self::CONCEAL) { parts.push("conceal"); }
-        if self.get(Self::STRIKE) { parts.push("strike"); }
-        if self.get(Self::OVERLINE) { parts.push("overline"); }
+        if self.get(Self::BOLD) {
+            parts.push("bold");
+        }
+        if self.get(Self::DIM) {
+            parts.push("dim");
+        }
+        if self.get(Self::ITALIC) {
+            parts.push("italic");
+        }
+        if self.get(Self::UNDERLINE) {
+            parts.push("underline");
+        }
+        if self.get(Self::BLINK) {
+            parts.push("blink");
+        }
+        if self.get(Self::REVERSE) {
+            parts.push("reverse");
+        }
+        if self.get(Self::CONCEAL) {
+            parts.push("conceal");
+        }
+        if self.get(Self::STRIKE) {
+            parts.push("strike");
+        }
+        if self.get(Self::OVERLINE) {
+            parts.push("overline");
+        }
         if parts.is_empty() {
             write!(f, "none")
         } else {
@@ -612,43 +638,95 @@ impl Style {
 
         // Attributes — use push_code! macro for single-code attributes
         if self.set_attributes & Attributes::BOLD != 0 {
-            push_code!(if self.attributes.get(Attributes::BOLD) { "1" } else { "22" });
+            push_code!(if self.attributes.get(Attributes::BOLD) {
+                "1"
+            } else {
+                "22"
+            });
         }
         if self.set_attributes & Attributes::DIM != 0 {
-            push_code!(if self.attributes.get(Attributes::DIM) { "2" } else { "22" });
+            push_code!(if self.attributes.get(Attributes::DIM) {
+                "2"
+            } else {
+                "22"
+            });
         }
         if self.set_attributes & Attributes::ITALIC != 0 {
-            push_code!(if self.attributes.get(Attributes::ITALIC) { "3" } else { "23" });
+            push_code!(if self.attributes.get(Attributes::ITALIC) {
+                "3"
+            } else {
+                "23"
+            });
         }
         if self.set_attributes & Attributes::UNDERLINE != 0 {
-            push_code!(if self.attributes.get(Attributes::UNDERLINE) { "4" } else { "24" });
+            push_code!(if self.attributes.get(Attributes::UNDERLINE) {
+                "4"
+            } else {
+                "24"
+            });
         }
         if self.set_attributes & Attributes::BLINK != 0 {
-            push_code!(if self.attributes.get(Attributes::BLINK) { "5" } else { "25" });
+            push_code!(if self.attributes.get(Attributes::BLINK) {
+                "5"
+            } else {
+                "25"
+            });
         }
         if self.set_attributes & Attributes::REVERSE != 0 {
-            push_code!(if self.attributes.get(Attributes::REVERSE) { "7" } else { "27" });
+            push_code!(if self.attributes.get(Attributes::REVERSE) {
+                "7"
+            } else {
+                "27"
+            });
         }
         if self.set_attributes & Attributes::CONCEAL != 0 {
-            push_code!(if self.attributes.get(Attributes::CONCEAL) { "8" } else { "28" });
+            push_code!(if self.attributes.get(Attributes::CONCEAL) {
+                "8"
+            } else {
+                "28"
+            });
         }
         if self.set_attributes & Attributes::STRIKE != 0 {
-            push_code!(if self.attributes.get(Attributes::STRIKE) { "9" } else { "29" });
+            push_code!(if self.attributes.get(Attributes::STRIKE) {
+                "9"
+            } else {
+                "29"
+            });
         }
         if self.set_attributes & Attributes::UNDERLINE2 != 0 {
-            push_code!(if self.attributes.get(Attributes::UNDERLINE2) { "21" } else { "24" });
+            push_code!(if self.attributes.get(Attributes::UNDERLINE2) {
+                "21"
+            } else {
+                "24"
+            });
         }
         if self.set_attributes & Attributes::BLINK2 != 0 {
-            push_code!(if self.attributes.get(Attributes::BLINK2) { "6" } else { "25" });
+            push_code!(if self.attributes.get(Attributes::BLINK2) {
+                "6"
+            } else {
+                "25"
+            });
         }
         if self.set_attributes & Attributes::FRAME != 0 {
-            push_code!(if self.attributes.get(Attributes::FRAME) { "51" } else { "54" });
+            push_code!(if self.attributes.get(Attributes::FRAME) {
+                "51"
+            } else {
+                "54"
+            });
         }
         if self.set_attributes & Attributes::ENCIRCLE != 0 {
-            push_code!(if self.attributes.get(Attributes::ENCIRCLE) { "52" } else { "54" });
+            push_code!(if self.attributes.get(Attributes::ENCIRCLE) {
+                "52"
+            } else {
+                "54"
+            });
         }
         if self.set_attributes & Attributes::OVERLINE != 0 {
-            push_code!(if self.attributes.get(Attributes::OVERLINE) { "53" } else { "55" });
+            push_code!(if self.attributes.get(Attributes::OVERLINE) {
+                "53"
+            } else {
+                "55"
+            });
         }
 
         if !first {
@@ -736,7 +814,8 @@ impl Style {
         if self.set_attributes & Attributes::BOLD != 0 && self.attributes.get(Attributes::BOLD) {
             parts.push("font-weight: bold".into());
         }
-        if self.set_attributes & Attributes::ITALIC != 0 && self.attributes.get(Attributes::ITALIC) {
+        if self.set_attributes & Attributes::ITALIC != 0 && self.attributes.get(Attributes::ITALIC)
+        {
             parts.push("font-style: italic".into());
         }
 
@@ -752,13 +831,11 @@ impl Style {
         {
             decor.push("underline");
         }
-        if self.set_attributes & Attributes::STRIKE != 0
-            && self.attributes.get(Attributes::STRIKE)
+        if self.set_attributes & Attributes::STRIKE != 0 && self.attributes.get(Attributes::STRIKE)
         {
             decor.push("line-through");
         }
-        if (self.set_attributes & Attributes::BLINK != 0
-            && self.attributes.get(Attributes::BLINK))
+        if (self.set_attributes & Attributes::BLINK != 0 && self.attributes.get(Attributes::BLINK))
             || (self.set_attributes & Attributes::BLINK2 != 0
                 && self.attributes.get(Attributes::BLINK2))
         {
@@ -1095,13 +1172,15 @@ mod tests {
         let s = Style::new().color(Color::parse("red").unwrap()).bold(true);
         let ansi = s.to_ansi();
         assert!(ansi.contains("31")); // red foreground
-        assert!(ansi.contains("1"));  // bold
+        assert!(ansi.contains("1")); // bold
     }
 
     #[test]
     fn test_chain() {
         let a = Style::new().bold(true);
-        let b = Style::new().color(Color::parse("red").unwrap()).italic(true);
+        let b = Style::new()
+            .color(Color::parse("red").unwrap())
+            .italic(true);
         let chained = a.chain(&b);
         assert_eq!(chained.get_bold(), Some(true));
         assert!(chained.attributes.get(Attributes::ITALIC));
@@ -1112,7 +1191,9 @@ mod tests {
     #[test]
     fn test_chain_precedence() {
         let a = Style::new().bold(true).color(Color::parse("red").unwrap());
-        let b = Style::new().bold(false).color(Color::parse("blue").unwrap());
+        let b = Style::new()
+            .bold(false)
+            .color(Color::parse("blue").unwrap());
         let chained = a.chain(&b);
         // a sets bold(true) and color(red); b sets bold(false) and color(blue)
         // chain: self's values take priority

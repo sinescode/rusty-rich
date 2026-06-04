@@ -22,12 +22,12 @@
 
 use crate::color::Color;
 use crate::console::{ConsoleOptions, RenderResult, Renderable};
+#[cfg(feature = "syntax-highlighting")]
+use crate::highlighter::ReprHighlighter;
 use crate::panel::Panel;
 use crate::segment::Segment;
 use crate::style::Style;
 use crate::table::{Column, Table};
-#[cfg(feature = "syntax-highlighting")]
-use crate::highlighter::ReprHighlighter;
 
 // ---------------------------------------------------------------------------
 // Inspect — structured object inspection
@@ -174,7 +174,8 @@ impl Inspect {
         type_name: impl Into<String>,
         value: impl Into<String>,
     ) -> Self {
-        self.attrs.push((name.into(), type_name.into(), value.into(), None));
+        self.attrs
+            .push((name.into(), type_name.into(), value.into(), None));
         self
     }
 
@@ -186,16 +187,17 @@ impl Inspect {
         value: impl Into<String>,
         doc: impl Into<String>,
     ) -> Self {
-        self.attrs.push((name.into(), type_name.into(), value.into(), Some(doc.into())));
+        self.attrs.push((
+            name.into(),
+            type_name.into(),
+            value.into(),
+            Some(doc.into()),
+        ));
         self
     }
 
     /// Add a method to the inspection output.
-    pub fn add_method(
-        mut self,
-        name: impl Into<String>,
-        signature: impl Into<String>,
-    ) -> Self {
+    pub fn add_method(mut self, name: impl Into<String>, signature: impl Into<String>) -> Self {
         self.method_list.push((name.into(), signature.into(), None));
         self
     }
@@ -207,7 +209,8 @@ impl Inspect {
         signature: impl Into<String>,
         doc: impl Into<String>,
     ) -> Self {
-        self.method_list.push((name.into(), signature.into(), Some(doc.into())));
+        self.method_list
+            .push((name.into(), signature.into(), Some(doc.into())));
         self
     }
 
@@ -218,10 +221,7 @@ impl Inspect {
     }
 
     /// Build the attribute table from a list of `(name, type, value)` tuples.
-    pub fn with_attrs(
-        mut self,
-        attrs: Vec<(String, String, String)>,
-    ) -> Self {
+    pub fn with_attrs(mut self, attrs: Vec<(String, String, String)>) -> Self {
         self.attrs = attrs.into_iter().map(|(n, t, v)| (n, t, v, None)).collect();
         self
     }
@@ -278,14 +278,11 @@ impl Renderable for Inspect {
         if self.docs {
             if let Some(ref doc) = self.doc_text {
                 segments.push(Segment::line());
-                let doc_style = Style::new().italic(true).color(
-                    Color::parse("bright_black").unwrap_or_else(|_| Color::default()),
-                );
+                let doc_style = Style::new()
+                    .italic(true)
+                    .color(Color::parse("bright_black").unwrap_or_else(|_| Color::default()));
                 for line in doc.lines() {
-                    segments.push(Segment::styled(
-                        format!("  {line}"),
-                        doc_style.clone(),
-                    ));
+                    segments.push(Segment::styled(format!("  {line}"), doc_style.clone()));
                     segments.push(Segment::line());
                 }
             }
@@ -313,31 +310,33 @@ impl Renderable for Inspect {
             table.show_edge = false;
             table.show_lines = false;
             table.add_column(
-                Column::new("Attribute")
-                    .header_style(Style::new().bold(true).color(
-                        Color::parse("bright_cyan").unwrap_or_else(|_| Color::default()),
-                    )),
+                Column::new("Attribute").header_style(
+                    Style::new()
+                        .bold(true)
+                        .color(Color::parse("bright_cyan").unwrap_or_else(|_| Color::default())),
+                ),
             );
             table.add_column(
-                Column::new("Type")
-                    .header_style(Style::new().bold(true).color(
-                        Color::parse("bright_green").unwrap_or_else(|_| Color::default()),
-                    )),
+                Column::new("Type").header_style(
+                    Style::new()
+                        .bold(true)
+                        .color(Color::parse("bright_green").unwrap_or_else(|_| Color::default())),
+                ),
             );
             table.add_column(
-                Column::new("Value")
-                    .header_style(Style::new().bold(true).color(
-                        Color::parse("bright_yellow").unwrap_or_else(|_| Color::default()),
-                    )),
+                Column::new("Value").header_style(
+                    Style::new()
+                        .bold(true)
+                        .color(Color::parse("bright_yellow").unwrap_or_else(|_| Color::default())),
+                ),
             );
 
             for (name, type_name, value_repr, _doc) in &sorted_attrs {
-                let name_style = Style::new().color(
-                    Color::parse("cyan").unwrap_or_else(|_| Color::default()),
-                );
-                let type_style = Style::new().color(
-                    Color::parse("green").unwrap_or_else(|_| Color::default()),
-                ).italic(true);
+                let name_style =
+                    Style::new().color(Color::parse("cyan").unwrap_or_else(|_| Color::default()));
+                let type_style = Style::new()
+                    .color(Color::parse("green").unwrap_or_else(|_| Color::default()))
+                    .italic(true);
 
                 let name_text = name_style.render(name);
                 let type_text = type_style.render(type_name);
@@ -364,23 +363,23 @@ impl Renderable for Inspect {
             table.show_lines = false;
             table.add_column(
                 Column::new("Method").header_style(
-                    Style::new().bold(true).color(
-                        Color::parse("bright_magenta").unwrap_or_else(|_| Color::default()),
-                    ),
+                    Style::new()
+                        .bold(true)
+                        .color(Color::parse("bright_magenta").unwrap_or_else(|_| Color::default())),
                 ),
             );
             table.add_column(
                 Column::new("Signature").header_style(
-                    Style::new().bold(true).color(
-                        Color::parse("bright_blue").unwrap_or_else(|_| Color::default()),
-                    ),
+                    Style::new()
+                        .bold(true)
+                        .color(Color::parse("bright_blue").unwrap_or_else(|_| Color::default())),
                 ),
             );
 
             for (name, sig, _doc) in &self.method_list {
-                let name_style = Style::new().bold(true).color(
-                    Color::parse("magenta").unwrap_or_else(|_| Color::default()),
-                );
+                let name_style = Style::new()
+                    .bold(true)
+                    .color(Color::parse("magenta").unwrap_or_else(|_| Color::default()));
                 let sig_style = Style::new().italic(true);
 
                 let name_text = name_style.render(name);
@@ -421,9 +420,8 @@ impl Renderable for Inspect {
         let panel = Panel::new(panel_content)
             .title(self.effective_title())
             .border_style(
-                Style::new().color(
-                    Color::parse("bright_blue").unwrap_or_else(|_| Color::default()),
-                ),
+                Style::new()
+                    .color(Color::parse("bright_blue").unwrap_or_else(|_| Color::default())),
             );
 
         panel.render(options)
@@ -477,8 +475,8 @@ mod tests {
 
     #[test]
     fn test_inspect_add_method() {
-        let insp = Inspect::from_str("test")
-            .add_method("do_thing", "fn do_thing(&self, x: i32) -> bool");
+        let insp =
+            Inspect::from_str("test").add_method("do_thing", "fn do_thing(&self, x: i32) -> bool");
         assert_eq!(insp.method_list.len(), 1);
         assert_eq!(insp.method_list[0].0, "do_thing");
     }

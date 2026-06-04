@@ -110,10 +110,7 @@ impl ControlType {
                 format!("\x1b[{mode}K")
             }
             Self::SetWindowTitle => {
-                let title: String = params
-                    .iter()
-                    .map(|n| char::from(*n as u8))
-                    .collect();
+                let title: String = params.iter().map(|n| char::from(*n as u8)).collect();
                 format!("\x1b]0;{title}\x07")
             }
         }
@@ -198,7 +195,7 @@ impl Segment {
                 // Skip the escape sequence: \x1b [ ... m
                 if let Some('[') = chars.peek() {
                     chars.next(); // consume '['
-                    // Consume until 'm' (the terminator)
+                                  // Consume until 'm' (the terminator)
                     for c in chars.by_ref() {
                         if c == 'm' {
                             break;

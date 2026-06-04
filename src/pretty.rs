@@ -159,7 +159,10 @@ impl Renderable for Pretty {
         let prefix = String::new();
         let depth = 0;
         self.render_node(&self.node, &mut lines, &prefix, depth, options);
-        RenderResult { lines, items: Vec::new() }
+        RenderResult {
+            lines,
+            items: Vec::new(),
+        }
     }
 }
 
@@ -245,10 +248,7 @@ impl Pretty {
                     if show_ellipsis {
                         let child_prefix = format!("{prefix}{indent}");
                         lines.push(vec![
-                            Segment::new(format!(
-                                "{child_prefix}... ({} more)",
-                                count - max_len
-                            )),
+                            Segment::new(format!("{child_prefix}... ({} more)", count - max_len)),
                             Segment::line(),
                         ]);
                     }

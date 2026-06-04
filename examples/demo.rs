@@ -13,7 +13,12 @@ fn main() {
     // ── Title banner ──────────────────────────────────────────────────────
     console.clear();
     let mut title_text = Text::new("");
-    title_text.append_styled("rusty-rich", Style::new().bold(true).color(Color::parse("bright_cyan").unwrap()));
+    title_text.append_styled(
+        "rusty-rich",
+        Style::new()
+            .bold(true)
+            .color(Color::parse("bright_cyan").unwrap()),
+    );
     title_text.append_styled(" v0.4.0", Style::new().dim(true));
 
     let banner = Panel::new(title_text)
@@ -33,7 +38,8 @@ fn main() {
     console.print_str("Colors: [red]red[/red]  [green]green[/green]  [blue]blue[/blue]  [yellow]yellow[/yellow]  [magenta]magenta[/magenta]  [cyan]cyan[/cyan]\n");
     console.print_str("Backgrounds: [on red]on red[/on red]  [on green]on green[/on green]  [on blue]on blue[/on blue]\n");
     console.print_str("Combined:  [bold red on bright_black]bold red on bright black[/]\n");
-    console.print_str("Links:     [link=https://github.com/textualize/rich]Rich on GitHub[/link]\n");
+    console
+        .print_str("Links:     [link=https://github.com/textualize/rich]Rich on GitHub[/link]\n");
     console.print_str("\n");
 
     // ── Tables ────────────────────────────────────────────────────────────
@@ -48,29 +54,32 @@ fn main() {
             .justify(AlignMethod::Left)
             .header_style(Style::new().bold(true).color(Color::parse("cyan").unwrap())),
     );
-    table.add_column(
-        Column::new("Created")
-            .justify(AlignMethod::Center),
-    );
-    table.add_column(
-        Column::new("Typing")
-            .justify(AlignMethod::Center),
-    );
-    table.add_column(
-        Column::new("Performance")
-            .justify(AlignMethod::Right),
-    );
+    table.add_column(Column::new("Created").justify(AlignMethod::Center));
+    table.add_column(Column::new("Typing").justify(AlignMethod::Center));
+    table.add_column(Column::new("Performance").justify(AlignMethod::Right));
     table.add_row(vec![
-        "Rust".into(), "2010".into(), "Static".into(), "★★★★★".into(),
+        "Rust".into(),
+        "2010".into(),
+        "Static".into(),
+        "★★★★★".into(),
     ]);
     table.add_row(vec![
-        "Python".into(), "1991".into(), "Dynamic".into(), "★★★☆☆".into(),
+        "Python".into(),
+        "1991".into(),
+        "Dynamic".into(),
+        "★★★☆☆".into(),
     ]);
     table.add_row(vec![
-        "Go".into(), "2009".into(), "Static".into(), "★★★★☆".into(),
+        "Go".into(),
+        "2009".into(),
+        "Static".into(),
+        "★★★★☆".into(),
     ]);
     table.add_row(vec![
-        "TypeScript".into(), "2012".into(), "Gradual".into(), "★★★☆☆".into(),
+        "TypeScript".into(),
+        "2012".into(),
+        "Gradual".into(),
+        "★★★☆☆".into(),
     ]);
     let table = table
         .title("Programming Languages")
@@ -113,8 +122,16 @@ fn main() {
     console.println(&rule);
 
     let mut info_text = Text::new("");
-    info_text.append_styled("⚠ ", Style::new().bold(true).color(Color::parse("bright_yellow").unwrap()));
-    info_text.append("This library is a faithful Rust port of the Python Rich library by Textualize. ", None);
+    info_text.append_styled(
+        "⚠ ",
+        Style::new()
+            .bold(true)
+            .color(Color::parse("bright_yellow").unwrap()),
+    );
+    info_text.append(
+        "This library is a faithful Rust port of the Python Rich library by Textualize. ",
+        None,
+    );
     info_text.append("It runs natively, with zero Python dependencies.", None);
 
     let info = Panel::new(info_text)
@@ -217,8 +234,7 @@ impl<K: Eq + Hash, V> Cache<K, V> {
 }
 "#;
 
-        let syntax = Syntax::new(rust_code, "rust")
-            .theme("base16-ocean.dark");
+        let syntax = Syntax::new(rust_code, "rust").theme("base16-ocean.dark");
         let panel = Panel::new(syntax)
             .title(" src/cache.rs ")
             .box_style(BoxStyle::clone(&box_drawing::BOX_HEAVY_HEAD))
@@ -282,7 +298,11 @@ Made with ❤️ using Rust.
     println!("Simulating a 3-step pipeline...\n");
 
     // We render progress manually here (the library supports it)
-    let steps = ["Downloading dependencies", "Compiling source", "Running tests"];
+    let steps = [
+        "Downloading dependencies",
+        "Compiling source",
+        "Running tests",
+    ];
     for (i, step) in steps.iter().enumerate() {
         let total_steps = steps.len() as f64;
         let pct = (i as f64 + 0.42) / total_steps;
@@ -359,25 +379,39 @@ Made with ❤️ using Rust.
     console.println(&rule);
 
     let color_names = [
-        "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white",
-        "bright_black", "bright_red", "bright_green", "bright_yellow",
-        "bright_blue", "bright_magenta", "bright_cyan", "bright_white",
+        "black",
+        "red",
+        "green",
+        "yellow",
+        "blue",
+        "magenta",
+        "cyan",
+        "white",
+        "bright_black",
+        "bright_red",
+        "bright_green",
+        "bright_yellow",
+        "bright_blue",
+        "bright_magenta",
+        "bright_cyan",
+        "bright_white",
     ];
     for chunk in color_names.chunks(8) {
         let mut line = String::new();
         for name in chunk {
-            let style = Style::new()
-                .color(Color::parse(name).unwrap())
-                .bold(true);
-            let bg_style = Style::new()
-                .bgcolor(Color::parse(name).unwrap());
+            let style = Style::new().color(Color::parse(name).unwrap()).bold(true);
+            let bg_style = Style::new().bgcolor(Color::parse(name).unwrap());
             line.push_str(&format!(
                 "{}{:>15}{} ",
-                style.to_ansi(), name, Style::new().reset_ansi()
+                style.to_ansi(),
+                name,
+                Style::new().reset_ansi()
             ));
             line.push_str(&format!(
                 "{}{}{} ",
-                bg_style.to_ansi(), "   ", Style::new().reset_ansi()
+                bg_style.to_ansi(),
+                "   ",
+                Style::new().reset_ansi()
             ));
         }
         println!("  {line}");
@@ -386,10 +420,16 @@ Made with ❤️ using Rust.
 
     // ── Footer ────────────────────────────────────────────────────────────
     let mut footer_text = Text::new("");
-    footer_text.append_styled("rusty-rich", Style::new().bold(true).color(Color::parse("cyan").unwrap()));
+    footer_text.append_styled(
+        "rusty-rich",
+        Style::new().bold(true).color(Color::parse("cyan").unwrap()),
+    );
     footer_text.append(" — Rust port of ", None);
     footer_text.append_styled("Textualize/rich", Style::new().underline(true));
-    footer_text.append(" — 20 modules, 41+ unit tests, 103+ integration tests", None);
+    footer_text.append(
+        " — 20 modules, 41+ unit tests, 103+ integration tests",
+        None,
+    );
 
     let footer = Panel::new(footer_text)
         .box_style(BoxStyle::clone(&box_drawing::BOX_HEAVY_EDGE))

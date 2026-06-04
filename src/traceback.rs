@@ -129,7 +129,9 @@ impl Trace {
 
     /// Create a `Trace` containing a single [`Stack`].
     pub fn from_stack(stack: Stack) -> Self {
-        Self { stacks: vec![stack] }
+        Self {
+            stacks: vec![stack],
+        }
     }
 }
 
@@ -470,11 +472,7 @@ impl Renderable for Traceback {
                 // --- Frame location header ---
                 // "  /path/to/file.rs:42 in function_name"
                 {
-                    let loc = format!(
-                        "{}:{}",
-                        frame.filename,
-                        frame.lineno
-                    );
+                    let loc = format!("{}:{}", frame.filename, frame.lineno);
                     let func = if frame.name.is_empty() {
                         String::new()
                     } else {
@@ -502,11 +500,7 @@ impl Renderable for Traceback {
 
                     // Determine line number width
                     // (max line number in the context)
-                    let max_ln = source_lines
-                        .iter()
-                        .map(|(ln, _)| *ln)
-                        .max()
-                        .unwrap_or(0);
+                    let max_ln = source_lines.iter().map(|(ln, _)| *ln).max().unwrap_or(0);
                     let ln_width = max_ln.to_string().len().max(2);
 
                     // Marker character width (❱ is 2 cells wide in Unicode)
@@ -538,13 +532,8 @@ impl Renderable for Traceback {
                         let ln_str = format!("{:>width$}", line_num, width = ln_width);
                         let code = truncate_to_width(line_text, code_cells);
 
-                        let raw_line = format!(
-                            "{}{} {} │ {} ",
-                            marker_str,
-                            " ".repeat(1),
-                            ln_str,
-                            code,
-                        );
+                        let raw_line =
+                            format!("{}{} {} │ {} ", marker_str, " ".repeat(1), ln_str, code,);
 
                         // Now build: indent + "│" + raw_line + "│"
                         // The raw_line should be padded to sub_box_inner - 2
@@ -588,7 +577,8 @@ impl Renderable for Traceback {
 
                         // Padding
                         // Count width so far after the "│" marker
-                        let after_marker_w = marker_cells + 1 + ln_width + 3 + UnicodeWidthStr::width(code.as_str());
+                        let after_marker_w =
+                            marker_cells + 1 + ln_width + 3 + UnicodeWidthStr::width(code.as_str());
                         let remain = sub_box_inner
                             .saturating_sub(2) // for │ │
                             .saturating_sub(after_marker_w);
@@ -646,8 +636,8 @@ impl Renderable for Traceback {
                                     header_text.to_string(),
                                     locals_header_style.clone(),
                                 ));
-                                let dash_count = sub_box_inner
-                                    .saturating_sub(header_text.len() + 1);
+                                let dash_count =
+                                    sub_box_inner.saturating_sub(header_text.len() + 1);
                                 segs.push(Segment::styled(
                                     format!("─{}╮", "─".repeat(dash_count)),
                                     border_style.clone(),
@@ -693,22 +683,15 @@ impl Renderable for Traceback {
 
                                 let mut segs = Vec::new();
                                 segs.push(Segment::new(" ".repeat(indent)));
-                                segs.push(Segment::styled(
-                                    "│".to_string(),
-                                    border_style.clone(),
-                                ));
+                                segs.push(Segment::styled("│".to_string(), border_style.clone()));
                                 segs.push(Segment::new(format!(" {}", padded)));
                                 // Add padding
-                                let extra_pad = inner_w.saturating_sub(
-                                    UnicodeWidthStr::width(padded.as_str()),
-                                );
+                                let extra_pad =
+                                    inner_w.saturating_sub(UnicodeWidthStr::width(padded.as_str()));
                                 if extra_pad > 0 {
                                     segs.push(Segment::new(" ".repeat(extra_pad)));
                                 }
-                                segs.push(Segment::styled(
-                                    " │".to_string(),
-                                    border_style.clone(),
-                                ));
+                                segs.push(Segment::styled(" │".to_string(), border_style.clone()));
                                 out_lines.push(outer_content_line(segs, total_width));
                             }
 
@@ -771,7 +754,10 @@ impl Renderable for Traceback {
         // Bottom border
         out_lines.push(bottom_border(total_width));
 
-        RenderResult { lines: out_lines, items: Vec::new() }
+        RenderResult {
+            lines: out_lines,
+            items: Vec::new(),
+        }
     }
 }
 
@@ -834,8 +820,7 @@ pub fn install() {
         frame.line = Some(msg.clone());
 
         let exc_value = format!("panic at {}:{}:{}", file, line, col);
-        let traceback = Traceback::from_exception("Panic", exc_value, vec![frame])
-            .extra_lines(0);
+        let traceback = Traceback::from_exception("Panic", exc_value, vec![frame]).extra_lines(0);
 
         // Render to segments
         let opts = ConsoleOptions {
@@ -977,10 +962,7 @@ mod tests {
             "/rustc/.../library/core/src/result.rs",
             &suppress,
         ));
-        assert!(!is_suppressed(
-            "/home/user/project/src/main.rs",
-            &suppress,
-        ));
+        assert!(!is_suppressed("/home/user/project/src/main.rs", &suppress,));
     }
 
     #[test]
@@ -1104,12 +1086,11 @@ mod tests {
         locals.insert("__private__".to_string(), "secret".to_string());
         locals.insert("normal".to_string(), "visible".to_string());
 
-        let tb = Traceback::from_exception("E", "msg", vec![
-            Frame::new("t.rs", 1, "f").locals(locals),
-        ])
-        .width(80)
-        .show_locals(true)
-        .locals_hide_dunder(true);
+        let tb =
+            Traceback::from_exception("E", "msg", vec![Frame::new("t.rs", 1, "f").locals(locals)])
+                .width(80)
+                .show_locals(true)
+                .locals_hide_dunder(true);
 
         let opts = ConsoleOptions {
             max_width: 80,
@@ -1133,12 +1114,11 @@ mod tests {
         locals.insert("_hidden".to_string(), "invisible".to_string());
         locals.insert("visible".to_string(), "yes".to_string());
 
-        let tb = Traceback::from_exception("E", "msg", vec![
-            Frame::new("t.rs", 1, "f").locals(locals),
-        ])
-        .width(80)
-        .show_locals(true)
-        .locals_hide_sunder(true);
+        let tb =
+            Traceback::from_exception("E", "msg", vec![Frame::new("t.rs", 1, "f").locals(locals)])
+                .width(80)
+                .show_locals(true)
+                .locals_hide_sunder(true);
 
         let opts = ConsoleOptions {
             max_width: 80,

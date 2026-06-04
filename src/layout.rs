@@ -64,12 +64,19 @@ impl LayoutNode {
     /// [`sizes`](LayoutNode::sizes) to customize the ratios.
     pub fn split(direction: Direction, children: Vec<LayoutNode>) -> Self {
         let sizes = vec![1; children.len()];
-        Self::Split { direction, sizes, children }
+        Self::Split {
+            direction,
+            sizes,
+            children,
+        }
     }
 
     /// Builder: set the size ratios for the children of this split node.
     pub fn sizes(mut self, sizes: Vec<usize>) -> Self {
-        if let Self::Split { sizes: ref mut s, .. } = self {
+        if let Self::Split {
+            sizes: ref mut s, ..
+        } = self
+        {
             *s = sizes;
         }
         self
@@ -153,14 +160,25 @@ impl Layout {
                 direction,
                 sizes: vec![1, 1],
                 children: vec![
-                    LayoutNode::Leaf { name: name_a, renderable: None, size: None },
-                    LayoutNode::Leaf { name: name_b, renderable: None, size: None },
+                    LayoutNode::Leaf {
+                        name: name_a,
+                        renderable: None,
+                        size: None,
+                    },
+                    LayoutNode::Leaf {
+                        name: name_b,
+                        renderable: None,
+                        size: None,
+                    },
                 ],
             },
         );
 
         // Put the old root back as the first child
-        if let LayoutNode::Split { ref mut children, .. } = self.root {
+        if let LayoutNode::Split {
+            ref mut children, ..
+        } = self.root
+        {
             children[0] = old_root;
         }
 
@@ -172,7 +190,11 @@ impl Layout {
     pub fn unsplit(&mut self) {
         let replacement = std::mem::replace(
             &mut self.root,
-            LayoutNode::Leaf { name: String::new(), renderable: None, size: None },
+            LayoutNode::Leaf {
+                name: String::new(),
+                renderable: None,
+                size: None,
+            },
         );
         match replacement {
             LayoutNode::Split { mut children, .. } if !children.is_empty() => {
@@ -211,10 +233,13 @@ impl Layout {
         let id = self.next_pane_id;
         self.next_pane_id += 1;
         let name = format!("_pane_{}", id);
-        self.renderables.insert(name.clone(), DynRenderable::new(renderable));
+        self.renderables
+            .insert(name.clone(), DynRenderable::new(renderable));
 
         match &mut self.root {
-            LayoutNode::Split { children, sizes, .. } => {
+            LayoutNode::Split {
+                children, sizes, ..
+            } => {
                 children.push(LayoutNode::Leaf {
                     name: name.clone(),
                     renderable: None,
@@ -244,7 +269,10 @@ impl Layout {
                         ],
                     },
                 );
-                if let LayoutNode::Split { ref mut children, .. } = self.root {
+                if let LayoutNode::Split {
+                    ref mut children, ..
+                } = self.root
+                {
                     children[0] = old_root;
                 }
                 1
@@ -303,7 +331,8 @@ impl Layout {
         renderable: impl Renderable + Send + Sync + 'static,
     ) -> bool {
         if self.renderables.contains_key(name) {
-            self.renderables.insert(name.to_string(), DynRenderable::new(renderable));
+            self.renderables
+                .insert(name.to_string(), DynRenderable::new(renderable));
             true
         } else {
             false
@@ -340,7 +369,12 @@ impl Layout {
     /// layout tree.
     pub fn compute(&self, total_width: usize, total_height: usize) -> Vec<(String, Region)> {
         let mut regions = Vec::new();
-        let region = Region { x: 0, y: 0, width: total_width, height: total_height };
+        let region = Region {
+            x: 0,
+            y: 0,
+            width: total_width,
+            height: total_height,
+        };
         Self::layout_node(&self.root, region, &mut regions);
         regions
     }
@@ -358,7 +392,11 @@ impl Layout {
                 }
                 out.push((name.clone(), r));
             }
-            LayoutNode::Split { direction, sizes, children } => {
+            LayoutNode::Split {
+                direction,
+                sizes,
+                children,
+            } => {
                 let total_size: usize = sizes.iter().sum();
                 if total_size == 0 || children.is_empty() {
                     return;
@@ -416,7 +454,8 @@ pub trait Splitter: std::fmt::Debug {
     /// Split `region` among `children` according to `direction`.
     ///
     /// Returns one [`Region`] per child.
-    fn split(&self, region: &Region, children: &[LayoutNode], direction: &Direction) -> Vec<Region>;
+    fn split(&self, region: &Region, children: &[LayoutNode], direction: &Direction)
+        -> Vec<Region>;
 }
 
 /// Default splitter that divides space equally among all children.
@@ -424,7 +463,12 @@ pub trait Splitter: std::fmt::Debug {
 pub struct NoSplitter;
 
 impl Splitter for NoSplitter {
-    fn split(&self, region: &Region, children: &[LayoutNode], direction: &Direction) -> Vec<Region> {
+    fn split(
+        &self,
+        region: &Region,
+        children: &[LayoutNode],
+        direction: &Direction,
+    ) -> Vec<Region> {
         let count = children.len().max(1);
         match direction {
             Direction::Horizontal => {
@@ -462,7 +506,12 @@ impl Splitter for NoSplitter {
 pub struct ColumnSplitter;
 
 impl Splitter for ColumnSplitter {
-    fn split(&self, region: &Region, children: &[LayoutNode], _direction: &Direction) -> Vec<Region> {
+    fn split(
+        &self,
+        region: &Region,
+        children: &[LayoutNode],
+        _direction: &Direction,
+    ) -> Vec<Region> {
         let count = children.len().max(1);
         let col_width = region.width / count;
         children
@@ -483,7 +532,12 @@ impl Splitter for ColumnSplitter {
 pub struct RowSplitter;
 
 impl Splitter for RowSplitter {
-    fn split(&self, region: &Region, children: &[LayoutNode], _direction: &Direction) -> Vec<Region> {
+    fn split(
+        &self,
+        region: &Region,
+        children: &[LayoutNode],
+        _direction: &Direction,
+    ) -> Vec<Region> {
         let count = children.len().max(1);
         let row_height = region.height / count;
         children
@@ -509,7 +563,12 @@ mod tests {
 
     #[test]
     fn test_region_defaults() {
-        let r = Region { x: 0, y: 0, width: 80, height: 24 };
+        let r = Region {
+            x: 0,
+            y: 0,
+            width: 80,
+            height: 24,
+        };
         assert_eq!(r.width, 80);
         assert_eq!(r.height, 24);
     }
@@ -530,8 +589,16 @@ mod tests {
     #[test]
     fn test_layout_horizontal_split() {
         let children = vec![
-            LayoutNode::Leaf { name: "left".into(), renderable: None, size: None },
-            LayoutNode::Leaf { name: "right".into(), renderable: None, size: None },
+            LayoutNode::Leaf {
+                name: "left".into(),
+                renderable: None,
+                size: None,
+            },
+            LayoutNode::Leaf {
+                name: "right".into(),
+                renderable: None,
+                size: None,
+            },
         ];
         let node = LayoutNode::split(Direction::Horizontal, children);
         let layout = Layout::new(node);
@@ -543,8 +610,16 @@ mod tests {
     #[test]
     fn test_layout_vertical_split() {
         let children = vec![
-            LayoutNode::Leaf { name: "top".into(), renderable: None, size: None },
-            LayoutNode::Leaf { name: "bottom".into(), renderable: None, size: None },
+            LayoutNode::Leaf {
+                name: "top".into(),
+                renderable: None,
+                size: None,
+            },
+            LayoutNode::Leaf {
+                name: "bottom".into(),
+                renderable: None,
+                size: None,
+            },
         ];
         let node = LayoutNode::split(Direction::Vertical, children);
         let layout = Layout::new(node);
@@ -687,7 +762,9 @@ mod tests {
         let id = layout.add_split("second", 2);
         // Root should now be a Split
         match &layout.root {
-            LayoutNode::Split { children, sizes, .. } => {
+            LayoutNode::Split {
+                children, sizes, ..
+            } => {
                 assert_eq!(children.len(), 2);
                 assert_eq!(*sizes, vec![1, 2]);
                 assert_eq!(id, 1);
@@ -700,10 +777,23 @@ mod tests {
     fn test_no_splitter() {
         let splitter = NoSplitter;
         let children = vec![
-            LayoutNode::Leaf { name: "a".into(), renderable: None, size: None },
-            LayoutNode::Leaf { name: "b".into(), renderable: None, size: None },
+            LayoutNode::Leaf {
+                name: "a".into(),
+                renderable: None,
+                size: None,
+            },
+            LayoutNode::Leaf {
+                name: "b".into(),
+                renderable: None,
+                size: None,
+            },
         ];
-        let region = Region { x: 0, y: 0, width: 80, height: 24 };
+        let region = Region {
+            x: 0,
+            y: 0,
+            width: 80,
+            height: 24,
+        };
         let regions = splitter.split(&region, &children, &Direction::Horizontal);
         assert_eq!(regions.len(), 2);
         assert_eq!(regions[0].width, 40);
@@ -714,11 +804,28 @@ mod tests {
     fn test_column_splitter() {
         let splitter = ColumnSplitter;
         let children = vec![
-            LayoutNode::Leaf { name: "a".into(), renderable: None, size: None },
-            LayoutNode::Leaf { name: "b".into(), renderable: None, size: None },
-            LayoutNode::Leaf { name: "c".into(), renderable: None, size: None },
+            LayoutNode::Leaf {
+                name: "a".into(),
+                renderable: None,
+                size: None,
+            },
+            LayoutNode::Leaf {
+                name: "b".into(),
+                renderable: None,
+                size: None,
+            },
+            LayoutNode::Leaf {
+                name: "c".into(),
+                renderable: None,
+                size: None,
+            },
         ];
-        let region = Region { x: 0, y: 0, width: 90, height: 24 };
+        let region = Region {
+            x: 0,
+            y: 0,
+            width: 90,
+            height: 24,
+        };
         let regions = splitter.split(&region, &children, &Direction::Vertical);
         assert_eq!(regions.len(), 3);
         assert_eq!(regions[0].width, 30);
@@ -730,10 +837,23 @@ mod tests {
     fn test_row_splitter() {
         let splitter = RowSplitter;
         let children = vec![
-            LayoutNode::Leaf { name: "a".into(), renderable: None, size: None },
-            LayoutNode::Leaf { name: "b".into(), renderable: None, size: None },
+            LayoutNode::Leaf {
+                name: "a".into(),
+                renderable: None,
+                size: None,
+            },
+            LayoutNode::Leaf {
+                name: "b".into(),
+                renderable: None,
+                size: None,
+            },
         ];
-        let region = Region { x: 0, y: 0, width: 80, height: 24 };
+        let region = Region {
+            x: 0,
+            y: 0,
+            width: 80,
+            height: 24,
+        };
         let regions = splitter.split(&region, &children, &Direction::Horizontal);
         assert_eq!(regions.len(), 2);
         assert_eq!(regions[0].height, 12);

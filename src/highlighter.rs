@@ -4,9 +4,9 @@
 //! Highlighters are callables that transform text by applying styles for
 //! certain patterns (numbers, URLs, paths, etc.).
 
-use regex::Regex;
 use crate::style::Style;
 use crate::text::Text;
+use regex::Regex;
 
 // ---------------------------------------------------------------------------
 // Highlighter trait
@@ -134,20 +134,17 @@ impl ReprHighlighter {
         // File paths
         let _ = rh.add_rule(
             r"(?<!\w)(?:/[\w.-]+)+/?(?!\w)",
-            Style::new()
-                .color(crate::color::Color::parse("magenta").unwrap()),
+            Style::new().color(crate::color::Color::parse("magenta").unwrap()),
         );
 
         // Quoted strings (single or double)
         let _ = rh.add_rule(
             r#""(?:[^"\\]|\\.)*""#,
-            Style::new()
-                .color(crate::color::Color::parse("green").unwrap()),
+            Style::new().color(crate::color::Color::parse("green").unwrap()),
         );
         let _ = rh.add_rule(
             r"'(?:[^'\\]|\\.)*'",
-            Style::new()
-                .color(crate::color::Color::parse("green").unwrap()),
+            Style::new().color(crate::color::Color::parse("green").unwrap()),
         );
 
         Self {
@@ -226,22 +223,19 @@ impl JSONHighlighter {
         // JSON keys
         let _ = h.add_rule(
             r#""(?:[^"\\]|\\.)*"\s*:"#,
-            Style::new()
-                .color(crate::color::Color::parse("bright_cyan").unwrap()),
+            Style::new().color(crate::color::Color::parse("bright_cyan").unwrap()),
         );
 
         // JSON strings (values)
         let _ = h.add_rule(
             r#""(?:[^"\\]|\\.)*""#,
-            Style::new()
-                .color(crate::color::Color::parse("green").unwrap()),
+            Style::new().color(crate::color::Color::parse("green").unwrap()),
         );
 
         // JSON numbers
         let _ = h.add_rule(
             r"(?<!\w)-?\d+\.?\d*(?:[eE][+-]?\d+)?(?!\w)",
-            Style::new()
-                .color(crate::color::Color::parse("bright_yellow").unwrap()),
+            Style::new().color(crate::color::Color::parse("bright_yellow").unwrap()),
         );
 
         // JSON booleans and null
@@ -295,8 +289,7 @@ impl PathHighlighter {
         // File paths with optional line:column suffix
         let _ = h.add_rule(
             r"(?:\w:)?(?:[/\\][\w.\-]+)+(?:\.\w+)?(?::\d+(?::\d+)?)?",
-            Style::new()
-                .color(crate::color::Color::parse("bright_magenta").unwrap()),
+            Style::new().color(crate::color::Color::parse("bright_magenta").unwrap()),
         );
 
         Self { highlighter: h }

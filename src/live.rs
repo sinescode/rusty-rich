@@ -47,7 +47,10 @@
 //! disappears as if it was never there. Useful for "loading…" overlays.
 
 use std::io::{self, Write};
-use std::sync::{Arc, Mutex, atomic::{AtomicUsize, Ordering}};
+use std::sync::{
+    atomic::{AtomicUsize, Ordering},
+    Arc, Mutex,
+};
 use std::time::Instant;
 
 use crate::console::{ConsoleOptions, DynRenderable, Renderable};
@@ -178,20 +181,40 @@ impl Live {
     }
 
     /// Builder: use the alternate screen buffer for full-screen display.
-    pub fn screen(mut self) -> Self { self.screen = true; self }
+    pub fn screen(mut self) -> Self {
+        self.screen = true;
+        self
+    }
     /// Builder: disable automatic periodic refresh.
-    pub fn no_auto_refresh(mut self) -> Self { self.auto_refresh = false; self }
+    pub fn no_auto_refresh(mut self) -> Self {
+        self.auto_refresh = false;
+        self
+    }
     /// Builder: set the refresh rate in Hz (default 4.0).
-    pub fn refresh_per_second(mut self, rate: f64) -> Self { self.refresh_per_second = rate; self }
+    pub fn refresh_per_second(mut self, rate: f64) -> Self {
+        self.refresh_per_second = rate;
+        self
+    }
     /// Builder: enable transient mode (live display disappears on stop).
-    pub fn transient(mut self) -> Self { self.transient = true; self }
+    pub fn transient(mut self) -> Self {
+        self.transient = true;
+        self
+    }
     /// Builder: redirect stdout writes into the live display.
-    pub fn redirect_stdout(mut self, redirect: bool) -> Self { self.redirect_stdout = redirect; self }
+    pub fn redirect_stdout(mut self, redirect: bool) -> Self {
+        self.redirect_stdout = redirect;
+        self
+    }
     /// Builder: redirect stderr writes into the live display.
-    pub fn redirect_stderr(mut self, redirect: bool) -> Self { self.redirect_stderr = redirect; self }
+    pub fn redirect_stderr(mut self, redirect: bool) -> Self {
+        self.redirect_stderr = redirect;
+        self
+    }
 
     /// Register a writer whose captured content will be rendered during refresh.
-    pub fn add_writer(&mut self, writer: LiveWriter) { self.writers.lock().unwrap().push(writer); }
+    pub fn add_writer(&mut self, writer: LiveWriter) {
+        self.writers.lock().unwrap().push(writer);
+    }
 
     /// Create a LiveWriter that captures output while Live is active.
     pub fn create_writer() -> LiveWriter {
@@ -214,7 +237,12 @@ impl Live {
         if self.transient {
             let prev = self.previous_line_count.load(Ordering::Relaxed);
             for _ in 0..prev {
-                write!(io::stdout(), "{}{}", crate::control::CURSOR_UP, crate::control::ERASE_LINE)?;
+                write!(
+                    io::stdout(),
+                    "{}{}",
+                    crate::control::CURSOR_UP,
+                    crate::control::ERASE_LINE
+                )?;
             }
         }
         if self.screen {
@@ -228,7 +256,10 @@ impl Live {
     }
 
     /// Replace the displayed content and refresh immediately.
-    pub fn update(&mut self, renderable: impl Renderable + Send + Sync + 'static) -> io::Result<()> {
+    pub fn update(
+        &mut self,
+        renderable: impl Renderable + Send + Sync + 'static,
+    ) -> io::Result<()> {
         *self.renderable.lock().unwrap() = Some(DynRenderable::new(renderable));
         self.refresh()
     }
@@ -278,7 +309,8 @@ impl Live {
                 }
             }
 
-            self.previous_line_count.store(line_count, Ordering::Relaxed);
+            self.previous_line_count
+                .store(line_count, Ordering::Relaxed);
 
             // Write captured writer content
             let writers_guard = self.writers.lock().unwrap();
@@ -392,10 +424,8 @@ mod tests {
     fn test_process_renderables() {
         let live = Live::new(Text::new("dummy"));
         let opts = ConsoleOptions::default();
-        let renderables: Vec<Box<dyn Renderable>> = vec![
-            Box::new(Text::new("first")),
-            Box::new(Text::new("second")),
-        ];
+        let renderables: Vec<Box<dyn Renderable>> =
+            vec![Box::new(Text::new("first")), Box::new(Text::new("second"))];
         let lines = live.process_renderables(&renderables, &opts);
         assert!(!lines.is_empty());
     }

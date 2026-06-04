@@ -82,10 +82,7 @@ fn box_from_str_roundtrip_all_18() {
     for (name, b) in all_box_styles() {
         let s = b.to_string();
         let parsed = BoxStyle::from_str(&s, b.ascii);
-        assert_eq!(
-            parsed, *b,
-            "{name}: from_str(to_string()) roundtrip failed"
-        );
+        assert_eq!(parsed, *b, "{name}: from_str(to_string()) roundtrip failed");
     }
 }
 
@@ -177,7 +174,7 @@ fn box_heavy_edge_inner_dividers_light() {
     // Heavy outer (━) but light inner dividers (─)
     assert_eq!(b.top, '━'); // heavy horizontal on top edge
     assert_eq!(b.mid_horizontal, ' '); // mid is a data line, no horizontal
-    // Inner row separators use light horizontal
+                                       // Inner row separators use light horizontal
     assert_eq!(b.row_horizontal, '─'); // light horizontal on row separators
 }
 
@@ -186,7 +183,7 @@ fn box_double_edge_inner_dividers_single() {
     let b = &*box_drawing::BOX_DOUBLE_EDGE;
     // Double outer (═), single inner (─)
     assert_eq!(b.top, '═'); // double horizontal on top
-    // Row separators use single horizontal
+                            // Row separators use single horizontal
     assert_eq!(b.row_horizontal, '─'); // single for inner row separators
 }
 
@@ -387,8 +384,7 @@ fn panel_all_18_box_styles_render() {
         ..Default::default()
     };
     for (name, b) in all_box_styles() {
-        let panel = Panel::new("test")
-            .box_style(BoxStyle::clone(b));
+        let panel = Panel::new("test").box_style(BoxStyle::clone(b));
         let result = panel.render(&opts);
         if b.has_visible_edges() {
             assert!(
@@ -413,9 +409,7 @@ fn panel_all_18_styles_with_title() {
         ..Default::default()
     };
     for (name, b) in all_box_styles() {
-        let panel = Panel::new("x")
-            .box_style(BoxStyle::clone(b))
-            .title("T");
+        let panel = Panel::new("x").box_style(BoxStyle::clone(b)).title("T");
         let result = panel.render(&opts);
         let ansi = result.to_ansi();
         assert!(
@@ -432,9 +426,7 @@ fn panel_all_18_styles_with_subtitle() {
         ..Default::default()
     };
     for (name, b) in all_box_styles() {
-        let panel = Panel::new("x")
-            .box_style(BoxStyle::clone(b))
-            .subtitle("S");
+        let panel = Panel::new("x").box_style(BoxStyle::clone(b)).subtitle("S");
         let result = panel.render(&opts);
         let ansi = result.to_ansi();
         assert!(
@@ -498,8 +490,7 @@ fn panel_title_align_full() {
 
 #[test]
 fn panel_subtitle_align_left() {
-    let mut panel = Panel::new("content")
-        .subtitle("left");
+    let mut panel = Panel::new("content").subtitle("left");
     panel.subtitle_align = AlignMethod::Left;
     let opts = ConsoleOptions {
         max_width: 30,
@@ -512,8 +503,7 @@ fn panel_subtitle_align_left() {
 
 #[test]
 fn panel_subtitle_align_right() {
-    let mut panel = Panel::new("content")
-        .subtitle("right");
+    let mut panel = Panel::new("content").subtitle("right");
     panel.subtitle_align = AlignMethod::Right;
     let opts = ConsoleOptions {
         max_width: 30,
@@ -526,8 +516,7 @@ fn panel_subtitle_align_right() {
 
 #[test]
 fn panel_subtitle_align_center() {
-    let mut panel = Panel::new("content")
-        .subtitle("center");
+    let mut panel = Panel::new("content").subtitle("center");
     panel.subtitle_align = AlignMethod::Center;
     let opts = ConsoleOptions {
         max_width: 30,
@@ -540,8 +529,8 @@ fn panel_subtitle_align_center() {
 
 #[test]
 fn panel_border_style_color() {
-    let panel = Panel::new("colored border")
-        .border_style(Style::new().color(Color::parse("red").unwrap()));
+    let panel =
+        Panel::new("colored border").border_style(Style::new().color(Color::parse("red").unwrap()));
     let opts = ConsoleOptions {
         max_width: 30,
         ..Default::default()
@@ -554,8 +543,7 @@ fn panel_border_style_color() {
 
 #[test]
 fn panel_border_style_bold() {
-    let panel = Panel::new("bold border")
-        .border_style(Style::new().bold(true));
+    let panel = Panel::new("bold border").border_style(Style::new().bold(true));
     let opts = ConsoleOptions {
         max_width: 30,
         ..Default::default()
@@ -566,8 +554,7 @@ fn panel_border_style_bold() {
 
 #[test]
 fn panel_content_style() {
-    let panel = Panel::new("styled content")
-        .style(Style::new().italic(true));
+    let panel = Panel::new("styled content").style(Style::new().italic(true));
     let opts = ConsoleOptions {
         max_width: 30,
         ..Default::default()
@@ -790,15 +777,10 @@ fn table_all_18_styles_with_title() {
         let mut table = Table::new();
         table.add_column(Column::new("X"));
         table.add_row_str(vec!["data".into()]);
-        let table = table
-            .box_style(BoxStyle::clone(b))
-            .title("TITLE");
+        let table = table.box_style(BoxStyle::clone(b)).title("TITLE");
         let result = table.render(&opts);
         let ansi = result.to_ansi();
-        assert!(
-            ansi.contains("TITLE"),
-            "{name}: title should appear"
-        );
+        assert!(ansi.contains("TITLE"), "{name}: title should appear");
     }
 }
 
@@ -812,15 +794,10 @@ fn table_all_18_styles_with_caption() {
         let mut table = Table::new();
         table.add_column(Column::new("X"));
         table.add_row_str(vec!["data".into()]);
-        let table = table
-            .box_style(BoxStyle::clone(b))
-            .caption("CAPTION");
+        let table = table.box_style(BoxStyle::clone(b)).caption("CAPTION");
         let result = table.render(&opts);
         let ansi = result.to_ansi();
-        assert!(
-            ansi.contains("CAPTION"),
-            "{name}: caption should appear"
-        );
+        assert!(ansi.contains("CAPTION"), "{name}: caption should appear");
     }
 }
 
@@ -1279,8 +1256,7 @@ fn table_row_explicit_with_style() {
     let mut table = Table::new();
     table.add_column(Column::new("A"));
     table.add_column(Column::new("B"));
-    let row = Row::new(vec![Cell::new("x"), Cell::new("y")])
-        .style(Style::new().bold(true));
+    let row = Row::new(vec![Cell::new("x"), Cell::new("y")]).style(Style::new().bold(true));
     table.add_row_explicit(row);
 
     let opts = ConsoleOptions {
@@ -1346,8 +1322,8 @@ fn table_hide_header() {
 fn table_cell_style() {
     let mut table = Table::new();
     table.add_column(Column::new("A"));
-    let cell = Cell::new("styled")
-        .style(Style::new().bold(true).color(Color::parse("red").unwrap()));
+    let cell =
+        Cell::new("styled").style(Style::new().bold(true).color(Color::parse("red").unwrap()));
     table.add_row(vec![cell]);
 
     let opts = ConsoleOptions {
@@ -1382,9 +1358,7 @@ fn table_column_header_style() {
 #[test]
 fn table_column_style() {
     let mut table = Table::new();
-    table.add_column(
-        Column::new("A").style(Style::new().italic(true)),
-    );
+    table.add_column(Column::new("A").style(Style::new().italic(true)));
     table.add_row_str(vec!["data".into()]);
 
     let opts = ConsoleOptions {
@@ -1463,9 +1437,7 @@ fn table_title_justify_left() {
     let mut table = Table::new();
     table.add_column(Column::new("X"));
     table.add_row_str(vec!["data".into()]);
-    let table = table
-        .title("Left Title")
-        .title_justify(AlignMethod::Left);
+    let table = table.title("Left Title").title_justify(AlignMethod::Left);
 
     let opts = ConsoleOptions {
         max_width: 50,
@@ -1484,9 +1456,7 @@ fn table_title_justify_right() {
     let mut table = Table::new();
     table.add_column(Column::new("X"));
     table.add_row_str(vec!["data".into()]);
-    let table = table
-        .title("Right Title")
-        .title_justify(AlignMethod::Right);
+    let table = table.title("Right Title").title_justify(AlignMethod::Right);
 
     let opts = ConsoleOptions {
         max_width: 50,
@@ -1540,9 +1510,7 @@ fn table_border_style_color() {
     let mut table = Table::new();
     table.add_column(Column::new("X"));
     table.add_row_str(vec!["data".into()]);
-    let table = table.border_style(
-        Style::new().color(Color::parse("magenta").unwrap()),
-    );
+    let table = table.border_style(Style::new().color(Color::parse("magenta").unwrap()));
 
     let opts = ConsoleOptions {
         max_width: 30,
@@ -1908,10 +1876,22 @@ fn align_method_default_is_left() {
 
 #[test]
 fn vertical_align_method_parse() {
-    assert_eq!(VerticalAlignMethod::from_str("top"), VerticalAlignMethod::Top);
-    assert_eq!(VerticalAlignMethod::from_str("middle"), VerticalAlignMethod::Middle);
-    assert_eq!(VerticalAlignMethod::from_str("bottom"), VerticalAlignMethod::Bottom);
-    assert_eq!(VerticalAlignMethod::from_str("unknown"), VerticalAlignMethod::Top);
+    assert_eq!(
+        VerticalAlignMethod::from_str("top"),
+        VerticalAlignMethod::Top
+    );
+    assert_eq!(
+        VerticalAlignMethod::from_str("middle"),
+        VerticalAlignMethod::Middle
+    );
+    assert_eq!(
+        VerticalAlignMethod::from_str("bottom"),
+        VerticalAlignMethod::Bottom
+    );
+    assert_eq!(
+        VerticalAlignMethod::from_str("unknown"),
+        VerticalAlignMethod::Top
+    );
 }
 
 #[test]
@@ -2009,7 +1989,12 @@ fn console_options_update_height() {
 #[test]
 fn panel_with_styled_content() {
     let mut text = Text::new("");
-    text.append_styled("Hello", Style::new().bold(true).color(Color::parse("green").unwrap()));
+    text.append_styled(
+        "Hello",
+        Style::new()
+            .bold(true)
+            .color(Color::parse("green").unwrap()),
+    );
 
     let panel = Panel::new(text)
         .title("Styled Panel")

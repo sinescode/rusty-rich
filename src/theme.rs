@@ -52,7 +52,9 @@ impl Theme {
     /// Merge another theme's styles into this one.
     pub fn merge(&mut self, other: &Theme) {
         for (name, style) in &other.styles {
-            self.styles.entry(name.clone()).or_insert_with(|| style.clone());
+            self.styles
+                .entry(name.clone())
+                .or_insert_with(|| style.clone());
         }
     }
 }
@@ -229,114 +231,422 @@ pub fn default_theme() -> Theme {
     use crate::style::Style;
 
     // repr styles
-    t.set(names::REPR_NUMBER, Style::new().color(Color::parse("cyan").unwrap()).bold(true));
-    t.set(names::REPR_STR, Style::new().color(Color::parse("green").unwrap()));
-    t.set(names::REPR_BOOL_TRUE, Style::new().color(Color::parse("bright_green").unwrap()).bold(true));
-    t.set(names::REPR_BOOL_FALSE, Style::new().color(Color::parse("bright_red").unwrap()).bold(true));
-    t.set(names::REPR_NONE, Style::new().color(Color::parse("bright_yellow").unwrap()).dim(true));
-    t.set(names::REPR_URL, Style::new().color(Color::parse("bright_blue").unwrap()).underline(true));
-    t.set(names::REPR_PATH, Style::new().color(Color::parse("magenta").unwrap()));
-    t.set(names::REPR_ATTRIB_NAME, Style::new().color(Color::parse("bright_cyan").unwrap()));
-    t.set(names::REPR_ATTRIB_VALUE, Style::new().color(Color::parse("white").unwrap()));
-    t.set(names::REPR_ELLIPSIS, Style::new().dim(true).color(Color::parse("white").unwrap()));
-    t.set(names::REPR_IPV4, Style::new().color(Color::parse("bright_blue").unwrap()).bold(true));
-    t.set(names::REPR_IPV6, Style::new().color(Color::parse("bright_magenta").unwrap()).bold(true));
-    t.set(names::REPR_TAG_NAME, Style::new().color(Color::parse("bright_blue").unwrap()).bold(true));
-    t.set(names::REPR_TAG_CONTENTS, Style::new().color(Color::parse("white").unwrap()));
-    t.set(names::REPR_TAG_PUNCTUATION, Style::new().color(Color::parse("bright_black").unwrap()));
-    t.set(names::REPR_BRACE, Style::new().color(Color::parse("bright_black").unwrap()));
-    t.set(names::REPR_CALL, Style::new().color(Color::parse("bright_cyan").unwrap()));
-    t.set(names::REPR_COMMA, Style::new().color(Color::parse("bright_black").unwrap()));
-    t.set(names::REPR_BOOL, Style::new().color(Color::parse("bright_yellow").unwrap()).bold(true));
-    t.set(names::REPR_ERROR, Style::new().color(Color::parse("bright_red").unwrap()).bold(true));
+    t.set(
+        names::REPR_NUMBER,
+        Style::new().color(Color::parse("cyan").unwrap()).bold(true),
+    );
+    t.set(
+        names::REPR_STR,
+        Style::new().color(Color::parse("green").unwrap()),
+    );
+    t.set(
+        names::REPR_BOOL_TRUE,
+        Style::new()
+            .color(Color::parse("bright_green").unwrap())
+            .bold(true),
+    );
+    t.set(
+        names::REPR_BOOL_FALSE,
+        Style::new()
+            .color(Color::parse("bright_red").unwrap())
+            .bold(true),
+    );
+    t.set(
+        names::REPR_NONE,
+        Style::new()
+            .color(Color::parse("bright_yellow").unwrap())
+            .dim(true),
+    );
+    t.set(
+        names::REPR_URL,
+        Style::new()
+            .color(Color::parse("bright_blue").unwrap())
+            .underline(true),
+    );
+    t.set(
+        names::REPR_PATH,
+        Style::new().color(Color::parse("magenta").unwrap()),
+    );
+    t.set(
+        names::REPR_ATTRIB_NAME,
+        Style::new().color(Color::parse("bright_cyan").unwrap()),
+    );
+    t.set(
+        names::REPR_ATTRIB_VALUE,
+        Style::new().color(Color::parse("white").unwrap()),
+    );
+    t.set(
+        names::REPR_ELLIPSIS,
+        Style::new().dim(true).color(Color::parse("white").unwrap()),
+    );
+    t.set(
+        names::REPR_IPV4,
+        Style::new()
+            .color(Color::parse("bright_blue").unwrap())
+            .bold(true),
+    );
+    t.set(
+        names::REPR_IPV6,
+        Style::new()
+            .color(Color::parse("bright_magenta").unwrap())
+            .bold(true),
+    );
+    t.set(
+        names::REPR_TAG_NAME,
+        Style::new()
+            .color(Color::parse("bright_blue").unwrap())
+            .bold(true),
+    );
+    t.set(
+        names::REPR_TAG_CONTENTS,
+        Style::new().color(Color::parse("white").unwrap()),
+    );
+    t.set(
+        names::REPR_TAG_PUNCTUATION,
+        Style::new().color(Color::parse("bright_black").unwrap()),
+    );
+    t.set(
+        names::REPR_BRACE,
+        Style::new().color(Color::parse("bright_black").unwrap()),
+    );
+    t.set(
+        names::REPR_CALL,
+        Style::new().color(Color::parse("bright_cyan").unwrap()),
+    );
+    t.set(
+        names::REPR_COMMA,
+        Style::new().color(Color::parse("bright_black").unwrap()),
+    );
+    t.set(
+        names::REPR_BOOL,
+        Style::new()
+            .color(Color::parse("bright_yellow").unwrap())
+            .bold(true),
+    );
+    t.set(
+        names::REPR_ERROR,
+        Style::new()
+            .color(Color::parse("bright_red").unwrap())
+            .bold(true),
+    );
 
     // table styles
-    t.set(names::TABLE_HEADER, Style::new().bold(true).color(Color::parse("white").unwrap()));
+    t.set(
+        names::TABLE_HEADER,
+        Style::new()
+            .bold(true)
+            .color(Color::parse("white").unwrap()),
+    );
     t.set(names::TABLE_FOOTER, Style::new().bold(true));
     t.set(names::TABLE_TITLE, Style::new().bold(true));
     t.set(names::TABLE_CAPTION, Style::new().dim(true));
-    t.set(names::TABLE_BORDER, Style::new().color(Color::parse("bright_black").unwrap()));
-    t.set(names::TABLE_CELL, Style::new().color(Color::parse("white").unwrap()));
-    t.set(names::TABLE_ROW, Style::new().color(Color::parse("white").unwrap()));
+    t.set(
+        names::TABLE_BORDER,
+        Style::new().color(Color::parse("bright_black").unwrap()),
+    );
+    t.set(
+        names::TABLE_CELL,
+        Style::new().color(Color::parse("white").unwrap()),
+    );
+    t.set(
+        names::TABLE_ROW,
+        Style::new().color(Color::parse("white").unwrap()),
+    );
 
     // rule
-    t.set(names::RULE_LINE, Style::new().color(Color::parse("bright_black").unwrap()));
+    t.set(
+        names::RULE_LINE,
+        Style::new().color(Color::parse("bright_black").unwrap()),
+    );
     t.set(names::RULE_TEXT, Style::new().bold(true));
 
     // tree
-    t.set(names::TREE, Style::new().color(Color::parse("white").unwrap()));
-    t.set(names::TREE_LINE, Style::new().color(Color::parse("bright_black").unwrap()));
+    t.set(
+        names::TREE,
+        Style::new().color(Color::parse("white").unwrap()),
+    );
+    t.set(
+        names::TREE_LINE,
+        Style::new().color(Color::parse("bright_black").unwrap()),
+    );
 
     // progress
-    t.set(names::BAR_COMPLETE, Style::new().color(Color::parse("green").unwrap()));
-    t.set(names::BAR_FINISHED, Style::new().color(Color::parse("bright_green").unwrap()));
-    t.set(names::BAR_PULSE, Style::new().color(Color::parse("bright_cyan").unwrap()));
-    t.set(names::PROGRESS_DESCRIPTION, Style::new().color(Color::parse("white").unwrap()));
-    t.set(names::PROGRESS_PERCENTAGE, Style::new().color(Color::parse("cyan").unwrap()));
-    t.set(names::PROGRESS_REMAINING, Style::new().color(Color::parse("bright_black").unwrap()));
-    t.set(names::PROGRESS_ELAPSED, Style::new().color(Color::parse("cyan").unwrap()));
-    t.set(names::PROGRESS_DATA, Style::new().color(Color::parse("bright_blue").unwrap()));
-    t.set(names::PROGRESS_DOWNLOAD, Style::new().color(Color::parse("bright_cyan").unwrap()));
-    t.set(names::PROGRESS_TRANSFER, Style::new().color(Color::parse("bright_magenta").unwrap()));
-    t.set(names::PROGRESS_FILESIZE, Style::new().color(Color::parse("bright_green").unwrap()));
-    t.set(names::PROGRESS_TOTAL, Style::new().color(Color::parse("bright_blue").unwrap()));
-    t.set(names::BAR_REMAINING, Style::new().color(Color::parse("bright_black").unwrap()));
+    t.set(
+        names::BAR_COMPLETE,
+        Style::new().color(Color::parse("green").unwrap()),
+    );
+    t.set(
+        names::BAR_FINISHED,
+        Style::new().color(Color::parse("bright_green").unwrap()),
+    );
+    t.set(
+        names::BAR_PULSE,
+        Style::new().color(Color::parse("bright_cyan").unwrap()),
+    );
+    t.set(
+        names::PROGRESS_DESCRIPTION,
+        Style::new().color(Color::parse("white").unwrap()),
+    );
+    t.set(
+        names::PROGRESS_PERCENTAGE,
+        Style::new().color(Color::parse("cyan").unwrap()),
+    );
+    t.set(
+        names::PROGRESS_REMAINING,
+        Style::new().color(Color::parse("bright_black").unwrap()),
+    );
+    t.set(
+        names::PROGRESS_ELAPSED,
+        Style::new().color(Color::parse("cyan").unwrap()),
+    );
+    t.set(
+        names::PROGRESS_DATA,
+        Style::new().color(Color::parse("bright_blue").unwrap()),
+    );
+    t.set(
+        names::PROGRESS_DOWNLOAD,
+        Style::new().color(Color::parse("bright_cyan").unwrap()),
+    );
+    t.set(
+        names::PROGRESS_TRANSFER,
+        Style::new().color(Color::parse("bright_magenta").unwrap()),
+    );
+    t.set(
+        names::PROGRESS_FILESIZE,
+        Style::new().color(Color::parse("bright_green").unwrap()),
+    );
+    t.set(
+        names::PROGRESS_TOTAL,
+        Style::new().color(Color::parse("bright_blue").unwrap()),
+    );
+    t.set(
+        names::BAR_REMAINING,
+        Style::new().color(Color::parse("bright_black").unwrap()),
+    );
 
     // markdown
-    t.set(names::MARKDOWN_H1, Style::new().bold(true).color(Color::parse("bright_cyan").unwrap()));
-    t.set(names::MARKDOWN_H2, Style::new().bold(true).color(Color::parse("cyan").unwrap()));
-    t.set(names::MARKDOWN_CODE, Style::new().color(Color::parse("bright_yellow").unwrap()).bgcolor(Color::parse("black").unwrap()));
-    t.set(names::MARKDOWN_LINK, Style::new().color(Color::parse("bright_blue").unwrap()).underline(true));
-    t.set(names::MARKDOWN_H3, Style::new().bold(true).color(Color::parse("yellow").unwrap()));
-    t.set(names::MARKDOWN_H4, Style::new().bold(true).color(Color::parse("green").unwrap()));
-    t.set(names::MARKDOWN_H5, Style::new().bold(true).color(Color::parse("blue").unwrap()));
-    t.set(names::MARKDOWN_H6, Style::new().bold(true).color(Color::parse("bright_black").unwrap()));
-    t.set(names::MARKDOWN_H7, Style::new().dim(true).color(Color::parse("bright_black").unwrap()));
-    t.set(names::MARKDOWN_PARAGRAPH, Style::new().color(Color::parse("white").unwrap()));
-    t.set(names::MARKDOWN_BLOCKQUOTE, Style::new().color(Color::parse("bright_black").unwrap()));
-    t.set(names::MARKDOWN_LIST, Style::new().color(Color::parse("white").unwrap()));
-    t.set(names::MARKDOWN_ITEM, Style::new().color(Color::parse("cyan").unwrap()));
-    t.set(names::MARKDOWN_ITEM_BULLET, Style::new().color(Color::parse("cyan").unwrap()));
-    t.set(names::MARKDOWN_ITEM_NUMBER, Style::new().color(Color::parse("cyan").unwrap()));
-    t.set(names::MARKDOWN_TABLE, Style::new().color(Color::parse("white").unwrap()));
-    t.set(names::MARKDOWN_TABLE_HEADER, Style::new().bold(true).color(Color::parse("white").unwrap()));
-    t.set(names::MARKDOWN_CODE_BLOCK, Style::new().color(Color::parse("bright_yellow").unwrap()).bgcolor(Color::parse("black").unwrap()));
-    t.set(names::MARKDOWN_CODE_INLINE, Style::new().color(Color::parse("bright_yellow").unwrap()));
-    t.set(names::MARKDOWN_HR, Style::new().color(Color::parse("bright_black").unwrap()));
+    t.set(
+        names::MARKDOWN_H1,
+        Style::new()
+            .bold(true)
+            .color(Color::parse("bright_cyan").unwrap()),
+    );
+    t.set(
+        names::MARKDOWN_H2,
+        Style::new().bold(true).color(Color::parse("cyan").unwrap()),
+    );
+    t.set(
+        names::MARKDOWN_CODE,
+        Style::new()
+            .color(Color::parse("bright_yellow").unwrap())
+            .bgcolor(Color::parse("black").unwrap()),
+    );
+    t.set(
+        names::MARKDOWN_LINK,
+        Style::new()
+            .color(Color::parse("bright_blue").unwrap())
+            .underline(true),
+    );
+    t.set(
+        names::MARKDOWN_H3,
+        Style::new()
+            .bold(true)
+            .color(Color::parse("yellow").unwrap()),
+    );
+    t.set(
+        names::MARKDOWN_H4,
+        Style::new()
+            .bold(true)
+            .color(Color::parse("green").unwrap()),
+    );
+    t.set(
+        names::MARKDOWN_H5,
+        Style::new().bold(true).color(Color::parse("blue").unwrap()),
+    );
+    t.set(
+        names::MARKDOWN_H6,
+        Style::new()
+            .bold(true)
+            .color(Color::parse("bright_black").unwrap()),
+    );
+    t.set(
+        names::MARKDOWN_H7,
+        Style::new()
+            .dim(true)
+            .color(Color::parse("bright_black").unwrap()),
+    );
+    t.set(
+        names::MARKDOWN_PARAGRAPH,
+        Style::new().color(Color::parse("white").unwrap()),
+    );
+    t.set(
+        names::MARKDOWN_BLOCKQUOTE,
+        Style::new().color(Color::parse("bright_black").unwrap()),
+    );
+    t.set(
+        names::MARKDOWN_LIST,
+        Style::new().color(Color::parse("white").unwrap()),
+    );
+    t.set(
+        names::MARKDOWN_ITEM,
+        Style::new().color(Color::parse("cyan").unwrap()),
+    );
+    t.set(
+        names::MARKDOWN_ITEM_BULLET,
+        Style::new().color(Color::parse("cyan").unwrap()),
+    );
+    t.set(
+        names::MARKDOWN_ITEM_NUMBER,
+        Style::new().color(Color::parse("cyan").unwrap()),
+    );
+    t.set(
+        names::MARKDOWN_TABLE,
+        Style::new().color(Color::parse("white").unwrap()),
+    );
+    t.set(
+        names::MARKDOWN_TABLE_HEADER,
+        Style::new()
+            .bold(true)
+            .color(Color::parse("white").unwrap()),
+    );
+    t.set(
+        names::MARKDOWN_CODE_BLOCK,
+        Style::new()
+            .color(Color::parse("bright_yellow").unwrap())
+            .bgcolor(Color::parse("black").unwrap()),
+    );
+    t.set(
+        names::MARKDOWN_CODE_INLINE,
+        Style::new().color(Color::parse("bright_yellow").unwrap()),
+    );
+    t.set(
+        names::MARKDOWN_HR,
+        Style::new().color(Color::parse("bright_black").unwrap()),
+    );
 
     // json
-    t.set(names::JSON_KEY, Style::new().color(Color::parse("cyan").unwrap()));
-    t.set(names::JSON_STR, Style::new().color(Color::parse("green").unwrap()));
-    t.set(names::JSON_NUMBER, Style::new().color(Color::parse("bright_blue").unwrap()).bold(true));
-    t.set(names::JSON_BOOL, Style::new().color(Color::parse("bright_yellow").unwrap()).bold(true));
-    t.set(names::JSON_NULL, Style::new().color(Color::parse("bright_red").unwrap()).dim(true));
-    t.set(names::JSON_BOOL_TRUE, Style::new().color(Color::parse("bright_green").unwrap()).bold(true));
-    t.set(names::JSON_BOOL_FALSE, Style::new().color(Color::parse("bright_red").unwrap()).bold(true));
-    t.set(names::JSON_BRACE, Style::new().color(Color::parse("bright_black").unwrap()));
+    t.set(
+        names::JSON_KEY,
+        Style::new().color(Color::parse("cyan").unwrap()),
+    );
+    t.set(
+        names::JSON_STR,
+        Style::new().color(Color::parse("green").unwrap()),
+    );
+    t.set(
+        names::JSON_NUMBER,
+        Style::new()
+            .color(Color::parse("bright_blue").unwrap())
+            .bold(true),
+    );
+    t.set(
+        names::JSON_BOOL,
+        Style::new()
+            .color(Color::parse("bright_yellow").unwrap())
+            .bold(true),
+    );
+    t.set(
+        names::JSON_NULL,
+        Style::new()
+            .color(Color::parse("bright_red").unwrap())
+            .dim(true),
+    );
+    t.set(
+        names::JSON_BOOL_TRUE,
+        Style::new()
+            .color(Color::parse("bright_green").unwrap())
+            .bold(true),
+    );
+    t.set(
+        names::JSON_BOOL_FALSE,
+        Style::new()
+            .color(Color::parse("bright_red").unwrap())
+            .bold(true),
+    );
+    t.set(
+        names::JSON_BRACE,
+        Style::new().color(Color::parse("bright_black").unwrap()),
+    );
 
     // traceback
-    t.set(names::TRACEBACK_BORDER, Style::new().color(Color::parse("red").unwrap()));
+    t.set(
+        names::TRACEBACK_BORDER,
+        Style::new().color(Color::parse("red").unwrap()),
+    );
     t.set(names::TRACEBACK_TITLE, Style::new().bold(true));
-    t.set(names::TRACEBACK_ERROR, Style::new().color(Color::parse("bright_red").unwrap()).bold(true));
-    t.set(names::TRACEBACK_ERROR_MARK, Style::new().color(Color::parse("bright_red").unwrap()).bold(true));
-    t.set(names::TRACEBACK_FILENAME, Style::new().color(Color::parse("cyan").unwrap()));
-    t.set(names::TRACEBACK_LINE_NO, Style::new().color(Color::parse("bright_black").unwrap()));
+    t.set(
+        names::TRACEBACK_ERROR,
+        Style::new()
+            .color(Color::parse("bright_red").unwrap())
+            .bold(true),
+    );
+    t.set(
+        names::TRACEBACK_ERROR_MARK,
+        Style::new()
+            .color(Color::parse("bright_red").unwrap())
+            .bold(true),
+    );
+    t.set(
+        names::TRACEBACK_FILENAME,
+        Style::new().color(Color::parse("cyan").unwrap()),
+    );
+    t.set(
+        names::TRACEBACK_LINE_NO,
+        Style::new().color(Color::parse("bright_black").unwrap()),
+    );
     t.set(names::TRACEBACK_LOCALS_HEADER, Style::new().bold(true));
-    t.set(names::TRACEBACK_LOCALS_KEY, Style::new().color(Color::parse("bright_cyan").unwrap()));
-    t.set(names::TRACEBACK_LOCALS_VALUE, Style::new().color(Color::parse("white").unwrap()));
-    t.set(names::TRACEBACK_EXC_TYPE, Style::new().color(Color::parse("bright_red").unwrap()).bold(true));
-    t.set(names::TRACEBACK_EXC_VALUE, Style::new().color(Color::parse("white").unwrap()));
+    t.set(
+        names::TRACEBACK_LOCALS_KEY,
+        Style::new().color(Color::parse("bright_cyan").unwrap()),
+    );
+    t.set(
+        names::TRACEBACK_LOCALS_VALUE,
+        Style::new().color(Color::parse("white").unwrap()),
+    );
+    t.set(
+        names::TRACEBACK_EXC_TYPE,
+        Style::new()
+            .color(Color::parse("bright_red").unwrap())
+            .bold(true),
+    );
+    t.set(
+        names::TRACEBACK_EXC_VALUE,
+        Style::new().color(Color::parse("white").unwrap()),
+    );
 
     // logging extras
-    t.set(names::LOGGING_KEYWORD, Style::new().color(Color::parse("bright_yellow").unwrap()).bold(true));
-    t.set(names::LOGGING_LEVEL_NOTSET, Style::new().dim(true).color(Color::parse("white").unwrap()));
+    t.set(
+        names::LOGGING_KEYWORD,
+        Style::new()
+            .color(Color::parse("bright_yellow").unwrap())
+            .bold(true),
+    );
+    t.set(
+        names::LOGGING_LEVEL_NOTSET,
+        Style::new().dim(true).color(Color::parse("white").unwrap()),
+    );
 
     // status & prompt
-    t.set(names::STATUS_SPINNER, Style::new().color(Color::parse("bright_cyan").unwrap()));
-    t.set(names::STATUS_MESSAGE, Style::new().color(Color::parse("white").unwrap()));
-    t.set(names::PROMPT, Style::new().color(Color::parse("bright_cyan").unwrap()));
-    t.set(names::PROMPT_CHOICES, Style::new().color(Color::parse("cyan").unwrap()));
-    t.set(names::PROMPT_DEFAULT, Style::new().color(Color::parse("bright_black").unwrap()));
+    t.set(
+        names::STATUS_SPINNER,
+        Style::new().color(Color::parse("bright_cyan").unwrap()),
+    );
+    t.set(
+        names::STATUS_MESSAGE,
+        Style::new().color(Color::parse("white").unwrap()),
+    );
+    t.set(
+        names::PROMPT,
+        Style::new().color(Color::parse("bright_cyan").unwrap()),
+    );
+    t.set(
+        names::PROMPT_CHOICES,
+        Style::new().color(Color::parse("cyan").unwrap()),
+    );
+    t.set(
+        names::PROMPT_DEFAULT,
+        Style::new().color(Color::parse("bright_black").unwrap()),
+    );
 
     t
 }

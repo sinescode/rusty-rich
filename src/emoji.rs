@@ -84,7 +84,6 @@ fn get_emoji_map() -> Vec<(&'static str, &'static str)> {
         ("yawning", "\u{1F971}"),
         ("smirk", "\u{1F60F}"),
         ("disappointed", "\u{1F61E}"),
-
         // Hearts & emotions
         ("heart", "\u{2764}\u{FE0F}"),
         ("orange_heart", "\u{1F9E1}"),
@@ -101,7 +100,6 @@ fn get_emoji_map() -> Vec<(&'static str, &'static str)> {
         ("boom", "\u{1F4A5}"),
         ("fire", "\u{1F525}"),
         ("zap", "\u{26A1}"),
-
         // Objects & symbols
         ("check", "\u{2705}"),
         ("cross", "\u{274C}"),
@@ -131,7 +129,6 @@ fn get_emoji_map() -> Vec<(&'static str, &'static str)> {
         ("bug", "\u{1F41B}"),
         ("rocket", "\u{1F680}"),
         ("satellite", "\u{1F4E1}"),
-
         // Gestures & people
         ("thumbs_up", "\u{1F44D}"),
         ("thumbs_down", "\u{1F44E}"),
@@ -144,7 +141,6 @@ fn get_emoji_map() -> Vec<(&'static str, &'static str)> {
         ("point_down", "\u{1F447}"),
         ("point_left", "\u{1F448}"),
         ("point_right", "\u{1F449}"),
-
         // Arrows
         ("arrow_right", "\u{27A1}\u{FE0F}"),
         ("arrow_left", "\u{2B05}\u{FE0F}"),
@@ -154,7 +150,6 @@ fn get_emoji_map() -> Vec<(&'static str, &'static str)> {
         ("left_right_arrow", "\u{2194}\u{FE0F}"),
         ("twisted_rightwards_arrows", "\u{1F500}"),
         ("repeat", "\u{1F501}"),
-
         // Nature & animals
         ("beetle", "\u{1FAB2}"),
         ("ant", "\u{1F41C}"),
@@ -172,7 +167,6 @@ fn get_emoji_map() -> Vec<(&'static str, &'static str)> {
         ("globe", "\u{1F30E}"),
         ("moon", "\u{1F319}"),
         ("rainbow", "\u{1F308}"),
-
         // Misc
         ("tada", "\u{1F389}"),
         ("confetti", "\u{1F38A}"),

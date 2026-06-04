@@ -4,7 +4,7 @@
 //! with optional title, value display, and custom bar characters.
 
 use crate::color::Color;
-use crate::console::{ConsoleOptions, Renderable, RenderResult};
+use crate::console::{ConsoleOptions, RenderResult, Renderable};
 use crate::segment::Segment;
 use crate::style::Style;
 

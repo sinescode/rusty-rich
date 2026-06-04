@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use syntect::easy::HighlightLines;
-use syntect::highlighting::{ThemeSet, Style as SyntectStyle};
+use syntect::highlighting::{Style as SyntectStyle, ThemeSet};
 use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
 
@@ -55,16 +55,28 @@ impl Syntax {
     }
 
     /// Builder: set the syntect theme name (e.g. `"base16-ocean.dark"`, `"monokai"`).
-    pub fn theme(mut self, theme: impl Into<String>) -> Self { self.theme = theme.into(); self }
+    pub fn theme(mut self, theme: impl Into<String>) -> Self {
+        self.theme = theme.into();
+        self
+    }
 
     /// Builder: enable line numbers in the rendered output.
-    pub fn line_numbers(mut self) -> Self { self.line_numbers = true; self }
+    pub fn line_numbers(mut self) -> Self {
+        self.line_numbers = true;
+        self
+    }
 
     /// Builder: set the starting line number for display (default 1).
-    pub fn start_line(mut self, n: usize) -> Self { self.start_line = n; self }
+    pub fn start_line(mut self, n: usize) -> Self {
+        self.start_line = n;
+        self
+    }
 
     /// Builder: set a background color for the code block.
-    pub fn background(mut self, color: crate::color::Color) -> Self { self.background_color = Some(color); self }
+    pub fn background(mut self, color: crate::color::Color) -> Self {
+        self.background_color = Some(color);
+        self
+    }
 
     /// Create a Syntax from a file path, auto-detecting the language from the extension.
     ///
@@ -153,7 +165,10 @@ impl Renderable for Syntax {
             // Apply per-line styles
             apply_line_styles(&mut lines, self.start_line, &self.line_styles);
 
-            return RenderResult { lines, items: Vec::new() };
+            return RenderResult {
+                lines,
+                items: Vec::new(),
+            };
         }
 
         let ss = SyntaxSet::load_defaults_newlines();
@@ -164,9 +179,10 @@ impl Renderable for Syntax {
             .or_else(|| ss.find_syntax_by_extension(&self.language))
             .unwrap_or_else(|| ss.find_syntax_plain_text());
 
-        let theme = ts.themes.get(&self.theme).unwrap_or_else(|| {
-            &ts.themes["base16-ocean.dark"]
-        });
+        let theme = ts
+            .themes
+            .get(&self.theme)
+            .unwrap_or_else(|| &ts.themes["base16-ocean.dark"]);
 
         let mut highlighter = HighlightLines::new(syntax, theme);
 
@@ -194,10 +210,7 @@ impl Renderable for Syntax {
                 Ok(highlighted) => {
                     for (syntect_style, text) in &highlighted {
                         let style = syntect_to_rich_style(syntect_style);
-                        line_segments.push(Segment::styled(
-                            text.to_string(),
-                            style,
-                        ));
+                        line_segments.push(Segment::styled(text.to_string(), style));
                     }
                 }
                 Err(_) => {
@@ -211,7 +224,10 @@ impl Renderable for Syntax {
         // Apply per-line styles
         apply_line_styles(&mut lines, self.start_line, &self.line_styles);
 
-        RenderResult { lines, items: Vec::new() }
+        RenderResult {
+            lines,
+            items: Vec::new(),
+        }
     }
 }
 
@@ -249,13 +265,22 @@ fn syntect_to_rich_style(ss: &SyntectStyle) -> Style {
     let fg = ss.foreground;
     style = style.color(crate::color::Color::from_rgb(fg.r, fg.g, fg.b));
 
-    if ss.font_style.contains(syntect::highlighting::FontStyle::BOLD) {
+    if ss
+        .font_style
+        .contains(syntect::highlighting::FontStyle::BOLD)
+    {
         style = style.bold(true);
     }
-    if ss.font_style.contains(syntect::highlighting::FontStyle::ITALIC) {
+    if ss
+        .font_style
+        .contains(syntect::highlighting::FontStyle::ITALIC)
+    {
         style = style.italic(true);
     }
-    if ss.font_style.contains(syntect::highlighting::FontStyle::UNDERLINE) {
+    if ss
+        .font_style
+        .contains(syntect::highlighting::FontStyle::UNDERLINE)
+    {
         style = style.underline(true);
     }
     style
@@ -313,7 +338,10 @@ impl ANSISyntaxTheme {
         theme.set("string", Style::new().color(Color::from_rgb(230, 219, 116)));
         theme.set("number", Style::new().color(Color::from_rgb(174, 129, 255)));
         theme.set("type", Style::new().color(Color::from_rgb(102, 217, 239)));
-        theme.set("function", Style::new().color(Color::from_rgb(166, 226, 46)));
+        theme.set(
+            "function",
+            Style::new().color(Color::from_rgb(166, 226, 46)),
+        );
         theme
     }
 
@@ -408,11 +436,17 @@ pub fn get_style_by_name(name: &str) -> Option<ANSISyntaxTheme> {
             theme.background = Some(Color::from_rgb(46, 52, 64));
             theme.foreground = Some(Color::from_rgb(216, 222, 233));
             theme.set("comment", Style::new().color(Color::from_rgb(76, 86, 106)));
-            theme.set("keyword", Style::new().color(Color::from_rgb(143, 188, 187)));
+            theme.set(
+                "keyword",
+                Style::new().color(Color::from_rgb(143, 188, 187)),
+            );
             theme.set("string", Style::new().color(Color::from_rgb(163, 190, 140)));
             theme.set("number", Style::new().color(Color::from_rgb(208, 135, 112)));
             theme.set("type", Style::new().color(Color::from_rgb(136, 192, 208)));
-            theme.set("function", Style::new().color(Color::from_rgb(129, 161, 193)));
+            theme.set(
+                "function",
+                Style::new().color(Color::from_rgb(129, 161, 193)),
+            );
             Some(theme)
         }
         "dracula" => {
@@ -420,23 +454,35 @@ pub fn get_style_by_name(name: &str) -> Option<ANSISyntaxTheme> {
             theme.background = Some(Color::from_rgb(40, 42, 54));
             theme.foreground = Some(Color::from_rgb(248, 248, 242));
             theme.set("comment", Style::new().color(Color::from_rgb(98, 114, 164)));
-            theme.set("keyword", Style::new().color(Color::from_rgb(255, 121, 198)));
+            theme.set(
+                "keyword",
+                Style::new().color(Color::from_rgb(255, 121, 198)),
+            );
             theme.set("string", Style::new().color(Color::from_rgb(241, 250, 140)));
             theme.set("number", Style::new().color(Color::from_rgb(189, 147, 249)));
             theme.set("type", Style::new().color(Color::from_rgb(139, 233, 253)));
-            theme.set("function", Style::new().color(Color::from_rgb(80, 250, 123)));
+            theme.set(
+                "function",
+                Style::new().color(Color::from_rgb(80, 250, 123)),
+            );
             Some(theme)
         }
         "github" => {
             let mut theme = ANSISyntaxTheme::new();
             theme.background = Some(Color::from_rgb(255, 255, 255));
             theme.foreground = Some(Color::from_rgb(36, 41, 46));
-            theme.set("comment", Style::new().color(Color::from_rgb(106, 115, 125)));
+            theme.set(
+                "comment",
+                Style::new().color(Color::from_rgb(106, 115, 125)),
+            );
             theme.set("keyword", Style::new().color(Color::from_rgb(215, 58, 73)));
             theme.set("string", Style::new().color(Color::from_rgb(3, 47, 98)));
             theme.set("number", Style::new().color(Color::from_rgb(0, 92, 197)));
             theme.set("type", Style::new().color(Color::from_rgb(227, 98, 9)));
-            theme.set("function", Style::new().color(Color::from_rgb(111, 66, 193)));
+            theme.set(
+                "function",
+                Style::new().color(Color::from_rgb(111, 66, 193)),
+            );
             Some(theme)
         }
         _ => None,
@@ -611,35 +657,17 @@ mod tests {
 
     #[test]
     fn test_get_lexer_by_name() {
-        assert_eq!(
-            get_lexer_by_name("py"),
-            Some("python".to_string())
-        );
-        assert_eq!(
-            get_lexer_by_name("rs"),
-            Some("rust".to_string())
-        );
-        assert_eq!(
-            get_lexer_by_name("js"),
-            Some("javascript".to_string())
-        );
-        assert_eq!(
-            get_lexer_by_name("cpp"),
-            Some("c++".to_string())
-        );
+        assert_eq!(get_lexer_by_name("py"), Some("python".to_string()));
+        assert_eq!(get_lexer_by_name("rs"), Some("rust".to_string()));
+        assert_eq!(get_lexer_by_name("js"), Some("javascript".to_string()));
+        assert_eq!(get_lexer_by_name("cpp"), Some("c++".to_string()));
     }
 
     #[test]
     fn test_get_lexer_by_name_passthrough() {
         // Unknown short names should pass through as-is
-        assert_eq!(
-            get_lexer_by_name("python"),
-            Some("python".to_string())
-        );
-        assert_eq!(
-            get_lexer_by_name("rust"),
-            Some("rust".to_string())
-        );
+        assert_eq!(get_lexer_by_name("python"), Some("python".to_string()));
+        assert_eq!(get_lexer_by_name("rust"), Some("rust".to_string()));
     }
 
     #[test]
@@ -662,16 +690,22 @@ mod tests {
 
     #[test]
     fn test_stylize_range() {
-        let s = Syntax::new("line1\nline2\nline3", "text")
-            .stylize_range(1, 1, Style::new().bgcolor(Color::from_rgb(255, 0, 0)));
+        let s = Syntax::new("line1\nline2\nline3", "text").stylize_range(
+            1,
+            1,
+            Style::new().bgcolor(Color::from_rgb(255, 0, 0)),
+        );
         assert_eq!(s.line_styles.len(), 1);
         assert!(s.line_styles.contains_key(&1));
     }
 
     #[test]
     fn test_stylize_range_multi_line() {
-        let s = Syntax::new("line1\nline2\nline3", "text")
-            .stylize_range(1, 2, Style::new().bgcolor(Color::from_rgb(255, 255, 0)));
+        let s = Syntax::new("line1\nline2\nline3", "text").stylize_range(
+            1,
+            2,
+            Style::new().bgcolor(Color::from_rgb(255, 255, 0)),
+        );
         assert_eq!(s.line_styles.len(), 2);
         assert!(s.line_styles.contains_key(&1));
         assert!(s.line_styles.contains_key(&2));
@@ -680,8 +714,11 @@ mod tests {
 
     #[test]
     fn test_stylize_range_renders() {
-        let s = Syntax::new("hello\nworld", "text")
-            .stylize_range(1, 1, Style::new().bgcolor(Color::from_rgb(255, 0, 0)));
+        let s = Syntax::new("hello\nworld", "text").stylize_range(
+            1,
+            1,
+            Style::new().bgcolor(Color::from_rgb(255, 0, 0)),
+        );
         let opts = ConsoleOptions::default();
         let result = s.render(&opts);
         let ansi = result.to_ansi();

@@ -41,8 +41,7 @@ use std::time::{Duration, Instant};
 
 use crate::console::{ConsoleOptions, DynRenderable, Renderable};
 use crate::progress_columns::{
-    BarColumn, ProgressColumn, SpinnerColumn, TaskProgressColumn, TextColumn,
-    TimeElapsedColumn,
+    BarColumn, ProgressColumn, SpinnerColumn, TaskProgressColumn, TextColumn, TimeElapsedColumn,
 };
 use crate::style::Style;
 use crate::table::{Cell, Table};
@@ -91,19 +90,34 @@ impl ProgressBar {
     }
 
     /// Set total.
-    pub fn total(mut self, total: f64) -> Self { self.total = Some(total); self }
+    pub fn total(mut self, total: f64) -> Self {
+        self.total = Some(total);
+        self
+    }
 
     /// Set completed.
-    pub fn completed(mut self, completed: f64) -> Self { self.completed = completed; self }
+    pub fn completed(mut self, completed: f64) -> Self {
+        self.completed = completed;
+        self
+    }
 
     /// Set width.
-    pub fn width(mut self, width: usize) -> Self { self.width = Some(width); self }
+    pub fn width(mut self, width: usize) -> Self {
+        self.width = Some(width);
+        self
+    }
 
     /// Set complete style.
-    pub fn complete_style(mut self, style: Style) -> Self { self.complete_style = style; self }
+    pub fn complete_style(mut self, style: Style) -> Self {
+        self.complete_style = style;
+        self
+    }
 
     /// Set remaining style.
-    pub fn remaining_style(mut self, style: Style) -> Self { self.remaining_style = style; self }
+    pub fn remaining_style(mut self, style: Style) -> Self {
+        self.remaining_style = style;
+        self
+    }
 
     /// Get progress as a fraction (0.0–1.0).
     pub fn percentage(&self) -> f64 {
@@ -136,7 +150,11 @@ impl ProgressBar {
             let filled = (w as f64 * pct) as usize;
             let empty = w - filled;
             let complete_ansi = self.complete_style.to_ansi();
-            let complete_reset = if complete_ansi.is_empty() { "" } else { "\x1b[0m" };
+            let complete_reset = if complete_ansi.is_empty() {
+                ""
+            } else {
+                "\x1b[0m"
+            };
             format!(
                 "[{complete_ansi}{}{complete_reset}{}]",
                 self.complete_char.to_string().repeat(filled),
@@ -240,7 +258,9 @@ pub struct RenderableColumn {
 impl RenderableColumn {
     /// Create a new `RenderableColumn` from a renderable-producing closure.
     pub fn new<F: Fn(&Task) -> DynRenderable + Send + Sync + 'static>(format: F) -> Self {
-        Self { format: Box::new(format) }
+        Self {
+            format: Box::new(format),
+        }
     }
 }
 
@@ -295,17 +315,16 @@ impl Progress {
     /// Replace the default columns with a custom list of [`ProgressColumn`]s.
     ///
     /// Each task is rendered as one row using the provided columns.
-    pub fn with_columns(mut self, columns: Vec<Box<dyn crate::progress_columns::ProgressColumn>>) -> Self {
+    pub fn with_columns(
+        mut self,
+        columns: Vec<Box<dyn crate::progress_columns::ProgressColumn>>,
+    ) -> Self {
         self.columns = Some(columns);
         self
     }
 
     /// Register a new task and return its numeric ID (used by `advance`, `update`, etc.).
-    pub fn add_task(
-        &mut self,
-        description: impl Into<String>,
-        total: Option<f64>,
-    ) -> usize {
+    pub fn add_task(&mut self, description: impl Into<String>, total: Option<f64>) -> usize {
         let id = self.next_id;
         self.next_id += 1;
         self.tasks.insert(id, Task::new(id, description, total));
@@ -449,7 +468,11 @@ impl Progress {
     }
 
     /// Render using custom columns.
-    fn render_with_columns(&self, _width: usize, columns: &[Box<dyn crate::progress_columns::ProgressColumn>]) -> String {
+    fn render_with_columns(
+        &self,
+        _width: usize,
+        columns: &[Box<dyn crate::progress_columns::ProgressColumn>],
+    ) -> String {
         let mut out = String::new();
         let now = std::time::Instant::now();
         for id in &self.task_order {
@@ -460,7 +483,9 @@ impl Progress {
                 let elapsed = now.duration_since(task.start_time);
                 let mut line = String::new();
                 for (i, col) in columns.iter().enumerate() {
-                    if i > 0 { line.push(' '); }
+                    if i > 0 {
+                        line.push(' ');
+                    }
                     line.push_str(&col.render(task, 20, elapsed));
                 }
                 out.push_str(&line);
@@ -504,7 +529,8 @@ impl Progress {
         let pct = task.progress();
         let filled = (w as f64 * pct) as usize;
         let empty = w - filled;
-        format!("[{}░{}]",
+        format!(
+            "[{}░{}]",
             "█".repeat(filled),
             " ".repeat(empty.saturating_sub(1))
         )
@@ -609,7 +635,11 @@ impl Default for Progress {
 ///     // process item
 /// }
 /// ```
-pub fn track<T: IntoIterator>(sequence: T, _description: &str, total: Option<f64>) -> TrackIterator<T::IntoIter> {
+pub fn track<T: IntoIterator>(
+    sequence: T,
+    _description: &str,
+    total: Option<f64>,
+) -> TrackIterator<T::IntoIter> {
     let iter = sequence.into_iter();
     let (lower, upper) = iter.size_hint();
     let total_val = total.unwrap_or(upper.unwrap_or(lower) as f64);
@@ -664,10 +694,14 @@ impl<I: Iterator> Iterator for TrackIterator<I> {
 
 impl<I: Iterator> TrackIterator<I> {
     /// Get the current count.
-    pub fn count(&self) -> usize { self.count }
+    pub fn count(&self) -> usize {
+        self.count
+    }
 
     /// Get the total.
-    pub fn total(&self) -> f64 { self.total }
+    pub fn total(&self) -> f64 {
+        self.total
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -686,17 +720,28 @@ pub struct ProgressFile {
 impl ProgressFile {
     /// Create a new ProgressFile.
     pub fn new(file: std::fs::File, task_id: usize, total: u64) -> Self {
-        Self { inner: file, task_id, total, bytes_read: 0 }
+        Self {
+            inner: file,
+            task_id,
+            total,
+            bytes_read: 0,
+        }
     }
 
     /// Get the number of bytes read so far.
-    pub fn bytes_read(&self) -> u64 { self.bytes_read }
+    pub fn bytes_read(&self) -> u64 {
+        self.bytes_read
+    }
 
     /// Get the total file size.
-    pub fn total(&self) -> u64 { self.total }
+    pub fn total(&self) -> u64 {
+        self.total
+    }
 
     /// Get the task ID this ProgressFile is associated with.
-    pub fn task_id(&self) -> usize { self.task_id }
+    pub fn task_id(&self) -> usize {
+        self.task_id
+    }
 
     /// Sync the current read progress to a Progress instance.
     pub fn sync(&self, progress: &mut Progress) {
@@ -706,13 +751,19 @@ impl ProgressFile {
     }
 
     /// Get a reference to the inner file.
-    pub fn inner(&self) -> &std::fs::File { &self.inner }
+    pub fn inner(&self) -> &std::fs::File {
+        &self.inner
+    }
 
     /// Get a mutable reference to the inner file.
-    pub fn inner_mut(&mut self) -> &mut std::fs::File { &mut self.inner }
+    pub fn inner_mut(&mut self) -> &mut std::fs::File {
+        &mut self.inner
+    }
 
     /// Consume this ProgressFile and return the inner file.
-    pub fn into_inner(self) -> std::fs::File { self.inner }
+    pub fn into_inner(self) -> std::fs::File {
+        self.inner
+    }
 }
 
 impl std::io::Read for ProgressFile {
@@ -905,9 +956,7 @@ mod tests {
 
     #[test]
     fn test_renderable_column() {
-        let col = RenderableColumn::new(|task: &Task| {
-            DynRenderable::new(task.description.clone())
-        });
+        let col = RenderableColumn::new(|task: &Task| DynRenderable::new(task.description.clone()));
         let task = Task::new(1, "hello", Some(100.0));
         let result = col.render(&task, 20, Duration::from_secs(0));
         assert!(result.contains("hello"));

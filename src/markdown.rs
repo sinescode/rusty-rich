@@ -5,11 +5,11 @@
 
 use pulldown_cmark::{Alignment, CodeBlockKind, Event, HeadingLevel, Options, Parser, Tag, TagEnd};
 
+use crate::align::AlignMethod;
 use crate::console::{ConsoleOptions, RenderResult, Renderable};
 use crate::rule::Rule;
 use crate::segment::Segment;
 use crate::style::Style;
-use crate::align::AlignMethod;
 use crate::table::{Cell, Column, Table};
 
 /// Render markdown text.
@@ -33,7 +33,10 @@ pub struct MarkdownRender {
 
 impl MarkdownRender {
     /// Set a fixed rendering width (defaults to the console width).
-    pub fn width(mut self, w: usize) -> Self { self.width = Some(w); self }
+    pub fn width(mut self, w: usize) -> Self {
+        self.width = Some(w);
+        self
+    }
 
     /// Set the code syntax-highlighting theme (default: `"default"`).
     pub fn code_theme(mut self, theme: impl Into<String>) -> Self {
@@ -94,10 +97,7 @@ impl Renderable for MarkdownRender {
                         _ => Style::new().bold(true),
                     };
                     let prefix = "#".repeat(level as usize);
-                    current_line.push(Segment::styled(
-                        format!("{prefix} "),
-                        style.clone(),
-                    ));
+                    current_line.push(Segment::styled(format!("{prefix} "), style.clone()));
                 }
                 Event::End(TagEnd::Heading(_)) => {
                     lines.push(current_line.clone());
@@ -123,7 +123,11 @@ impl Renderable for MarkdownRender {
                     in_code_block = true;
                     let lang = match kind {
                         CodeBlockKind::Fenced(lang) => {
-                            if lang.is_empty() { String::new() } else { lang.to_string() }
+                            if lang.is_empty() {
+                                String::new()
+                            } else {
+                                lang.to_string()
+                            }
                         }
                         CodeBlockKind::Indented => String::new(),
                     };
@@ -134,10 +138,7 @@ impl Renderable for MarkdownRender {
                     };
                     // Code block opening
                     let code_style = self.code_style();
-                    current_line.push(Segment::styled(
-                        format!("┌─ {title} "),
-                        code_style.clone(),
-                    ));
+                    current_line.push(Segment::styled(format!("┌─ {title} "), code_style.clone()));
                     current_line.push(Segment::line());
                     lines.push(current_line.clone());
                     current_line.clear();
@@ -149,10 +150,13 @@ impl Renderable for MarkdownRender {
                         current_line.clear();
                     }
                     let code_style = self.code_style();
-                    lines.push(vec![Segment::styled(
-                        format!("└{}", "─".repeat(width.saturating_sub(2))),
-                        code_style,
-                    ), Segment::line()]);
+                    lines.push(vec![
+                        Segment::styled(
+                            format!("└{}", "─".repeat(width.saturating_sub(2))),
+                            code_style,
+                        ),
+                        Segment::line(),
+                    ]);
                 }
                 Event::Start(Tag::List(_)) => {
                     list_depth += 1;
@@ -298,7 +302,9 @@ impl Renderable for MarkdownRender {
                     table_rows.push(current_row.clone());
                     current_row.clear();
                 }
-                Event::Start(Tag::Image { dest_url, title, .. }) => {
+                Event::Start(Tag::Image {
+                    dest_url, title, ..
+                }) => {
                     // Render image as a styled placeholder with alt text and URL
                     let image_style = Self::get_style("markdown.image");
                     let title_str = if title.is_empty() {
@@ -332,7 +338,10 @@ impl Renderable for MarkdownRender {
             lines.push(current_line);
         }
 
-        RenderResult { lines, items: Vec::new() }
+        RenderResult {
+            lines,
+            items: Vec::new(),
+        }
     }
 }
 

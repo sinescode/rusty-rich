@@ -309,119 +309,119 @@
 
 // -- Core modules -----------------------------------------------------------
 
+/// Horizontal and vertical alignment wrappers for renderables.
+pub mod align;
+/// 17 box/border drawing styles from ASCII to heavy Unicode double-lines.
+pub mod box_drawing;
 /// Unicode cell width utilities for CJK and emoji text measurement.
 pub mod cells;
 /// 256 named ANSI colors, TrueColor/8-bit/Standard, RGB↔ANSI conversion, blending.
 pub mod color;
-/// 13 text attributes (bold, italic, underline, …), links, style combination.
-pub mod style;
+/// Central rendering engine — Console, Renderable trait, capture, export.
+pub mod console;
+/// Regex-based and repr-style text highlighters (requires `syntax-highlighting` feature).
+#[cfg(feature = "syntax-highlighting")]
+pub mod highlighter;
+/// BBCode-like markup parser: `[bold red]text[/bold red]`.
+pub mod markup;
+/// Width measurement protocol for layout negotiation between renderables.
+pub mod measure;
+/// Proportional space distribution algorithms with minimums and maximums.
+pub mod ratio;
 /// Styled text unit with control codes — the smallest rendering primitive.
 pub mod segment;
+/// 13 text attributes (bold, italic, underline, …), links, style combination.
+pub mod style;
 /// Styled text with `Span`-based markup and text manipulation utilities.
 pub mod text;
 /// Named style maps (170+ defaults) with stack-based inheritance.
 pub mod theme;
-/// Width measurement protocol for layout negotiation between renderables.
-pub mod measure;
-/// Horizontal and vertical alignment wrappers for renderables.
-pub mod align;
-/// BBCode-like markup parser: `[bold red]text[/bold red]`.
-pub mod markup;
-/// Proportional space distribution algorithms with minimums and maximums.
-pub mod ratio;
-/// Regex-based and repr-style text highlighters (requires `syntax-highlighting` feature).
-#[cfg(feature = "syntax-highlighting")]
-pub mod highlighter;
-/// Central rendering engine — Console, Renderable trait, capture, export.
-pub mod console;
-/// 17 box/border drawing styles from ASCII to heavy Unicode double-lines.
-pub mod box_drawing;
 
 // -- Renderable components --------------------------------------------------
 
-/// Bordered container with optional title, subtitle, and padding.
-pub mod panel;
-/// Tabular data with column definitions, colspan/rowspan, sections, and 17 border styles.
-pub mod table;
-/// Hierarchical tree with Unicode or ASCII branch guides.
-pub mod tree;
-/// Horizontal divider line with optional centered, left-, or right-aligned title.
-pub mod rule;
-/// CSS-style padding (1–4 side values) around any renderable.
-pub mod padding;
 /// Side-by-side column layout with equal-width and expand options.
 pub mod columns;
 /// Recursive split-pane layout engine with ratio sizing and named regions.
 pub mod layout;
+/// CSS-style padding (1–4 side values) around any renderable.
+pub mod padding;
+/// Bordered container with optional title, subtitle, and padding.
+pub mod panel;
+/// Horizontal divider line with optional centered, left-, or right-aligned title.
+pub mod rule;
+/// Tabular data with column definitions, colspan/rowspan, sections, and 17 border styles.
+pub mod table;
+/// Hierarchical tree with Unicode or ASCII branch guides.
+pub mod tree;
 
 // -- Dynamic / animated components ------------------------------------------
 
-/// Interactive prompts: string, int, float, confirm, select with password mode.
-pub mod prompt;
+/// Auto-updating display region with stdout/stderr capture via `LiveWriter`.
+pub mod live;
 /// Multi-task progress bars with configurable column layouts and iterable tracking.
 pub mod progress;
 /// 11 progress column types: bar, text, spinner, time, file size, transfer speed.
 pub mod progress_columns;
+/// Interactive prompts: string, int, float, confirm, select with password mode.
+pub mod prompt;
+/// Full-screen rendering, alternate screen buffer, and screen update helpers.
+pub mod screen;
 /// 55 animated spinners with case-insensitive name-based lookup.
 pub mod spinner;
 /// Animated spinner with status message, in-place refresh via carriage return.
 pub mod status;
-/// Auto-updating display region with stdout/stderr capture via `LiveWriter`.
-pub mod live;
-/// Full-screen rendering, alternate screen buffer, and screen update helpers.
-pub mod screen;
 
 // -- Content rendering ------------------------------------------------------
 
-/// Syntax highlighting via syntect (100+ languages, Sublime Text theme support).
-#[cfg(feature = "syntax-highlighting")]
-pub mod syntax;
-/// Markdown rendering via pulldown-cmark: headings, code, lists, blockquotes, tables.
-#[cfg(feature = "markdown")]
-pub mod markdown;
 /// Pretty-printed JSON with syntax-highlighted keys, strings, numbers, booleans.
 pub mod json;
 /// `RichHandler` for the `log` crate — colored log levels with file/line info.
 pub mod logging;
+/// Markdown rendering via pulldown-cmark: headings, code, lists, blockquotes, tables.
+#[cfg(feature = "markdown")]
+pub mod markdown;
+/// Syntax highlighting via syntect (100+ languages, Sublime Text theme support).
+#[cfg(feature = "syntax-highlighting")]
+pub mod syntax;
 /// Rich exception tracebacks with source code, locals, frame suppression, panic hook.
 pub mod traceback;
 
 // -- Additional renderables --------------------------------------------------
 
-/// Pretty-printing for Rust data structures with tree traversal and syntax highlighting.
-pub mod pretty;
-/// Emoji shortcode replacement — `:smile:` → 😊.
-pub mod emoji;
-/// System pager integration — pipes output to `less` or `$PAGER`.
-pub mod pager;
-/// Constrain the maximum width of any renderable.
-pub mod constrain;
-/// Pre-styled renderable wrapper — applies a style to all output of a renderable.
-pub mod styled;
-/// Horizontal bar chart with labels, colors, and auto-scaling.
-pub mod bar;
-/// Human-readable file size and transfer speed formatting.
-pub mod filesize;
-/// Container renderables — `Lines` and `Renderables` for grouping output.
-pub mod containers;
-/// Color palette generation — gradients, rainbows, monochrome ramps.
-pub mod palette;
-/// Error diagnostics — rich-formatted error reporting.
-pub mod diagnose;
 /// ANSI escape sequence decoder — parse ANSI text into styled `Text`.
 pub mod ansi;
-/// Variable scope inspection — render name→value mappings as tables.
-pub mod scope;
-/// Auto-refreshing file content display — watches file for changes.
-pub mod file_proxy;
-/// Rich representation protocol — customizable pretty-printing for Rust types.
-pub mod repr;
+/// Horizontal bar chart with labels, colors, and auto-scaling.
+pub mod bar;
+/// Constrain the maximum width of any renderable.
+pub mod constrain;
+/// Container renderables — `Lines` and `Renderables` for grouping output.
+pub mod containers;
 /// Terminal control sequence generation — cursor movement, screen, titles, bells.
 pub mod control;
+/// Error diagnostics — rich-formatted error reporting.
+pub mod diagnose;
+/// Emoji shortcode replacement — `:smile:` → 😊.
+pub mod emoji;
+/// Auto-refreshing file content display — watches file for changes.
+pub mod file_proxy;
+/// Human-readable file size and transfer speed formatting.
+pub mod filesize;
 /// Object introspection — structured display of type info, attributes, and methods.
 pub mod inspect;
 /// Standalone log record formatter — renders log records as Rich tables.
 pub mod log_render;
+/// System pager integration — pipes output to `less` or `$PAGER`.
+pub mod pager;
+/// Color palette generation — gradients, rainbows, monochrome ramps.
+pub mod palette;
+/// Pretty-printing for Rust data structures with tree traversal and syntax highlighting.
+pub mod pretty;
+/// Rich representation protocol — customizable pretty-printing for Rust types.
+pub mod repr;
+/// Variable scope inspection — render name→value mappings as tables.
+pub mod scope;
+/// Pre-styled renderable wrapper — applies a style to all output of a renderable.
+pub mod styled;
 
 // -- Export -----------------------------------------------------------------
 
@@ -451,52 +451,52 @@ pub use segment::Segment;
 /// A collection of [`Segment`]s with convenience methods.
 pub use segment::Segments;
 
-/// Styled text with `Span` regions, markup support, and text manipulation methods.
-pub use text::Text;
 /// A styled region within a [`Text`] — defined by start/end offsets and a [`Style`].
 pub use text::Span;
+/// Styled text with `Span` regions, markup support, and text manipulation methods.
+pub use text::Text;
 
 /// A named style map — look up styles by key (e.g. `"repr.number"`, `"markdown.h1"`).
 pub use theme::Theme;
 
+/// Wraps a renderable with horizontal and vertical alignment.
+pub use align::Align;
 /// Horizontal alignment: `Left`, `Center`, `Right`, or `Full` (justified).
 pub use align::AlignMethod;
 /// Vertical alignment: `Top`, `Middle`, or `Bottom`.
 pub use align::VerticalAlignMethod;
-/// Wraps a renderable with horizontal and vertical alignment.
-pub use align::Align;
 
 /// Width measurement (minimum, maximum) returned by the layout protocol.
 pub use measure::Measurement;
 
 // -- Console -----------------------------------------------------------------
 
-/// The central rendering engine — prints renderables, manages terminal state.
-pub use console::Console;
-/// Options passed to renderables during the rendering pass (width, height, overflow, etc.).
-pub use console::ConsoleOptions;
-/// Terminal size in character cells (width × height).
-pub use console::ConsoleDimensions;
-/// How text overflow is handled: `Fold`, `Crop`, `Ellipsis`, or `Ignore`.
-pub use console::OverflowMethod;
-/// Trait for types that can be rendered to terminal output.
-pub use console::Renderable;
-/// The result of rendering: lines of segments plus nested renderable items.
-pub use console::RenderResult;
-/// Either a [`Segment`] or a nested renderable — produced during rendering.
-pub use console::RenderItem;
-/// A type-erased, cloneable wrapper around any [`Renderable`].
-pub use console::DynRenderable;
-/// Renders multiple renderables sequentially as one unit.
-pub use console::Group;
 /// Returns a mutex-guarded reference to the global (singleton) [`Console`].
 pub use console::get_console;
+/// Pretty-print a `serde_json::Value` via the global console.
+pub use console::print_json_val as print_json;
 /// Drop-in replacement for `println!` that uses the global console.
 pub use console::print_objects as print;
 /// Print a markup string (e.g. `"[bold red]text[/bold red]"`) via the global console.
 pub use console::print_str;
-/// Pretty-print a `serde_json::Value` via the global console.
-pub use console::print_json_val as print_json;
+/// The central rendering engine — prints renderables, manages terminal state.
+pub use console::Console;
+/// Terminal size in character cells (width × height).
+pub use console::ConsoleDimensions;
+/// Options passed to renderables during the rendering pass (width, height, overflow, etc.).
+pub use console::ConsoleOptions;
+/// A type-erased, cloneable wrapper around any [`Renderable`].
+pub use console::DynRenderable;
+/// Renders multiple renderables sequentially as one unit.
+pub use console::Group;
+/// How text overflow is handled: `Fold`, `Crop`, `Ellipsis`, or `Ignore`.
+pub use console::OverflowMethod;
+/// Either a [`Segment`] or a nested renderable — produced during rendering.
+pub use console::RenderItem;
+/// The result of rendering: lines of segments plus nested renderable items.
+pub use console::RenderResult;
+/// Trait for types that can be rendered to terminal output.
+pub use console::Renderable;
 
 // -- Box drawing -------------------------------------------------------------
 
@@ -504,42 +504,40 @@ pub use console::print_json_val as print_json;
 pub use box_drawing::BoxStyle;
 #[doc(no_inline)]
 pub use box_drawing::{
-    BOX_ROUNDED, BOX_SQUARE, BOX_HEAVY, BOX_HEAVY_EDGE, BOX_HEAVY_HEAD,
-    BOX_DOUBLE, BOX_DOUBLE_EDGE, BOX_SIMPLE, BOX_SIMPLE_HEAVY,
-    BOX_MINIMAL, BOX_MINIMAL_HEAVY, BOX_ASCII, BOX_ASCII2,
-    BOX_SQUARE_DOUBLE_HEAD, BOX_MINIMAL_DOUBLE_HEAD, BOX_SIMPLE_HEAD,
-    BOX_ASCII_DOUBLE_HEAD,
+    BOX_ASCII, BOX_ASCII2, BOX_ASCII_DOUBLE_HEAD, BOX_DOUBLE, BOX_DOUBLE_EDGE, BOX_HEAVY,
+    BOX_HEAVY_EDGE, BOX_HEAVY_HEAD, BOX_MINIMAL, BOX_MINIMAL_DOUBLE_HEAD, BOX_MINIMAL_HEAVY,
+    BOX_ROUNDED, BOX_SIMPLE, BOX_SIMPLE_HEAD, BOX_SIMPLE_HEAVY, BOX_SQUARE, BOX_SQUARE_DOUBLE_HEAD,
 };
 
 // -- Renderables -------------------------------------------------------------
 
 /// A bordered container with optional title, subtitle, border style, and padding.
 pub use panel::Panel;
-/// Tabular data widget with headers, footers, colspan/rowspan, and 17 box styles.
-pub use table::Table;
-/// A column definition for a [`Table`] — header, footer, width, alignment, ratio.
-pub use table::Column;
 /// A table cell with optional style, colspan, and rowspan.
 pub use table::Cell;
+/// A column definition for a [`Table`] — header, footer, width, alignment, ratio.
+pub use table::Column;
+/// Tabular data widget with headers, footers, colspan/rowspan, and 17 box styles.
+pub use table::Table;
 
-/// A hierarchical tree with Unicode or ASCII branch guides.
-pub use tree::Tree;
-/// A horizontal divider line with optional centered, left-, or right-aligned title.
-pub use rule::Rule;
-/// CSS-style padding (1–4 side values) around any renderable.
-pub use padding::Padding;
-/// Padding dimension specification: 1, 2, or 4 values (like CSS).
-pub use padding::PaddingDimensions;
 /// Side-by-side column layout with equal-width and expand options.
 pub use columns::Columns;
+/// Layout split direction: `Horizontal` (columns) or `Vertical` (rows).
+pub use layout::Direction;
 /// Recursive split-pane layout engine with ratio sizing.
 pub use layout::Layout;
 /// A node in the layout tree — either a `Split` or a `Leaf`.
 pub use layout::LayoutNode;
-/// Layout split direction: `Horizontal` (columns) or `Vertical` (rows).
-pub use layout::Direction;
 /// A screen region defined by x, y, width, and height.
 pub use layout::Region;
+/// CSS-style padding (1–4 side values) around any renderable.
+pub use padding::Padding;
+/// Padding dimension specification: 1, 2, or 4 values (like CSS).
+pub use padding::PaddingDimensions;
+/// A horizontal divider line with optional centered, left-, or right-aligned title.
+pub use rule::Rule;
+/// A hierarchical tree with Unicode or ASCII branch guides.
+pub use tree::Tree;
 
 // -- Progress ----------------------------------------------------------------
 
@@ -554,8 +552,10 @@ pub use progress::Task;
 /// An iterator wrapper that automatically advances a progress task on each iteration.
 pub use progress::TrackIterator;
 
-/// Trait for progress column types — renders one cell per task.
-pub use progress_columns::ProgressColumn;
+/// Format a byte count as a human-readable size string.
+pub use progress_columns::format_size;
+/// Format a bytes-per-second rate as a human-readable speed string.
+pub use progress_columns::format_speed;
 /// Shows a progress bar for each task.
 pub use progress_columns::BarColumn;
 /// Shows "completed/total" as file sizes with a separator.
@@ -564,6 +564,8 @@ pub use progress_columns::DownloadColumn;
 pub use progress_columns::FileSizeColumn;
 /// Shows "completed/total" with raw numbers.
 pub use progress_columns::MofNCompleteColumn;
+/// Trait for progress column types — renders one cell per task.
+pub use progress_columns::ProgressColumn;
 /// Shows a spinner (animated during active, checkmark when finished).
 pub use progress_columns::SpinnerColumn;
 /// Shows the completion percentage for each task.
@@ -578,49 +580,42 @@ pub use progress_columns::TimeRemainingColumn;
 pub use progress_columns::TotalFileSizeColumn;
 /// Shows the transfer speed for each task.
 pub use progress_columns::TransferSpeedColumn;
-/// Format a byte count as a human-readable size string.
-pub use progress_columns::format_size;
-/// Format a bytes-per-second rate as a human-readable speed string.
-pub use progress_columns::format_speed;
 
 // -- Spinners ----------------------------------------------------------------
 
+/// Look up a spinner by name (case-insensitive).
+pub use spinner::get_spinner;
 /// An animated spinner — frames, interval, text, and style.
 pub use spinner::Spinner;
 /// A predefined spinner animation: slice of frame strings + frame interval.
 pub use spinner::SpinnerFrames;
 /// The default spinner (dots).
 pub use spinner::DEFAULT_SPINNER;
-/// Look up a spinner by name (case-insensitive).
-pub use spinner::get_spinner;
 /// All registered spinners as a slice of (name, spinner) pairs.
 pub use spinner::SPINNERS;
 #[doc(no_inline)]
 pub use spinner::{
-    SPINNER_ARC, SPINNER_ARROW, SPINNER_ARROW2, SPINNER_ARROW3,
-    SPINNER_BOUNCING_BAR, SPINNER_BOUNCING_BALL,
-    SPINNER_CHRISTMAS, SPINNER_CIRCLE, SPINNER_CLOCK,
-    SPINNER_EARTH, SPINNER_GRENADE,
-    SPINNER_GROW_HORIZONTAL, SPINNER_GROW_VERTICAL,
-    SPINNER_HAMBURGER, SPINNER_HEARTS, SPINNER_MONKEY,
-    SPINNER_NOISE, SPINNER_PONG, SPINNER_RUNNER, SPINNER_SHARK,
+    SPINNER_ARC, SPINNER_ARROW, SPINNER_ARROW2, SPINNER_ARROW3, SPINNER_BOUNCING_BALL,
+    SPINNER_BOUNCING_BAR, SPINNER_CHRISTMAS, SPINNER_CIRCLE, SPINNER_CLOCK, SPINNER_EARTH,
+    SPINNER_GRENADE, SPINNER_GROW_HORIZONTAL, SPINNER_GROW_VERTICAL, SPINNER_HAMBURGER,
+    SPINNER_HEARTS, SPINNER_MONKEY, SPINNER_NOISE, SPINNER_PONG, SPINNER_RUNNER, SPINNER_SHARK,
     SPINNER_TOGGLE, SPINNER_TRIANGLE, SPINNER_VERTICAL_BARS,
 };
 
 // -- Prompts -----------------------------------------------------------------
 
+/// Yes/no confirmation prompt with configurable default answer.
+pub use prompt::Confirm;
+/// Floating-point input prompt — loops until a valid f64 is entered.
+pub use prompt::FloatPrompt;
+/// Integer input prompt — loops until a valid i64 is entered.
+pub use prompt::IntPrompt;
 /// String input prompt with optional password mode and choice validation.
 pub use prompt::Prompt;
 /// Base configuration shared by all prompt types.
 pub use prompt::PromptBase;
 /// Error type for prompt operations: invalid response, I/O error, or cancellation.
 pub use prompt::PromptError;
-/// Integer input prompt — loops until a valid i64 is entered.
-pub use prompt::IntPrompt;
-/// Floating-point input prompt — loops until a valid f64 is entered.
-pub use prompt::FloatPrompt;
-/// Yes/no confirmation prompt with configurable default answer.
-pub use prompt::Confirm;
 /// Numbered-choice selection prompt — user picks from a list by number.
 pub use prompt::Select;
 
@@ -641,104 +636,104 @@ pub use screen::ScreenUpdate;
 
 // -- Content rendering -------------------------------------------------------
 
-/// Syntax-highlighted code block — language, theme, line numbers, word wrap.
-#[cfg(feature = "syntax-highlighting")]
-pub use syntax::Syntax;
+/// Render a `serde_json::Value` into a [`JsonRender`].
+pub use json::render_json;
+/// Pretty-printed, syntax-highlighted JSON renderable.
+pub use json::JsonRender;
 /// Render a markdown string into a [`MarkdownRender`].
 #[cfg(feature = "markdown")]
 pub use markdown::render_markdown;
 /// A markdown document renderable — headings, code, lists, blockquotes, tables.
 #[cfg(feature = "markdown")]
 pub use markdown::MarkdownRender;
-/// Render a `serde_json::Value` into a [`JsonRender`].
-pub use json::render_json;
-/// Pretty-printed, syntax-highlighted JSON renderable.
-pub use json::JsonRender;
+/// Syntax-highlighted code block — language, theme, line numbers, word wrap.
+#[cfg(feature = "syntax-highlighting")]
+pub use syntax::Syntax;
 
 /// A logging handler for the `log` crate — renders records with Rich styling.
 pub use logging::RichHandler;
 
-/// Rich exception traceback — box-drawn, with source code context and locals.
-pub use traceback::Traceback;
-/// A chain of exceptions — one or more [`Stack`]s of [`Frame`]s.
-pub use traceback::Trace;
-/// One exception level in a traceback — type, value, frames, notes.
-pub use traceback::Stack;
-/// A single stack frame — file, line number, function name, source line, locals.
-pub use traceback::Frame;
 /// Install a global panic hook that renders Rich-formatted tracebacks to stderr.
 pub use traceback::install;
+/// A single stack frame — file, line number, function name, source line, locals.
+pub use traceback::Frame;
+/// One exception level in a traceback — type, value, frames, notes.
+pub use traceback::Stack;
+/// A chain of exceptions — one or more [`Stack`]s of [`Frame`]s.
+pub use traceback::Trace;
+/// Rich exception traceback — box-drawn, with source code context and locals.
+pub use traceback::Traceback;
 
 /// Trait for text highlighters — takes a [`Text`] and returns a styled [`Text`].
 #[cfg(feature = "syntax-highlighting")]
 pub use highlighter::Highlighter;
-/// Highlights Python-repr-like output: URLs, numbers, paths, quoted strings.
-#[cfg(feature = "syntax-highlighting")]
-pub use highlighter::ReprHighlighter;
 /// A no-op highlighter that returns text unchanged.
 #[cfg(feature = "syntax-highlighting")]
 pub use highlighter::NullHighlighter;
 /// Highlights text using regex patterns mapped to styles.
 #[cfg(feature = "syntax-highlighting")]
 pub use highlighter::RegexHighlighter;
+/// Highlights Python-repr-like output: URLs, numbers, paths, quoted strings.
+#[cfg(feature = "syntax-highlighting")]
+pub use highlighter::ReprHighlighter;
 
 // -- Export ------------------------------------------------------------------
 
+/// Escape text for safe HTML embedding.
+pub use export::escape_html;
 /// Export rendered output as a full HTML document.
 pub use export::export_html;
-/// Export rendered output as HTML and save to a file.
-pub use export::save_html;
-/// Options for HTML export: font, font size, line height, theme, code styling.
-pub use export::ExportHtmlOptions;
 /// Export rendered output as an SVG document with terminal chrome.
 pub use export::export_svg;
-/// Export rendered output as SVG and save to a file.
-pub use export::save_svg;
-/// Options for SVG export: font, font size, theme, dimensions, code styling.
-pub use export::ExportSvgOptions;
 /// Export rendered output as plain text (optionally strip ANSI escapes).
 pub use export::export_text;
+/// Export rendered output as HTML and save to a file.
+pub use export::save_html;
+/// Export rendered output as SVG and save to a file.
+pub use export::save_svg;
 /// Export rendered output as plain text and save to a file.
 pub use export::save_text;
-/// Options for text export: text content and ANSI strip flag.
-pub use export::ExportTextOptions;
-/// A terminal color theme for HTML/SVG export (background, foreground, ANSI palette).
-pub use export::ExportTheme;
-/// Monokai export theme.
-pub use export::EXPORT_THEME_MONOKAI;
-/// Dimmed Monokai export theme.
-pub use export::EXPORT_THEME_DIMMED_MONOKAI;
-/// Night Owlish export theme.
-pub use export::EXPORT_THEME_NIGHT_OWLISH;
-/// SVG-optimized export theme.
-pub use export::EXPORT_THEME_SVG;
 /// Convert segments to HTML spans with inline CSS.
 pub use export::segments_to_html;
 /// Convert segments to SVG `<tspan>` elements with inline fill.
 pub use export::segments_to_svg;
-/// Escape text for safe HTML embedding.
-pub use export::escape_html;
 /// Strip ANSI escape sequences from a string.
 pub use export::strip_ansi_escapes;
+/// Options for HTML export: font, font size, line height, theme, code styling.
+pub use export::ExportHtmlOptions;
+/// Options for SVG export: font, font size, theme, dimensions, code styling.
+pub use export::ExportSvgOptions;
+/// Options for text export: text content and ANSI strip flag.
+pub use export::ExportTextOptions;
+/// A terminal color theme for HTML/SVG export (background, foreground, ANSI palette).
+pub use export::ExportTheme;
 /// HTML document template string.
 pub use export::CONSOLE_HTML_FORMAT;
 /// SVG document template string.
 pub use export::CONSOLE_SVG_FORMAT;
+/// Dimmed Monokai export theme.
+pub use export::EXPORT_THEME_DIMMED_MONOKAI;
+/// Monokai export theme.
+pub use export::EXPORT_THEME_MONOKAI;
+/// Night Owlish export theme.
+pub use export::EXPORT_THEME_NIGHT_OWLISH;
+/// SVG-optimized export theme.
+pub use export::EXPORT_THEME_SVG;
 
-/// Parse a BBCode-like markup string and return a styled [`Text`].
-pub use markup::render as render_markup;
 /// Escape square brackets in a string so they are not interpreted as markup tags.
 pub use markup::escape as escape_markup;
+/// Parse a BBCode-like markup string and return a styled [`Text`].
+pub use markup::render as render_markup;
 
 // -- New modules (Phase 2 additions) ------------------------------------------
 
 // Pretty printing
-pub use pretty::Pretty;
-pub use pretty::Node as PrettyNode;
+pub use pretty::install as pretty_install;
 pub use pretty::pprint;
 pub use pretty::pretty_repr;
 pub use pretty::traverse;
-pub use pretty::install as pretty_install;
+pub use pretty::Node as PrettyNode;
+pub use pretty::Pretty;
 
 // Emoji
 pub use emoji::Emoji;
@@ -772,8 +767,8 @@ pub use containers::Renderables;
 pub use palette::Palette;
 
 // Diagnose
-pub use diagnose::report;
 pub use diagnose::diagnose;
+pub use diagnose::report;
 
 // ANSI decoder
 pub use ansi::AnsiDecoder;
@@ -786,45 +781,45 @@ pub use scope::scope_summary;
 pub use file_proxy::FileProxy;
 
 // Repr protocol
-pub use repr::RichRepr;
 pub use repr::auto as repr_auto;
 pub use repr::rich_repr;
-pub use repr::ReprOptions;
 pub use repr::ReprError;
+pub use repr::ReprOptions;
+pub use repr::RichRepr;
 
 // Syntax additional exports
-#[cfg(feature = "syntax-highlighting")]
-pub use syntax::SyntaxTheme;
-#[cfg(feature = "syntax-highlighting")]
-pub use syntax::ANSISyntaxTheme;
 #[cfg(feature = "syntax-highlighting")]
 pub use syntax::get_lexer_by_name;
 #[cfg(feature = "syntax-highlighting")]
 pub use syntax::get_style_by_name;
 #[cfg(feature = "syntax-highlighting")]
 pub use syntax::guess_lexer_for_filename;
+#[cfg(feature = "syntax-highlighting")]
+pub use syntax::ANSISyntaxTheme;
+#[cfg(feature = "syntax-highlighting")]
+pub use syntax::SyntaxTheme;
 
 // Console additional exports
+pub use console::reconfigure;
 pub use console::Capture;
 pub use console::NewLine;
 pub use console::NoChange;
 pub use console::RenderHook;
 pub use console::ThemeContext;
-pub use console::reconfigure;
 
 // Layout additional exports
-pub use layout::Splitter;
 pub use layout::ColumnSplitter;
-pub use layout::RowSplitter;
 pub use layout::NoSplitter;
+pub use layout::RowSplitter;
+pub use layout::Splitter;
 
 // Table additional exports
 pub use table::Row;
 
 // Progress additional exports
-pub use progress::RenderableColumn;
 pub use progress::track;
 pub use progress::wrap_file;
+pub use progress::RenderableColumn;
 
 // Highlighter additional exports
 #[cfg(feature = "syntax-highlighting")]
@@ -838,20 +833,20 @@ pub use highlighter::PathHighlighter;
 pub use filesize::decimal as format_size_decimal;
 
 // Control exports
-pub use control::Control;
 pub use control::control_bell;
-pub use control::control_home;
 pub use control::control_clear;
+pub use control::control_home;
 pub use control::control_move_to;
-pub use control::strip_control_codes;
 pub use control::escape_control_codes;
+pub use control::strip_control_codes;
+pub use control::Control;
 
 // Inspect exports
-pub use inspect::Inspect;
 pub use inspect::inspect;
 pub use inspect::inspect_str;
+pub use inspect::Inspect;
 
 // LogRender exports
-pub use log_render::LogRender;
 pub use log_render::LogRecord;
+pub use log_render::LogRender;
 pub use log_render::LogTable;

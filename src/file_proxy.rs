@@ -1,6 +1,6 @@
 //! File proxy — auto-refreshing display of file content.
 
-use crate::console::{ConsoleOptions, Renderable, RenderResult};
+use crate::console::{ConsoleOptions, RenderResult, Renderable};
 use crate::segment::Segment;
 use crate::style::Style;
 use std::fs;

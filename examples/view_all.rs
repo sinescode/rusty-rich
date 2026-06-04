@@ -52,9 +52,11 @@ fn main() {
     // =========================================================================
     // EDGED BOX STYLES — PANELS (only styles with visible borders)
     // =========================================================================
-    let rule = Rule::new()
-        .title(" PANEL — Edged Box Styles ")
-        .style(Style::new().bold(true).color(Color::parse("green").unwrap()));
+    let rule = Rule::new().title(" PANEL — Edged Box Styles ").style(
+        Style::new()
+            .bold(true)
+            .color(Color::parse("green").unwrap()),
+    );
     console.println(&rule);
 
     let edged_styles: Vec<(&str, &box_drawing::BoxStyle)> = vec![
@@ -87,9 +89,11 @@ fn main() {
     // =========================================================================
     // PANEL FEATURES — Title & Subtitle Alignments
     // =========================================================================
-    let rule = Rule::new()
-        .title(" PANEL — Title Alignments ")
-        .style(Style::new().bold(true).color(Color::parse("green").unwrap()));
+    let rule = Rule::new().title(" PANEL — Title Alignments ").style(
+        Style::new()
+            .bold(true)
+            .color(Color::parse("green").unwrap()),
+    );
     console.println(&rule);
 
     for align in &[AlignMethod::Left, AlignMethod::Center, AlignMethod::Right] {
@@ -104,9 +108,11 @@ fn main() {
     }
 
     // Subtitle alignments
-    let rule = Rule::new()
-        .title(" PANEL — Subtitle Alignments ")
-        .style(Style::new().bold(true).color(Color::parse("green").unwrap()));
+    let rule = Rule::new().title(" PANEL — Subtitle Alignments ").style(
+        Style::new()
+            .bold(true)
+            .color(Color::parse("green").unwrap()),
+    );
     console.println(&rule);
 
     for align in &[AlignMethod::Left, AlignMethod::Center, AlignMethod::Right] {
@@ -123,9 +129,11 @@ fn main() {
     // =========================================================================
     // PANEL — Colored Borders
     // =========================================================================
-    let rule = Rule::new()
-        .title(" PANEL — Colored Borders ")
-        .style(Style::new().bold(true).color(Color::parse("green").unwrap()));
+    let rule = Rule::new().title(" PANEL — Colored Borders ").style(
+        Style::new()
+            .bold(true)
+            .color(Color::parse("green").unwrap()),
+    );
     console.println(&rule);
 
     let colors = ["red", "green", "yellow", "blue", "magenta", "cyan"];
@@ -133,7 +141,11 @@ fn main() {
     for color_name in &colors {
         let panel = Panel::new(*color_name)
             .box_style(BoxStyle::clone(&box_drawing::BOX_ROUNDED))
-            .border_style(Style::new().bold(true).color(Color::parse(color_name).unwrap()))
+            .border_style(
+                Style::new()
+                    .bold(true)
+                    .color(Color::parse(color_name).unwrap()),
+            )
             .title(format!(" {color_name} "))
             .padding(1, 2, 1, 2);
         cols.add(panel);
@@ -144,9 +156,11 @@ fn main() {
     // =========================================================================
     // TABLE — Colspan & Rowspan
     // =========================================================================
-    let rule = Rule::new()
-        .title(" TABLE — Colspan & Rowspan ")
-        .style(Style::new().bold(true).color(Color::parse("yellow").unwrap()));
+    let rule = Rule::new().title(" TABLE — Colspan & Rowspan ").style(
+        Style::new()
+            .bold(true)
+            .color(Color::parse("yellow").unwrap()),
+    );
     console.println(&rule);
 
     // Colspan
@@ -211,9 +225,11 @@ fn main() {
     // =========================================================================
     // TABLE — Column Alignments
     // =========================================================================
-    let rule = Rule::new()
-        .title(" TABLE — Column Alignments ")
-        .style(Style::new().bold(true).color(Color::parse("yellow").unwrap()));
+    let rule = Rule::new().title(" TABLE — Column Alignments ").style(
+        Style::new()
+            .bold(true)
+            .color(Color::parse("yellow").unwrap()),
+    );
     console.println(&rule);
 
     let mut ta = Table::new();
@@ -221,8 +237,18 @@ fn main() {
     ta.add_column(Column::new("Center").justify(AlignMethod::Center));
     ta.add_column(Column::new("Right").justify(AlignMethod::Right));
     ta.add_column(Column::new("Justified").justify(AlignMethod::Full));
-    ta.add_row_str(vec!["short".into(), "mid".into(), "123".into(), "justified text goes here".into()]);
-    ta.add_row_str(vec!["longer text".into(), "x".into(), "4567".into(), "another long para".into()]);
+    ta.add_row_str(vec![
+        "short".into(),
+        "mid".into(),
+        "123".into(),
+        "justified text goes here".into(),
+    ]);
+    ta.add_row_str(vec![
+        "longer text".into(),
+        "x".into(),
+        "4567".into(),
+        "another long para".into(),
+    ]);
     let ta = ta
         .title(" Mixed Alignments ")
         .box_style(BoxStyle::clone(&box_drawing::BOX_ROUNDED))
@@ -233,9 +259,11 @@ fn main() {
     // =========================================================================
     // TABLE — Sections
     // =========================================================================
-    let rule = Rule::new()
-        .title(" TABLE — Sections ")
-        .style(Style::new().bold(true).color(Color::parse("yellow").unwrap()));
+    let rule = Rule::new().title(" TABLE — Sections ").style(
+        Style::new()
+            .bold(true)
+            .color(Color::parse("yellow").unwrap()),
+    );
     console.println(&rule);
 
     let mut ts = Table::new();
@@ -259,9 +287,11 @@ fn main() {
     // =========================================================================
     // TABLE — Show Lines
     // =========================================================================
-    let rule = Rule::new()
-        .title(" TABLE — Show Lines ")
-        .style(Style::new().bold(true).color(Color::parse("yellow").unwrap()));
+    let rule = Rule::new().title(" TABLE — Show Lines ").style(
+        Style::new()
+            .bold(true)
+            .color(Color::parse("yellow").unwrap()),
+    );
     console.println(&rule);
 
     let mut tl = Table::new();
@@ -282,9 +312,11 @@ fn main() {
     // =========================================================================
     // TABLE — Row Styles (alternating)
     // =========================================================================
-    let rule = Rule::new()
-        .title(" TABLE — Alternating Row Styles ")
-        .style(Style::new().bold(true).color(Color::parse("yellow").unwrap()));
+    let rule = Rule::new().title(" TABLE — Alternating Row Styles ").style(
+        Style::new()
+            .bold(true)
+            .color(Color::parse("yellow").unwrap()),
+    );
     console.println(&rule);
 
     let mut tr = Table::new();
@@ -292,7 +324,11 @@ fn main() {
     tr.add_column(Column::new("Name"));
     tr.add_column(Column::new("Value"));
     for i in 1..=6 {
-        tr.add_row_str(vec![i.to_string(), format!("Item-{i}"), format!("${}", i * 10)]);
+        tr.add_row_str(vec![
+            i.to_string(),
+            format!("Item-{i}"),
+            format!("${}", i * 10),
+        ]);
     }
     let tr = tr
         .title(" Inventory ")
@@ -308,9 +344,11 @@ fn main() {
     // =========================================================================
     // TABLE — With Footer
     // =========================================================================
-    let rule = Rule::new()
-        .title(" TABLE — Footer ")
-        .style(Style::new().bold(true).color(Color::parse("yellow").unwrap()));
+    let rule = Rule::new().title(" TABLE — Footer ").style(
+        Style::new()
+            .bold(true)
+            .color(Color::parse("yellow").unwrap()),
+    );
     console.println(&rule);
 
     let mut tf = Table::new();
@@ -341,9 +379,11 @@ fn main() {
     // =========================================================================
     // TABLE — Grid Mode (no borders)
     // =========================================================================
-    let rule = Rule::new()
-        .title(" TABLE — Grid Mode ")
-        .style(Style::new().bold(true).color(Color::parse("yellow").unwrap()));
+    let rule = Rule::new().title(" TABLE — Grid Mode ").style(
+        Style::new()
+            .bold(true)
+            .color(Color::parse("yellow").unwrap()),
+    );
     console.println(&rule);
 
     let mut tg = Table::grid();
@@ -358,9 +398,11 @@ fn main() {
     // =========================================================================
     // TABLE — Leading (blank rows between data)
     // =========================================================================
-    let rule = Rule::new()
-        .title(" TABLE — Leading = 1 ")
-        .style(Style::new().bold(true).color(Color::parse("yellow").unwrap()));
+    let rule = Rule::new().title(" TABLE — Leading = 1 ").style(
+        Style::new()
+            .bold(true)
+            .color(Color::parse("yellow").unwrap()),
+    );
     console.println(&rule);
 
     let mut tld = Table::new();
@@ -379,9 +421,11 @@ fn main() {
     // =========================================================================
     // PANEL — Nested (Panel inside Columns)
     // =========================================================================
-    let rule = Rule::new()
-        .title(" PANEL — Three Side-by-Side ")
-        .style(Style::new().bold(true).color(Color::parse("green").unwrap()));
+    let rule = Rule::new().title(" PANEL — Three Side-by-Side ").style(
+        Style::new()
+            .bold(true)
+            .color(Color::parse("green").unwrap()),
+    );
     console.println(&rule);
 
     let mut cols = Columns::new().equal();
@@ -412,17 +456,32 @@ fn main() {
     // =========================================================================
     // PANEL — Styled Content (Markup inside Panel)
     // =========================================================================
-    let rule = Rule::new()
-        .title(" PANEL — Styled Content ")
-        .style(Style::new().bold(true).color(Color::parse("green").unwrap()));
+    let rule = Rule::new().title(" PANEL — Styled Content ").style(
+        Style::new()
+            .bold(true)
+            .color(Color::parse("green").unwrap()),
+    );
     console.println(&rule);
 
     let mut text = Text::new("");
-    text.append_styled("bold red", Style::new().bold(true).color(Color::parse("red").unwrap()));
+    text.append_styled(
+        "bold red",
+        Style::new().bold(true).color(Color::parse("red").unwrap()),
+    );
     text.append(" | ", None);
-    text.append_styled("italic green", Style::new().italic(true).color(Color::parse("green").unwrap()));
+    text.append_styled(
+        "italic green",
+        Style::new()
+            .italic(true)
+            .color(Color::parse("green").unwrap()),
+    );
     text.append(" | ", None);
-    text.append_styled("underline blue", Style::new().underline(true).color(Color::parse("blue").unwrap()));
+    text.append_styled(
+        "underline blue",
+        Style::new()
+            .underline(true)
+            .color(Color::parse("blue").unwrap()),
+    );
     text.append("\n", None);
     text.append_styled("dim text", Style::new().dim(true));
     text.append(" | ", None);
@@ -441,9 +500,11 @@ fn main() {
     // =========================================================================
     // TABLE — ASCII-only mode
     // =========================================================================
-    let rule = Rule::new()
-        .title(" TABLE — ASCII Only ")
-        .style(Style::new().bold(true).color(Color::parse("yellow").unwrap()));
+    let rule = Rule::new().title(" TABLE — ASCII Only ").style(
+        Style::new()
+            .bold(true)
+            .color(Color::parse("yellow").unwrap()),
+    );
     console.println(&rule);
 
     let mut tascii = Table::new();
@@ -454,7 +515,11 @@ fn main() {
     let tascii = tascii
         .title(" Config ")
         .box_style(BoxStyle::clone(&box_drawing::BOX_ASCII_DOUBLE_HEAD));
-    let opts = ConsoleOptions { max_width: 50, ascii_only: true, ..Default::default() };
+    let opts = ConsoleOptions {
+        max_width: 50,
+        ascii_only: true,
+        ..Default::default()
+    };
     let result = tascii.render(&opts);
     console.print_str(&result.to_ansi());
     console.print_str("\n\n");
@@ -463,8 +528,12 @@ fn main() {
     // FOOTER
     // =========================================================================
     let mut footer = Text::new("");
-    footer.append_styled("✓ All 18 box styles, panels, and tables rendered successfully!",
-        Style::new().bold(true).color(Color::parse("bright_green").unwrap()));
+    footer.append_styled(
+        "✓ All 18 box styles, panels, and tables rendered successfully!",
+        Style::new()
+            .bold(true)
+            .color(Color::parse("bright_green").unwrap()),
+    );
 
     let panel = Panel::new(footer)
         .box_style(BoxStyle::clone(&box_drawing::BOX_HEAVY_EDGE))

@@ -77,9 +77,7 @@ impl Renderable for Screen {
         let height = options.size.height.max(1);
 
         // Create render options that match the full screen size
-        let render_options = options
-            .update_width(width)
-            .update_height(height);
+        let render_options = options.update_width(width).update_height(height);
 
         // Render the inner content
         let result = self.renderable.render(&render_options);

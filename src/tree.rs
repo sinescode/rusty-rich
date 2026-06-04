@@ -82,18 +82,31 @@ impl Tree {
     }
 
     /// Set the style for this node.
-    pub fn style(mut self, style: Style) -> Self { self.style = style; self }
+    pub fn style(mut self, style: Style) -> Self {
+        self.style = style;
+        self
+    }
 
     /// Set the guide style.
-    pub fn guide_style(mut self, style: Style) -> Self { self.guide_style = style; self }
+    pub fn guide_style(mut self, style: Style) -> Self {
+        self.guide_style = style;
+        self
+    }
 
     /// Hide the root node.
-    pub fn hide_root(mut self) -> Self { self.hide_root = true; self }
+    pub fn hide_root(mut self) -> Self {
+        self.hide_root = true;
+        self
+    }
 }
 
 impl Renderable for Tree {
     fn render(&self, options: &ConsoleOptions) -> RenderResult {
-        let guides = if options.ascii_only { &ASCII_GUIDES } else { &TREE_GUIDES };
+        let guides = if options.ascii_only {
+            &ASCII_GUIDES
+        } else {
+            &TREE_GUIDES
+        };
         let mut lines: Vec<Vec<Segment>> = Vec::new();
 
         if !self.hide_root {
@@ -106,7 +119,10 @@ impl Renderable for Tree {
             self.render_node(child, &mut lines, guides, "", is_last, options);
         }
 
-        RenderResult { lines, items: Vec::new() }
+        RenderResult {
+            lines,
+            items: Vec::new(),
+        }
     }
 }
 
@@ -143,7 +159,14 @@ impl Tree {
         let last_child = node.children.len().saturating_sub(1);
         for (i, child) in node.children.iter().enumerate() {
             let child_is_last = i == last_child;
-            self.render_node(child, lines, guides, &child_prefix_styled, child_is_last, options);
+            self.render_node(
+                child,
+                lines,
+                guides,
+                &child_prefix_styled,
+                child_is_last,
+                options,
+            );
         }
     }
 }

@@ -53,22 +53,22 @@ pub const EXPORT_THEME_MONOKAI: ExportTheme = ExportTheme {
     background: (39, 40, 34),
     foreground: (248, 248, 242),
     ansi_colors: [
-        (39, 40, 34),   // 0: black (bg)
-        (249, 38, 114), // 1: red
-        (166, 226, 46), // 2: green
-        (230, 219, 116),// 3: yellow
-        (102, 217, 239),// 4: blue
-        (174, 129, 255),// 5: magenta
-        (161, 239, 228),// 6: cyan
-        (248, 248, 242),// 7: white
-        (117, 113, 94), // 8: bright black
-        (249, 38, 114), // 9: bright red
-        (166, 226, 46), // 10: bright green
-        (230, 219, 116),// 11: bright yellow
-        (102, 217, 239),// 12: bright blue
-        (174, 129, 255),// 13: bright magenta
-        (161, 239, 228),// 14: bright cyan
-        (248, 248, 242),// 15: bright white
+        (39, 40, 34),    // 0: black (bg)
+        (249, 38, 114),  // 1: red
+        (166, 226, 46),  // 2: green
+        (230, 219, 116), // 3: yellow
+        (102, 217, 239), // 4: blue
+        (174, 129, 255), // 5: magenta
+        (161, 239, 228), // 6: cyan
+        (248, 248, 242), // 7: white
+        (117, 113, 94),  // 8: bright black
+        (249, 38, 114),  // 9: bright red
+        (166, 226, 46),  // 10: bright green
+        (230, 219, 116), // 11: bright yellow
+        (102, 217, 239), // 12: bright blue
+        (174, 129, 255), // 13: bright magenta
+        (161, 239, 228), // 14: bright cyan
+        (248, 248, 242), // 15: bright white
     ],
 };
 
@@ -77,22 +77,22 @@ pub const EXPORT_THEME_DIMMED_MONOKAI: ExportTheme = ExportTheme {
     background: (35, 35, 35),
     foreground: (185, 188, 186),
     ansi_colors: [
-        (35, 35, 35),   // 0
-        (190, 63, 72),  // 1
-        (135, 154, 59), // 2
-        (197, 166, 56), // 3
-        (79, 118, 161), // 4
-        (133, 92, 141), // 5
-        (87, 143, 164), // 6
-        (185, 188, 186),// 7
-        (83, 83, 83),   // 8
-        (240, 80, 80),  // 9
-        (148, 166, 73), // 10
-        (215, 180, 66), // 11
-        (108, 147, 177),// 12
-        (152, 117, 171),// 13
-        (101, 164, 179),// 14
-        (230, 235, 235),// 15
+        (35, 35, 35),    // 0
+        (190, 63, 72),   // 1
+        (135, 154, 59),  // 2
+        (197, 166, 56),  // 3
+        (79, 118, 161),  // 4
+        (133, 92, 141),  // 5
+        (87, 143, 164),  // 6
+        (185, 188, 186), // 7
+        (83, 83, 83),    // 8
+        (240, 80, 80),   // 9
+        (148, 166, 73),  // 10
+        (215, 180, 66),  // 11
+        (108, 147, 177), // 12
+        (152, 117, 171), // 13
+        (101, 164, 179), // 14
+        (230, 235, 235), // 15
     ],
 };
 
@@ -101,22 +101,22 @@ pub const EXPORT_THEME_NIGHT_OWLISH: ExportTheme = ExportTheme {
     background: (1, 22, 39),
     foreground: (214, 222, 235),
     ansi_colors: [
-        (1, 22, 39),    // 0
-        (255, 88, 116), // 1
-        (173, 219, 103),// 2
-        (255, 203, 107),// 3
-        (130, 170, 255),// 4
-        (199, 146, 234),// 5
-        (137, 221, 255),// 6
-        (214, 222, 235),// 7
-        (84, 94, 109),  // 8
-        (255, 88, 116), // 9
-        (173, 219, 103),// 10
-        (255, 203, 107),// 11
-        (130, 170, 255),// 12
-        (199, 146, 234),// 13
-        (137, 221, 255),// 14
-        (255, 255, 255),// 15
+        (1, 22, 39),     // 0
+        (255, 88, 116),  // 1
+        (173, 219, 103), // 2
+        (255, 203, 107), // 3
+        (130, 170, 255), // 4
+        (199, 146, 234), // 5
+        (137, 221, 255), // 6
+        (214, 222, 235), // 7
+        (84, 94, 109),   // 8
+        (255, 88, 116),  // 9
+        (173, 219, 103), // 10
+        (255, 203, 107), // 11
+        (130, 170, 255), // 12
+        (199, 146, 234), // 13
+        (137, 221, 255), // 14
+        (255, 255, 255), // 15
     ],
 };
 
@@ -237,7 +237,10 @@ pub fn export_html(options: &ExportHtmlOptions) -> String {
 /// Save rendered output as an HTML file.
 ///
 /// Convenience wrapper around `export_html` that writes to disk.
-pub fn save_html(path: impl AsRef<std::path::Path>, options: &ExportHtmlOptions) -> std::io::Result<()> {
+pub fn save_html(
+    path: impl AsRef<std::path::Path>,
+    options: &ExportHtmlOptions,
+) -> std::io::Result<()> {
     std::fs::write(path.as_ref(), export_html(options))
 }
 
@@ -316,7 +319,10 @@ pub fn export_svg(options: &ExportSvgOptions) -> String {
 }
 
 /// Save rendered output as an SVG file.
-pub fn save_svg(path: impl AsRef<std::path::Path>, options: &ExportSvgOptions) -> std::io::Result<()> {
+pub fn save_svg(
+    path: impl AsRef<std::path::Path>,
+    options: &ExportSvgOptions,
+) -> std::io::Result<()> {
     std::fs::write(path.as_ref(), export_svg(options))
 }
 
@@ -398,7 +404,7 @@ pub fn strip_ansi_escapes(text: &str) -> String {
             match chars.peek() {
                 Some(&'[') => {
                     chars.next(); // consume '['
-                    // Consume parameter bytes (0x30-0x3F: digits, ;, ?, !, >)
+                                  // Consume parameter bytes (0x30-0x3F: digits, ;, ?, !, >)
                     while let Some(&c) = chars.peek() {
                         if c.is_ascii_digit() || c == ';' || c == '?' || c == '!' || c == '>' {
                             chars.next();
@@ -450,10 +456,7 @@ pub fn strip_ansi_escapes(text: &str) -> String {
 ///
 /// Each segment's foreground color, background color, bold, italic, etc.
 /// are mapped to `<span style="...">` elements.
-pub fn segments_to_html(
-    segments: &[Segment],
-    theme: &ExportTheme,
-) -> String {
+pub fn segments_to_html(segments: &[Segment], theme: &ExportTheme) -> String {
     let mut html = String::new();
 
     for seg in segments {
@@ -473,7 +476,10 @@ pub fn segments_to_html(
             // Background color
             if let Some(bgcolor) = &style.bgcolor {
                 let rgb = resolve_color(bgcolor, theme);
-                styles.push(format!("background-color:rgb({},{},{})", rgb.0, rgb.1, rgb.2));
+                styles.push(format!(
+                    "background-color:rgb({},{},{})",
+                    rgb.0, rgb.1, rgb.2
+                ));
             }
 
             // Text attributes
@@ -541,10 +547,7 @@ pub fn segments_to_html(
 /// colors. Each segment's foreground color maps to a `fill` attribute, and
 /// text attributes (bold, italic, underline, strike, dim, conceal) are
 /// mapped to CSS properties.
-pub fn segments_to_svg(
-    segments: &[Segment],
-    theme: &ExportTheme,
-) -> String {
+pub fn segments_to_svg(segments: &[Segment], theme: &ExportTheme) -> String {
     let mut svg = String::new();
 
     for seg in segments {
@@ -653,8 +656,8 @@ fn rgb_for_8bit(index: usize) -> (u8, u8, u8) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::style::Style;
     use crate::color::Color;
+    use crate::style::Style;
 
     #[test]
     fn test_escape_html_basic() {
@@ -747,8 +750,8 @@ mod tests {
 
     #[test]
     fn test_rgb_for_8bit_standard() {
-        assert_eq!(rgb_for_8bit(0), (0, 0, 0));     // black
-        assert_eq!(rgb_for_8bit(1), (128, 0, 0));   // red
+        assert_eq!(rgb_for_8bit(0), (0, 0, 0)); // black
+        assert_eq!(rgb_for_8bit(1), (128, 0, 0)); // red
         assert_eq!(rgb_for_8bit(15), (255, 255, 255)); // bright white
     }
 
@@ -769,9 +772,7 @@ mod tests {
     fn test_segments_to_html_styled() {
         let seg = Segment::styled(
             "hello",
-            Style::new()
-                .color(Color::parse("red").unwrap())
-                .bold(true),
+            Style::new().color(Color::parse("red").unwrap()).bold(true),
         );
         let html = segments_to_html(&[seg], &ExportTheme::default());
         assert!(html.contains("color:rgb(128,0,0)"));
@@ -798,9 +799,7 @@ mod tests {
     fn test_segments_to_svg_styled() {
         let seg = Segment::styled(
             "hello",
-            Style::new()
-                .color(Color::parse("red").unwrap())
-                .bold(true),
+            Style::new().color(Color::parse("red").unwrap()).bold(true),
         );
         let svg = segments_to_svg(&[seg], &ExportTheme::default());
         assert!(svg.contains("fill:rgb(128,0,0)"));

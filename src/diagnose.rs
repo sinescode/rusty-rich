@@ -17,10 +17,7 @@ pub fn report(error: &dyn std::error::Error, console: &mut Console) {
 pub fn diagnose(error: &dyn std::error::Error) -> Text {
     let mut text = Text::new(format!("Error: {}\n", error));
     if let Some(source) = error.source() {
-        text.append_styled(
-            format!("Caused by: {}\n", source),
-            Style::new().dim(true),
-        );
+        text.append_styled(format!("Caused by: {}\n", source), Style::new().dim(true));
     }
     text
 }

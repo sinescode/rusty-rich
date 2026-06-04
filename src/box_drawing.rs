@@ -74,8 +74,10 @@ impl BoxStyle {
     /// to be used in tables where internal separators provide structure.
     pub fn has_visible_edges(&self) -> bool {
         // A visible edge requires at least one non-space corner.
-        self.top_left != ' ' || self.top_right != ' '
-            || self.bottom_left != ' ' || self.bottom_right != ' '
+        self.top_left != ' '
+            || self.top_right != ' '
+            || self.bottom_left != ' '
+            || self.bottom_right != ' '
     }
 
     /// Parse a box style from an 8-line string.
@@ -83,9 +85,7 @@ impl BoxStyle {
         let lines: Vec<&str> = box_str.lines().collect();
         assert_eq!(lines.len(), 8, "Box definition must have exactly 8 lines");
 
-        let line_chars: Vec<Vec<char>> = lines.iter()
-            .map(|l| l.chars().collect())
-            .collect();
+        let line_chars: Vec<Vec<char>> = lines.iter().map(|l| l.chars().collect()).collect();
 
         // Each line should have 4 characters
         for (i, chars) in line_chars.iter().enumerate() {
@@ -94,14 +94,38 @@ impl BoxStyle {
 
         let l = &line_chars;
         Self {
-            top_left: l[0][0], top: l[0][1], top_divider: l[0][2], top_right: l[0][3],
-            head_left: l[1][0], head_horizontal: l[1][1], head_vertical: l[1][2], head_right: l[1][3],
-            head_row_left: l[2][0], head_row_horizontal: l[2][1], head_row_cross: l[2][2], head_row_right: l[2][3],
-            mid_left: l[3][0], mid_horizontal: l[3][1], mid_vertical: l[3][2], mid_right: l[3][3],
-            row_left: l[4][0], row_horizontal: l[4][1], row_cross: l[4][2], row_right: l[4][3],
-            foot_row_left: l[5][0], foot_row_horizontal: l[5][1], foot_row_cross: l[5][2], foot_row_right: l[5][3],
-            foot_left: l[6][0], foot_horizontal: l[6][1], foot_vertical: l[6][2], foot_right: l[6][3],
-            bottom_left: l[7][0], bottom: l[7][1], bottom_divider: l[7][2], bottom_right: l[7][3],
+            top_left: l[0][0],
+            top: l[0][1],
+            top_divider: l[0][2],
+            top_right: l[0][3],
+            head_left: l[1][0],
+            head_horizontal: l[1][1],
+            head_vertical: l[1][2],
+            head_right: l[1][3],
+            head_row_left: l[2][0],
+            head_row_horizontal: l[2][1],
+            head_row_cross: l[2][2],
+            head_row_right: l[2][3],
+            mid_left: l[3][0],
+            mid_horizontal: l[3][1],
+            mid_vertical: l[3][2],
+            mid_right: l[3][3],
+            row_left: l[4][0],
+            row_horizontal: l[4][1],
+            row_cross: l[4][2],
+            row_right: l[4][3],
+            foot_row_left: l[5][0],
+            foot_row_horizontal: l[5][1],
+            foot_row_cross: l[5][2],
+            foot_row_right: l[5][3],
+            foot_left: l[6][0],
+            foot_horizontal: l[6][1],
+            foot_vertical: l[6][2],
+            foot_right: l[6][3],
+            bottom_left: l[7][0],
+            bottom: l[7][1],
+            bottom_divider: l[7][2],
+            bottom_right: l[7][3],
             ascii,
         }
     }
@@ -110,14 +134,38 @@ impl BoxStyle {
     pub fn to_string(&self) -> String {
         format!(
             "{}{}{}{}\n{}{}{}{}\n{}{}{}{}\n{}{}{}{}\n{}{}{}{}\n{}{}{}{}\n{}{}{}{}\n{}{}{}{}",
-            self.top_left, self.top, self.top_divider, self.top_right,
-            self.head_left, self.head_horizontal, self.head_vertical, self.head_right,
-            self.head_row_left, self.head_row_horizontal, self.head_row_cross, self.head_row_right,
-            self.mid_left, self.mid_horizontal, self.mid_vertical, self.mid_right,
-            self.row_left, self.row_horizontal, self.row_cross, self.row_right,
-            self.foot_row_left, self.foot_row_horizontal, self.foot_row_cross, self.foot_row_right,
-            self.foot_left, self.foot_horizontal, self.foot_vertical, self.foot_right,
-            self.bottom_left, self.bottom, self.bottom_divider, self.bottom_right,
+            self.top_left,
+            self.top,
+            self.top_divider,
+            self.top_right,
+            self.head_left,
+            self.head_horizontal,
+            self.head_vertical,
+            self.head_right,
+            self.head_row_left,
+            self.head_row_horizontal,
+            self.head_row_cross,
+            self.head_row_right,
+            self.mid_left,
+            self.mid_horizontal,
+            self.mid_vertical,
+            self.mid_right,
+            self.row_left,
+            self.row_horizontal,
+            self.row_cross,
+            self.row_right,
+            self.foot_row_left,
+            self.foot_row_horizontal,
+            self.foot_row_cross,
+            self.foot_row_right,
+            self.foot_left,
+            self.foot_horizontal,
+            self.foot_vertical,
+            self.foot_right,
+            self.bottom_left,
+            self.bottom,
+            self.bottom_divider,
+            self.bottom_right,
         )
     }
 }
@@ -298,19 +346,23 @@ pub static BOX_SIMPLE_HEAVY: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(SI
 /// Minimal box (just horizontal separators between header/body).
 pub static BOX_MINIMAL: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(MINIMAL, false));
 /// Minimal box with heavy horizontal separators.
-pub static BOX_MINIMAL_HEAVY: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(MINIMAL_HEAVY, false));
+pub static BOX_MINIMAL_HEAVY: Lazy<BoxStyle> =
+    Lazy::new(|| BoxStyle::from_str(MINIMAL_HEAVY, false));
 /// ASCII-only box (uses `+`, `-`, `|` characters).
 pub static BOX_ASCII: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(ASCII, true));
 /// ASCII box with doubled edges.
 pub static BOX_ASCII2: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(ASCII2, true));
 /// Square box with a double horizontal header separator.
-pub static BOX_SQUARE_DOUBLE_HEAD: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(SQUARE_DOUBLE_HEAD, false));
+pub static BOX_SQUARE_DOUBLE_HEAD: Lazy<BoxStyle> =
+    Lazy::new(|| BoxStyle::from_str(SQUARE_DOUBLE_HEAD, false));
 /// Minimal box with a double horizontal header separator.
-pub static BOX_MINIMAL_DOUBLE_HEAD: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(MINIMAL_DOUBLE_HEAD, false));
+pub static BOX_MINIMAL_DOUBLE_HEAD: Lazy<BoxStyle> =
+    Lazy::new(|| BoxStyle::from_str(MINIMAL_DOUBLE_HEAD, false));
 /// Simple box with a single horizontal rule under the header.
 pub static BOX_SIMPLE_HEAD: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(SIMPLE_HEAD, false));
 /// ASCII box with a double header line.
-pub static BOX_ASCII_DOUBLE_HEAD: Lazy<BoxStyle> = Lazy::new(|| BoxStyle::from_str(ASCII_DOUBLE_HEAD, true));
+pub static BOX_ASCII_DOUBLE_HEAD: Lazy<BoxStyle> =
+    Lazy::new(|| BoxStyle::from_str(ASCII_DOUBLE_HEAD, true));
 
 // ---------------------------------------------------------------------------
 // MARKDOWN box (no outer border)

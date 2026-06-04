@@ -57,7 +57,6 @@ impl fmt::Display for ColorTriplet {
 }
 use std::hash::Hash;
 
-
 // ---------------------------------------------------------------------------
 // ColorSystem — what the terminal supports
 // ---------------------------------------------------------------------------
@@ -546,7 +545,9 @@ impl fmt::Display for Color {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.color_type {
             ColorType::Default => write!(f, "default"),
-            ColorType::Standard => write!(f, "{}", STANDARD_COLOR_NAMES[self.number.unwrap() as usize]),
+            ColorType::Standard => {
+                write!(f, "{}", STANDARD_COLOR_NAMES[self.number.unwrap() as usize])
+            }
             ColorType::EightBit => write!(f, "color({})", self.number.unwrap()),
             ColorType::TrueColor => {
                 let (r, g, b) = self.triplet.unwrap();
@@ -626,9 +627,22 @@ pub static STANDARD_PALETTE: &[(u8, u8, u8)] = &[
 
 /// The 16 ANSI standard color names in palette order (black, red, ..., bright_white).
 pub static STANDARD_COLOR_NAMES: &[&str] = &[
-    "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white",
-    "bright_black", "bright_red", "bright_green", "bright_yellow",
-    "bright_blue", "bright_magenta", "bright_cyan", "bright_white",
+    "black",
+    "red",
+    "green",
+    "yellow",
+    "blue",
+    "magenta",
+    "cyan",
+    "white",
+    "bright_black",
+    "bright_red",
+    "bright_green",
+    "bright_yellow",
+    "bright_blue",
+    "bright_magenta",
+    "bright_cyan",
+    "bright_white",
 ];
 
 /// The 6×6×6 color cube + greyscale ramp = 256-color palette.
@@ -715,11 +729,7 @@ pub fn rgb_to_standard(_r: u8, _g: u8, _b: u8) -> u8 {
 }
 
 /// Blend two RGB colors (like Rich's `blend_rgb`).
-pub fn blend_rgb(
-    color1: (u8, u8, u8),
-    color2: (u8, u8, u8),
-    cross_fade: f64,
-) -> (u8, u8, u8) {
+pub fn blend_rgb(color1: (u8, u8, u8), color2: (u8, u8, u8), cross_fade: f64) -> (u8, u8, u8) {
     let r = (color1.0 as f64 + (color2.0 as f64 - color1.0 as f64) * cross_fade) as u8;
     let g = (color1.1 as f64 + (color2.1 as f64 - color1.1 as f64) * cross_fade) as u8;
     let b = (color1.2 as f64 + (color2.2 as f64 - color1.2 as f64) * cross_fade) as u8;

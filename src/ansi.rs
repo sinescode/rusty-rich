@@ -52,44 +52,86 @@ fn apply_sgr(style: &Style, params: &str) -> Style {
     for param in params.split(';') {
         if let Ok(n) = param.parse::<u32>() {
             match n {
-                0 => s = Style::new(),                    // Reset
-                1 => { s = s.bold(true); }                // Bold
-                2 => { s = s.dim(true); }                 // Dim
-                3 => { s = s.italic(true); }              // Italic
-                4 => { s = s.underline(true); }           // Underline
-                5 => { s = s.blink(true); }               // Slow blink
-                6 => { s = s.blink2(true); }              // Fast blink
-                7 => { s = s.reverse(true); }             // Reverse
-                8 => { s = s.conceal(true); }             // Conceal
-                9 => { s = s.strike(true); }              // Strikethrough
-                21 => { s = s.underline2(true); }         // Double underline
-                22 => { s = s.bold(false); }              // Normal intensity
-                23 => { s = s.italic(false); }            // Not italic
-                24 => { s = s.underline(false); }         // Not underline
-                25 => { s = s.blink(false); }             // Not blink
-                27 => { s = s.reverse(false); }           // Not reverse
-                28 => { s = s.conceal(false); }           // Not conceal
-                29 => { s = s.strike(false); }            // Not strikethrough
-                30..=37 => {                               // Standard fg
+                0 => s = Style::new(), // Reset
+                1 => {
+                    s = s.bold(true);
+                } // Bold
+                2 => {
+                    s = s.dim(true);
+                } // Dim
+                3 => {
+                    s = s.italic(true);
+                } // Italic
+                4 => {
+                    s = s.underline(true);
+                } // Underline
+                5 => {
+                    s = s.blink(true);
+                } // Slow blink
+                6 => {
+                    s = s.blink2(true);
+                } // Fast blink
+                7 => {
+                    s = s.reverse(true);
+                } // Reverse
+                8 => {
+                    s = s.conceal(true);
+                } // Conceal
+                9 => {
+                    s = s.strike(true);
+                } // Strikethrough
+                21 => {
+                    s = s.underline2(true);
+                } // Double underline
+                22 => {
+                    s = s.bold(false);
+                } // Normal intensity
+                23 => {
+                    s = s.italic(false);
+                } // Not italic
+                24 => {
+                    s = s.underline(false);
+                } // Not underline
+                25 => {
+                    s = s.blink(false);
+                } // Not blink
+                27 => {
+                    s = s.reverse(false);
+                } // Not reverse
+                28 => {
+                    s = s.conceal(false);
+                } // Not conceal
+                29 => {
+                    s = s.strike(false);
+                } // Not strikethrough
+                30..=37 => {
+                    // Standard fg
                     if let Ok(c) = crate::color::Color::parse(&format!("color({})", n - 30)) {
                         s = s.color(c);
                     }
                 }
                 38 => { /* Extended fg - skip for simplicity */ }
-                39 => { s = s.color(crate::color::Color::default()); } // Default fg
-                40..=47 => {                               // Standard bg
+                39 => {
+                    s = s.color(crate::color::Color::default());
+                } // Default fg
+                40..=47 => {
+                    // Standard bg
                     if let Ok(c) = crate::color::Color::parse(&format!("color({})", n - 40)) {
                         s = s.bgcolor(c);
                     }
                 }
                 48 => { /* Extended bg - skip */ }
-                49 => { s = s.bgcolor(crate::color::Color::default()); } // Default bg
-                90..=97 => {                               // Bright fg
+                49 => {
+                    s = s.bgcolor(crate::color::Color::default());
+                } // Default bg
+                90..=97 => {
+                    // Bright fg
                     if let Ok(c) = crate::color::Color::parse(&format!("color({})", n - 90 + 8)) {
                         s = s.color(c);
                     }
                 }
-                100..=107 => {                             // Bright bg
+                100..=107 => {
+                    // Bright bg
                     if let Ok(c) = crate::color::Color::parse(&format!("color({})", n - 100 + 8)) {
                         s = s.bgcolor(c);
                     }

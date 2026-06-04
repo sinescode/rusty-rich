@@ -59,11 +59,21 @@ impl RichHandler {
 
         if self.show_level {
             let level_style = match level {
-                log::Level::Error => Style::new().color(crate::color::Color::parse("red").unwrap()).bold(true),
-                log::Level::Warn => Style::new().color(crate::color::Color::parse("yellow").unwrap()),
-                log::Level::Info => Style::new().color(crate::color::Color::parse("green").unwrap()),
-                log::Level::Debug => Style::new().color(crate::color::Color::parse("blue").unwrap()),
-                log::Level::Trace => Style::new().color(crate::color::Color::parse("bright_black").unwrap()),
+                log::Level::Error => Style::new()
+                    .color(crate::color::Color::parse("red").unwrap())
+                    .bold(true),
+                log::Level::Warn => {
+                    Style::new().color(crate::color::Color::parse("yellow").unwrap())
+                }
+                log::Level::Info => {
+                    Style::new().color(crate::color::Color::parse("green").unwrap())
+                }
+                log::Level::Debug => {
+                    Style::new().color(crate::color::Color::parse("blue").unwrap())
+                }
+                log::Level::Trace => {
+                    Style::new().color(crate::color::Color::parse("bright_black").unwrap())
+                }
             };
             text.append_styled(format!("{level:<5}"), level_style);
             text.append_styled(" ", Style::new());
@@ -119,13 +129,11 @@ pub fn style_level(level: log::Level) -> Style {
         log::Level::Error => Style::new()
             .color(crate::color::Color::parse("red").unwrap())
             .bold(true),
-        log::Level::Warn => Style::new()
-            .color(crate::color::Color::parse("yellow").unwrap()),
-        log::Level::Info => Style::new()
-            .color(crate::color::Color::parse("green").unwrap()),
-        log::Level::Debug => Style::new()
-            .color(crate::color::Color::parse("blue").unwrap()),
-        log::Level::Trace => Style::new()
-            .color(crate::color::Color::parse("bright_black").unwrap()),
+        log::Level::Warn => Style::new().color(crate::color::Color::parse("yellow").unwrap()),
+        log::Level::Info => Style::new().color(crate::color::Color::parse("green").unwrap()),
+        log::Level::Debug => Style::new().color(crate::color::Color::parse("blue").unwrap()),
+        log::Level::Trace => {
+            Style::new().color(crate::color::Color::parse("bright_black").unwrap())
+        }
     }
 }

@@ -50,11 +50,20 @@ impl Columns {
     }
 
     /// Builder: set padding between columns (in characters).
-    pub fn padding(mut self, padding: usize) -> Self { self.padding = padding; self }
+    pub fn padding(mut self, padding: usize) -> Self {
+        self.padding = padding;
+        self
+    }
     /// Builder: force all columns to have equal width.
-    pub fn equal(mut self) -> Self { self.equal = true; self }
+    pub fn equal(mut self) -> Self {
+        self.equal = true;
+        self
+    }
     /// Builder: expand columns to fill the available width.
-    pub fn expand(mut self) -> Self { self.expand = true; self }
+    pub fn expand(mut self) -> Self {
+        self.expand = true;
+        self
+    }
 }
 
 impl Renderable for Columns {
@@ -106,7 +115,10 @@ impl Renderable for Columns {
             lines.push(line_segments);
         }
 
-        RenderResult { lines, items: Vec::new() }
+        RenderResult {
+            lines,
+            items: Vec::new(),
+        }
     }
 }
 
