@@ -824,7 +824,337 @@ End with:
 
 ---
 
-## Quick-Copy: All Raw URLs (One Block)
+## Prompt 5: Security Audit, Vulnerability Deep-Dive & Upgrade Roadmap
+
+```
+You are a senior Rust security engineer and penetration tester specializing in
+supply-chain security, terminal attack surfaces, and systems programming hardening.
+
+## Target
+rusty-rich v0.4.1 — Rust terminal formatting library (~25,500 LOC, 51 modules)
+Repo: https://github.com/sinescode/rusty-rich (MIT license)
+CI: All green — Build (×3 OS) · Test (742+ tests) · Lint (fmt+clippy) · Docs · cargo-deny
+
+## Source Files — Focus on Security-Critical Modules
+
+Security-critical surface (read ALL):
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/Cargo.toml
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/deny.toml
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/console.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/markup.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/control.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/pager.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/export.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/live.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/style.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/color.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/ansi.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/text.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/prompt.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/file_proxy.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/logging.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/log_render.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/traceback.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/screen.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/progress.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/highlighter.rs
+
+CI & Infrastructure:
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/.github/workflows/ci.yml
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/.github/workflows/security-audit.yml
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/.github/dependabot.yml
+
+Prior Audit Reference (for context on what was already found + fixed):
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/Full_audit.md
+
+## Part 1 — Verify Previously-Fixed Vulnerabilities (Confirm No Regression)
+
+The following 10 vulnerabilities were identified in a prior audit. Verify each is ACTUALLY fixed
+in the current master branch code. Do NOT trust the status — independently verify by reading
+the source files.
+
+### VULN-001: atty → IsTerminal migration
+- Was: `atty 0.2` unmaintained (RUSTSEC-2021-0145)
+- Claimed FIX: migrated to `std::io::IsTerminal` (Rust 1.70+)
+- VERIFY: Check Cargo.toml — is `atty` still in [dependencies]? Check console.rs — does it use `std::io::IsTerminal`?
+
+### VULN-002: ANSI Escape Injection via Literal Text
+- Was: raw `\x1b[` bytes in user-controlled text passed through to terminal
+- Claimed FIX: `print_str()` strips via `export::strip_ansi_escapes`, markup sanitizes literal text
+- VERIFY: Check console.rs `print_str()` — does the non-markup path strip? Check markup.rs — does literal text get sanitized?
+
+### VULN-003: strip_ansi_escapes Regex Misses OSC/DCS
+- Was: regex-based `strip_ansi_escapes` in pager.rs missed OSC-52/DCS sequences
+- Claimed FIX: pager uses `export::strip_ansi_escapes` (hand-written FSM)
+- VERIFY: Check pager.rs — does it call `crate::export::strip_ansi_escapes`? Is there still a regex version anywhere? Does the FSM handle `\x1b]...BEL` and `\x1b]...ST`?
+
+### VULN-004: Live Not Thread-Safe
+- Was: `Live` struct had data race on renderable/writers/render_hooks
+- Claimed FIX: `Arc<Mutex<>>` + `Arc<AtomicUsize>` 
+- VERIFY: Check live.rs — are renderable/writers/render_hooks/previously_line_count properly synchronized?
+
+### VULN-005: ThemeContext Raw Pointer
+- Was: `*mut Console` pointer + `PhantomData` but missing explicit !Send/!Sync
+- Claimed MITIGATED: raw pointer prevents auto-derive of Send/Sync
+- VERIFY: Check console.rs ThemeContext — is the SAFETY comment still present? Is it properly preventing cross-thread use?
+
+### VULN-006: Live::get_renderable() Panic
+- Was: unconditional `.unwrap()` could panic
+- Claimed FIX: returns `Option<DynRenderable>`
+- VERIFY: Check live.rs get_renderable() and renderable() — do they return Option?
+
+### VULN-007: $PAGER Command Injection
+- Was: `$PAGER` env value passed directly to `Command::new()`
+- Claimed FIX: `split_pager_command()` splits into program + args
+- VERIFY: Check pager.rs — is the command properly split? What about the Pager struct's `show()` method?
+
+### VULN-008: yaml-rust via syntect
+- Was: `syntect` transitively depends on unmaintained `yaml-rust` (RUSTSEC-2024-0320)
+- Claimed MONITOR: syntect 5.3 still uses yaml-rust; no user-controlled theme loading exposed
+- VERIFY: Check Cargo.toml syntect version. Check syntax.rs — can users load arbitrary theme files?
+
+### VULN-009: Regex Recompilation DoS
+- Was: `Regex::new()` called on every `strip_ansi_escapes` invocation
+- Claimed FIX: removed regex; pager calls FSM-based export version
+- VERIFY: Search for `Regex::new` in pager.rs — any remaining per-call compilations?
+
+### VULN-010: Export Path Traversal
+- Was: save_html/svg/text() accept raw paths without validation
+- Claimed DOCUMENTED: caller responsibility
+- VERIFY: Check export.rs — are there any path validation guards? Is caller responsibility clearly documented?
+
+## Part 2 — Find NEW Vulnerabilities
+
+Go beyond the prior audit. Hunt for issues that may have been missed:
+
+### Supply Chain (fresh check)
+- Audit ALL 10 runtime dependencies for any NEW RUSTSEC advisories since the prior audit
+- Check minimum version pinning — are ranges too loose?
+- Is `yaml-rust` still the only unmaintained transitive dep?
+- Are there any dependency confusion risks (name squatting)?
+
+### Unsafe Code
+- Search ALL 51 source files for `unsafe` blocks
+- For each: document invariant, verify it's upheld, propose safe alternative if possible
+- Pay attention to FFI (crossterm ffi, syntect onig_sys)
+
+### Terminal Injection (deep)
+- Can markup parser be confused by crafted input? Try: `[bold]unclosed[/italic]`, deeply nested tags
+- Does ANSI decoder safely handle malformed escape sequences?
+- Can `control::escape_control_codes()` be bypassed?
+- Are terminal title/OSC sequences properly sanitized?
+- Can cursor movement sequences be injected via log messages?
+
+### Panic Surface
+- Find every `.unwrap()`, `.expect()`, `panic!()`, `unreachable!()` 
+- Can any be triggered by user-controlled input?
+- Check Color::parse() edge cases (empty, 7-char hex, Unicode)
+- Check markup parser — stack overflow on deep nesting?
+- Check Table/Grid — colspan/rowspan OOB?
+- Check Progress — NaN/Inf/negative values → div-by-zero?
+
+### Resource Exhaustion
+- Can a malicious input cause unbounded memory?
+- Does markup parsing have recursion depth limits?
+- Can spinner frames grow unboundedly?
+- ReDoS: does highlighter.rs have any regexes vulnerable to catastrophic backtracking?
+- Can table/columns with extreme colspan/width cause OOM?
+
+### Concurrency (beyond Live)
+- Progress::update() from multiple threads?
+- FileProxy auto-refresh race conditions?
+- Global console (GLOBAL_CONSOLE) — any deadlock risks?
+
+### Information Leakage
+- Does traceback expose sensitive data (env vars, file paths, locals)?
+- Does Inspect expose private fields?
+- Does logging accidentally output credentials?
+- Does export preserve hidden metadata?
+
+### CI/CD Security
+- Are GitHub Actions permissions least-privilege?
+- Is cargo-deny blocking on vulnerability findings?
+- Are actions pinned to SHA or using tags?
+
+## Part 3 — Severity-Graded Findings
+
+For EACH finding (old or new), produce:
+  - **ID**: VULN-XXX
+  - **Severity**: CRITICAL / HIGH / MEDIUM / LOW / INFO
+  - **Category**: Supply Chain / Terminal Injection / Unsafe / Panic / Resource / Concurrency / Leakage / CI
+  - **File(s)**: exact file + line references
+  - **Description**: What the vulnerability is
+  - **Exploit Scenario**: Concrete attack vector
+  - **Fix**: Exact code change (diff format preferred)
+  - **CVSS**: 3.1 score (0.0-10.0)
+
+End with:
+  - SECURITY POSTURE GRADE (A+ through F)
+  - TOP 5 MOST CRITICAL ISSUES (ranked)
+  - REMEDIATION PRIORITY ORDER
+  - RECOMMENDED VERSION FOR NEXT RELEASE (v0.5.0 readiness assessment)
+```
+
+---
+
+## Prompt 6: Upgrade Path & Release Readiness Assessment
+
+```
+You are a senior Rust release engineer and open-source maintainer. Assess rusty-rich
+for its upgrade path from v0.4.1 toward v0.5.0 → v0.6.0 → v1.0.0.
+
+## Target
+rusty-rich v0.4.1 — Rust terminal formatting library
+Repo: https://github.com/sinescode/rusty-rich (~25,500 LOC, 51 modules, 742+ tests)
+Current parity with Python Rich 14.x: ~86%
+
+## Source Files — Read ALL
+
+Full module tree:
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/lib.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/console.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/color.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/style.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/text.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/markup.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/segment.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/theme.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/control.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/box_drawing.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/panel.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/table.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/tree.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/rule.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/layout.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/columns.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/progress.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/progress_columns.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/spinner.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/live.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/status.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/screen.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/syntax.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/markdown.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/json.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/logging.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/log_render.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/traceback.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/pretty.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/ansi.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/prompt.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/inspect.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/pager.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/export.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/highlighter.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/emoji.rs
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/src/palette.rs
+
+Config & CI:
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/Cargo.toml
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/deny.toml
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/CHANGELOG.md
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/README.md
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/.github/workflows/ci.yml
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/.github/workflows/security-audit.yml
+
+Prior Audit:
+  https://raw.githubusercontent.com/sinescode/rusty-rich/master/Full_audit.md
+
+## Part 1 — Current State Assessment
+
+### What's Already Done (v0.4.1 baseline)
+- 48→51 modules, 742+ tests passing, CI all green
+- 7/10 audit vulns fixed, 3 mitigated
+- Thread-safe Live, ANSI injection prevention, IsTerminal migration
+- Style::to_ansi() optimized, StyleStack::pop_to for markup
+- HTML export fixed (preserves colors via segments)
+- Feature flags: syntax-highlighting, markdown, minimal
+- 148 CSS color names, platform-aware pager
+- 0 clippy warnings, 0 fmt issues, 0 doc warnings
+
+### Parity Gaps vs Python Rich 14.x
+Based on the prior audit's 10-dimension analysis (~86% overall):
+- Color System (~82%): missing CSS web color names for some entries
+- Text & Markup (~78%): overflow (crop/ellipsis/fold), tabs/justify/wrap partial
+- Export (~76%): SVG terminal chrome missing, HTML was broken (now fixed)
+- Progress/Live (~86%): standalone track() doesn't auto-update Progress, 25 spinners missing
+- Traceback (~40%): Rust can't inspect runtime variables (language limitation)
+
+## Part 2 — Release Roadmap
+
+### v0.5.0 — Polish & Hardening (Recommended Priority)
+For EACH item, assess:
+  - Is it actually done? (verify against current master code)
+  - Effort estimate (S/M/L)
+  - Breaking change? (y/n)
+  - Value to users (1-10)
+
+Checklist:
+- [ ] atty → IsTerminal (verify)
+- [ ] Thread-safe Live (verify)
+- [ ] $PAGER sanitization (verify)
+- [ ] strip_ansi_escapes dedup (verify)
+- [ ] ANSI injection prevention (verify)
+- [ ] Markup close-tag matching (verify)
+- [ ] HTML export color fix (verify)
+- [ ] 0 clippy warnings (verify)
+- [ ] Feature flags (verify)
+- [ ] CSS color name completion audit
+- [ ] yaml-rust → yaml-rust2 migration plan (syntect dep)
+- [ ] Missing spinner addition (25 remaining)
+- [ ] Style negation tests (not bold, !italic, etc.)
+
+### v0.6.0 — Performance & Developer Experience
+- [ ] once_cell → std::sync::OnceLock
+- [ ] proptest/quickcheck property tests
+- [ ] cargo-fuzz fuzz targets (markup, Color::parse, progress)
+- [ ] Standalone track() auto-update
+- [ ] Live refresh loop threading
+- [ ] Benchmark suite (criterion.rs)
+- [ ] Compile time reduction (feature-gate heavy deps)
+
+### v1.0.0 — Full Parity Release
+- [ ] 80/80 spinners
+- [ ] SVG terminal chrome
+- [ ] Traceback locals (panic::Location)
+- [ ] is_jupyter detection
+- [ ] force_terminal / force_jupyter
+- [ ] Full CSS color names (remaining gaps)
+- [ ] API stability guarantee
+- [ ] Semver compliance audit
+
+## Part 3 — Current Bugs & Pre-existing Issues
+
+Search for and catalog:
+- Any remaining `.unwrap()` / `.expect()` calls reachable from public API
+- Any `TODO`, `FIXME`, `HACK`, `XXX` comments
+- Any `#[allow(...)]` attributes suppressing lints that should be fixed
+- Any `String` clones that could be `Cow<str>` or borrowed
+- Any public API methods that panic instead of returning Result
+- Test coverage gaps (property tests, fuzz, edge cases)
+
+## Output Format
+
+### Section A: v0.5.0 Readiness Report
+- Overall readiness: READY / ALMOST / NOT READY
+- Blocker list (must-fix before release)
+- Recommended scope (what to include)
+- Breaking change assessment
+
+### Section B: Current Bug Catalog
+Table with: File · Line · Severity · Description · Fix complexity
+
+### Section C: Upgrade Path
+- v0.5.0 scope + effort estimate (person-days)
+- v0.6.0 scope + effort estimate
+- v1.0.0 scope + effort estimate
+- Key risks and mitigation strategies
+
+### Section D: Dependency Health Check
+- Outdated deps, unmaintained deps, security advisories, upgrade recommendations
+```
+
+---
 
 Paste this entire block into any AI to fetch all source files at once:
 
