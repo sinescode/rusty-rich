@@ -149,6 +149,19 @@ impl fmt::Display for Attributes {
 // Style
 // ---------------------------------------------------------------------------
 
+/// A constant null (empty) style. Use instead of `Style::null()` to avoid
+/// allocation when you need a null style repeatedly.
+pub const NULL_STYLE: Style = Style {
+    color: None,
+    bgcolor: None,
+    attributes: Attributes(0),
+    set_attributes: 0,
+    link: None,
+    link_id: 0,
+    is_null: true,
+    meta: None,
+};
+
 /// A terminal style.
 ///
 /// Supports foreground color, background color, attributes, and an optional
@@ -172,17 +185,11 @@ impl Style {
     // -- constructors -------------------------------------------------------
 
     /// Create a null (empty) style.
+    ///
+    /// For a zero-allocation alternative, use the [`NULL_STYLE`] constant
+    /// directly or clone it.
     pub fn null() -> Self {
-        Self {
-            color: None,
-            bgcolor: None,
-            attributes: Attributes::empty(),
-            set_attributes: 0,
-            link: None,
-            link_id: 0,
-            is_null: true,
-            meta: None,
-        }
+        NULL_STYLE.clone()
     }
 
     /// Create a new style with optional settings.
@@ -438,33 +445,52 @@ impl Style {
     }
 
     /// Render this style as ANSI SGR escape sequences.
+    ///
+    /// Uses a pre-allocated `String` with direct `push_str` instead of
+    /// `Vec<String>` + `join()`, avoiding ~3× allocations in the render
+    /// hot path.
     pub fn to_ansi(&self) -> String {
         if self.is_null {
             return String::new();
         }
-        let mut codes: Vec<String> = Vec::new();
+        let mut out = String::with_capacity(48);
+        let mut first = true;
+
+        // Macro to push a simple code with proper separator
+        macro_rules! push_code {
+            ($code:expr) => {{
+                if first {
+                    out.push_str("\x1b[");
+                    first = false;
+                } else {
+                    out.push(';');
+                }
+                out.push_str($code);
+            }};
+        }
 
         // Foreground color
         if let Some(ref c) = self.color {
             match c.color_type {
-                crate::color::ColorType::Default => codes.push("39".into()),
+                crate::color::ColorType::Default => push_code!("39"),
                 crate::color::ColorType::Standard => {
                     if let Some(n) = c.number {
-                        if n < 8 {
-                            codes.push((30 + n).to_string());
-                        } else {
-                            codes.push((82 + n).to_string()); // 90-97 for bright
-                        }
+                        let code = if n < 8 { 30 + n } else { 82 + n };
+                        push_code!(&code.to_string());
                     }
                 }
                 crate::color::ColorType::EightBit => {
                     if let Some(n) = c.number {
-                        codes.push(format!("38;5;{n}"));
+                        out.push_str(if first { "\x1b[38;5;" } else { ";38;5;" });
+                        first = false;
+                        out.push_str(&n.to_string());
                     }
                 }
                 crate::color::ColorType::TrueColor => {
                     if let Some((r, g, b)) = c.triplet {
-                        codes.push(format!("38;2;{r};{g};{b}"));
+                        out.push_str(if first { "\x1b[38;2;" } else { ";38;2;" });
+                        first = false;
+                        out.push_str(&format!("{r};{g};{b}"));
                     }
                 }
             }
@@ -473,75 +499,75 @@ impl Style {
         // Background color
         if let Some(ref c) = self.bgcolor {
             match c.color_type {
-                crate::color::ColorType::Default => codes.push("49".into()),
+                crate::color::ColorType::Default => push_code!("49"),
                 crate::color::ColorType::Standard => {
                     if let Some(n) = c.number {
-                        if n < 8 {
-                            codes.push((40 + n).to_string());
-                        } else {
-                            codes.push((92 + n).to_string()); // 100-107
-                        }
+                        let code = if n < 8 { 40 + n } else { 92 + n };
+                        push_code!(&code.to_string());
                     }
                 }
                 crate::color::ColorType::EightBit => {
                     if let Some(n) = c.number {
-                        codes.push(format!("48;5;{n}"));
+                        out.push_str(if first { "\x1b[48;5;" } else { ";48;5;" });
+                        first = false;
+                        out.push_str(&n.to_string());
                     }
                 }
                 crate::color::ColorType::TrueColor => {
                     if let Some((r, g, b)) = c.triplet {
-                        codes.push(format!("48;2;{r};{g};{b}"));
+                        out.push_str(if first { "\x1b[48;2;" } else { ";48;2;" });
+                        first = false;
+                        out.push_str(&format!("{r};{g};{b}"));
                     }
                 }
             }
         }
 
-        // Attributes
+        // Attributes — use push_code! macro for single-code attributes
         if self.set_attributes & Attributes::BOLD != 0 {
-            codes.push(if self.attributes.get(Attributes::BOLD) { "1" } else { "22" }.into());
+            push_code!(if self.attributes.get(Attributes::BOLD) { "1" } else { "22" });
         }
         if self.set_attributes & Attributes::DIM != 0 {
-            codes.push(if self.attributes.get(Attributes::DIM) { "2" } else { "22" }.into());
+            push_code!(if self.attributes.get(Attributes::DIM) { "2" } else { "22" });
         }
         if self.set_attributes & Attributes::ITALIC != 0 {
-            codes.push(if self.attributes.get(Attributes::ITALIC) { "3" } else { "23" }.into());
+            push_code!(if self.attributes.get(Attributes::ITALIC) { "3" } else { "23" });
         }
         if self.set_attributes & Attributes::UNDERLINE != 0 {
-            codes.push(if self.attributes.get(Attributes::UNDERLINE) { "4" } else { "24" }.into());
+            push_code!(if self.attributes.get(Attributes::UNDERLINE) { "4" } else { "24" });
         }
         if self.set_attributes & Attributes::BLINK != 0 {
-            codes.push(if self.attributes.get(Attributes::BLINK) { "5" } else { "25" }.into());
+            push_code!(if self.attributes.get(Attributes::BLINK) { "5" } else { "25" });
         }
         if self.set_attributes & Attributes::REVERSE != 0 {
-            codes.push(if self.attributes.get(Attributes::REVERSE) { "7" } else { "27" }.into());
+            push_code!(if self.attributes.get(Attributes::REVERSE) { "7" } else { "27" });
         }
         if self.set_attributes & Attributes::CONCEAL != 0 {
-            codes.push(if self.attributes.get(Attributes::CONCEAL) { "8" } else { "28" }.into());
+            push_code!(if self.attributes.get(Attributes::CONCEAL) { "8" } else { "28" });
         }
         if self.set_attributes & Attributes::STRIKE != 0 {
-            codes.push(if self.attributes.get(Attributes::STRIKE) { "9" } else { "29" }.into());
+            push_code!(if self.attributes.get(Attributes::STRIKE) { "9" } else { "29" });
         }
         if self.set_attributes & Attributes::UNDERLINE2 != 0 {
-            codes.push(if self.attributes.get(Attributes::UNDERLINE2) { "21" } else { "24" }.into());
+            push_code!(if self.attributes.get(Attributes::UNDERLINE2) { "21" } else { "24" });
         }
         if self.set_attributes & Attributes::BLINK2 != 0 {
-            codes.push(if self.attributes.get(Attributes::BLINK2) { "6" } else { "25" }.into());
+            push_code!(if self.attributes.get(Attributes::BLINK2) { "6" } else { "25" });
         }
         if self.set_attributes & Attributes::FRAME != 0 {
-            codes.push(if self.attributes.get(Attributes::FRAME) { "51" } else { "54" }.into());
+            push_code!(if self.attributes.get(Attributes::FRAME) { "51" } else { "54" });
         }
         if self.set_attributes & Attributes::ENCIRCLE != 0 {
-            codes.push(if self.attributes.get(Attributes::ENCIRCLE) { "52" } else { "54" }.into());
+            push_code!(if self.attributes.get(Attributes::ENCIRCLE) { "52" } else { "54" });
         }
         if self.set_attributes & Attributes::OVERLINE != 0 {
-            codes.push(if self.attributes.get(Attributes::OVERLINE) { "53" } else { "55" }.into());
+            push_code!(if self.attributes.get(Attributes::OVERLINE) { "53" } else { "55" });
         }
 
-        if codes.is_empty() {
-            String::new()
-        } else {
-            format!("\x1b[{}m", codes.join(";"))
+        if !first {
+            out.push('m');
         }
+        out
     }
 
     /// Return the ANSI reset sequence needed to turn off this style.
@@ -627,7 +653,7 @@ impl Style {
             parts.push("font-style: italic".into());
         }
 
-        // text-decoration: combine underline and strike
+        // text-decoration: combine underline, strike, blink
         let mut decor: Vec<&str> = Vec::new();
         if self.set_attributes & Attributes::UNDERLINE != 0
             && self.attributes.get(Attributes::UNDERLINE)
@@ -644,8 +670,29 @@ impl Style {
         {
             decor.push("line-through");
         }
+        if (self.set_attributes & Attributes::BLINK != 0
+            && self.attributes.get(Attributes::BLINK))
+            || (self.set_attributes & Attributes::BLINK2 != 0
+                && self.attributes.get(Attributes::BLINK2))
+        {
+            decor.push("blink");
+        }
         if !decor.is_empty() {
             parts.push(format!("text-decoration: {}", decor.join(" ")));
+        }
+
+        // reverse video → CSS invert filter
+        if self.set_attributes & Attributes::REVERSE != 0
+            && self.attributes.get(Attributes::REVERSE)
+        {
+            parts.push("filter: invert(100%)".into());
+        }
+
+        // conceal → hidden visibility
+        if self.set_attributes & Attributes::CONCEAL != 0
+            && self.attributes.get(Attributes::CONCEAL)
+        {
+            parts.push("visibility: hidden".into());
         }
 
         if parts.is_empty() {
@@ -1155,6 +1202,37 @@ mod tests {
         let c = Color::from_rgb(255, 0, 128);
         let hex = color_to_css_hex(&c);
         assert_eq!(hex, "#ff0080");
+    }
+
+    #[test]
+    fn test_null_style_constant() {
+        assert!(NULL_STYLE.is_null());
+        assert!(NULL_STYLE.color.is_none());
+        assert!(NULL_STYLE.bgcolor.is_none());
+        assert_eq!(NULL_STYLE.set_attributes, 0);
+        // Style::null() should equal NULL_STYLE
+        assert_eq!(Style::null(), NULL_STYLE);
+    }
+
+    #[test]
+    fn test_get_html_style_blink() {
+        let s = Style::new().blink(true);
+        let css = s.get_html_style(None);
+        assert!(css.contains("blink"));
+    }
+
+    #[test]
+    fn test_get_html_style_reverse() {
+        let s = Style::new().reverse(true);
+        let css = s.get_html_style(None);
+        assert!(css.contains("invert(100%)"));
+    }
+
+    #[test]
+    fn test_get_html_style_conceal() {
+        let s = Style::new().conceal(true);
+        let css = s.get_html_style(None);
+        assert!(css.contains("visibility: hidden"));
     }
 
     #[test]

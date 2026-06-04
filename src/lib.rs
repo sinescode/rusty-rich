@@ -329,7 +329,8 @@ pub mod align;
 pub mod markup;
 /// Proportional space distribution algorithms with minimums and maximums.
 pub mod ratio;
-/// Regex-based and repr-style text highlighters (always available, no syntect dependency).
+/// Regex-based and repr-style text highlighters (requires `syntax-highlighting` feature).
+#[cfg(feature = "syntax-highlighting")]
 pub mod highlighter;
 /// Central rendering engine — Console, Renderable trait, capture, export.
 pub mod console;
@@ -373,8 +374,10 @@ pub mod screen;
 // -- Content rendering ------------------------------------------------------
 
 /// Syntax highlighting via syntect (100+ languages, Sublime Text theme support).
+#[cfg(feature = "syntax-highlighting")]
 pub mod syntax;
 /// Markdown rendering via pulldown-cmark: headings, code, lists, blockquotes, tables.
+#[cfg(feature = "markdown")]
 pub mod markdown;
 /// Pretty-printed JSON with syntax-highlighted keys, strings, numbers, booleans.
 pub mod json;
@@ -639,10 +642,13 @@ pub use screen::ScreenUpdate;
 // -- Content rendering -------------------------------------------------------
 
 /// Syntax-highlighted code block — language, theme, line numbers, word wrap.
+#[cfg(feature = "syntax-highlighting")]
 pub use syntax::Syntax;
 /// Render a markdown string into a [`MarkdownRender`].
+#[cfg(feature = "markdown")]
 pub use markdown::render_markdown;
 /// A markdown document renderable — headings, code, lists, blockquotes, tables.
+#[cfg(feature = "markdown")]
 pub use markdown::MarkdownRender;
 /// Render a `serde_json::Value` into a [`JsonRender`].
 pub use json::render_json;
@@ -664,12 +670,16 @@ pub use traceback::Frame;
 pub use traceback::install;
 
 /// Trait for text highlighters — takes a [`Text`] and returns a styled [`Text`].
+#[cfg(feature = "syntax-highlighting")]
 pub use highlighter::Highlighter;
 /// Highlights Python-repr-like output: URLs, numbers, paths, quoted strings.
+#[cfg(feature = "syntax-highlighting")]
 pub use highlighter::ReprHighlighter;
 /// A no-op highlighter that returns text unchanged.
+#[cfg(feature = "syntax-highlighting")]
 pub use highlighter::NullHighlighter;
 /// Highlights text using regex patterns mapped to styles.
+#[cfg(feature = "syntax-highlighting")]
 pub use highlighter::RegexHighlighter;
 
 // -- Export ------------------------------------------------------------------
@@ -704,6 +714,8 @@ pub use export::EXPORT_THEME_NIGHT_OWLISH;
 pub use export::EXPORT_THEME_SVG;
 /// Convert segments to HTML spans with inline CSS.
 pub use export::segments_to_html;
+/// Convert segments to SVG `<tspan>` elements with inline fill.
+pub use export::segments_to_svg;
 /// Escape text for safe HTML embedding.
 pub use export::escape_html;
 /// Strip ANSI escape sequences from a string.
@@ -781,10 +793,15 @@ pub use repr::ReprOptions;
 pub use repr::ReprError;
 
 // Syntax additional exports
+#[cfg(feature = "syntax-highlighting")]
 pub use syntax::SyntaxTheme;
+#[cfg(feature = "syntax-highlighting")]
 pub use syntax::ANSISyntaxTheme;
+#[cfg(feature = "syntax-highlighting")]
 pub use syntax::get_lexer_by_name;
+#[cfg(feature = "syntax-highlighting")]
 pub use syntax::get_style_by_name;
+#[cfg(feature = "syntax-highlighting")]
 pub use syntax::guess_lexer_for_filename;
 
 // Console additional exports
@@ -810,8 +827,11 @@ pub use progress::track;
 pub use progress::wrap_file;
 
 // Highlighter additional exports
+#[cfg(feature = "syntax-highlighting")]
 pub use highlighter::ISO8601Highlighter;
+#[cfg(feature = "syntax-highlighting")]
 pub use highlighter::JSONHighlighter;
+#[cfg(feature = "syntax-highlighting")]
 pub use highlighter::PathHighlighter;
 
 // Filesize additional exports

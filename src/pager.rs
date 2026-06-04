@@ -11,20 +11,26 @@ use std::process::{Command, Stdio};
 // SystemPager
 // ---------------------------------------------------------------------------
 
-/// A pager that uses the system's default pager (`$PAGER` or `less`).
+/// A pager that uses the system's default pager (`$PAGER` or `less`/`more`).
+///
+/// The pager command is split into program + arguments to prevent command
+/// injection via environment variables (VULN-007).
 #[derive(Debug, Clone)]
 pub struct SystemPager {
-    /// The pager command to execute.
-    command: String,
+    /// The pager program to execute.
+    program: String,
+    /// Arguments to pass to the pager program.
+    args: Vec<String>,
 }
 
 impl SystemPager {
     /// Create a new `SystemPager`, detecting the system pager from the
-    /// `PAGER` environment variable (falls back to `less`).
+    /// `PAGER` environment variable. Falls back to `less` on Unix and
+    /// `more` on Windows.
     pub fn new() -> Self {
-        Self {
-            command: std::env::var("PAGER").unwrap_or_else(|_| "less".into()),
-        }
+        let pager_cmd = std::env::var("PAGER").unwrap_or_else(|_| default_pager());
+        let (program, args) = split_pager_command(&pager_cmd);
+        Self { program, args }
     }
 
     /// Pipe `content` through the system pager.
@@ -32,7 +38,8 @@ impl SystemPager {
     /// Spawns the pager process, writes content to its stdin, and waits
     /// for it to finish.
     pub fn show(&self, content: &str) -> std::io::Result<()> {
-        let mut child = Command::new(&self.command)
+        let mut child = Command::new(&self.program)
+            .args(&self.args)
             .stdin(Stdio::piped())
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
@@ -76,11 +83,11 @@ pub struct Pager {
 
 impl Pager {
     /// Create a new `Pager` with default settings (enabled, uses `$PAGER`,
-    /// color enabled).
+    /// color enabled). Falls back to `less` on Unix, `more` on Windows.
     pub fn new() -> Self {
         Self {
             enabled: true,
-            command: std::env::var("PAGER").unwrap_or_else(|_| "less".into()),
+            command: std::env::var("PAGER").unwrap_or_else(|_| default_pager()),
             color: true,
         }
     }
@@ -133,15 +140,15 @@ impl Pager {
         }
 
         let display = if !self.color {
-            // Strip ANSI escape sequences
-            strip_ansi_escapes(content)
+            // Strip ANSI escape sequences using the comprehensive FSM-based
+            // version from the export module (handles CSI, OSC, DCS, etc.)
+            crate::export::strip_ansi_escapes(content)
         } else {
             content.to_string()
         };
 
-        let pager = SystemPager {
-            command: self.command.clone(),
-        };
+        let (program, args) = split_pager_command(&self.command);
+        let pager = SystemPager { program, args };
         pager.show(&display)
     }
 }
@@ -233,12 +240,27 @@ impl Drop for PagerContext {
 // Internal helpers
 // ---------------------------------------------------------------------------
 
-/// Strip ANSI escape sequences from a string.
-fn strip_ansi_escapes(s: &str) -> String {
-    use regex::Regex;
-    // Match ANSI escape sequences: ESC[ ... m or similar
-    let re = Regex::new(r"\x1b\[[0-9;]*[a-zA-Z]").unwrap();
-    re.replace_all(s, "").to_string()
+/// Return the platform-appropriate default pager command.
+fn default_pager() -> String {
+    if cfg!(windows) {
+        "more".into()
+    } else {
+        "less".into()
+    }
+}
+
+/// Split a pager command string into a program and arguments.
+///
+/// This prevents command injection via `$PAGER` by ensuring the program
+/// and arguments are passed separately to `Command::new()`.
+fn split_pager_command(cmd: &str) -> (String, Vec<String>) {
+    let mut parts: Vec<&str> = cmd.split_whitespace().collect();
+    if parts.is_empty() {
+        return (String::new(), vec![]);
+    }
+    let program = parts.remove(0).to_string();
+    let args: Vec<String> = parts.into_iter().map(String::from).collect();
+    (program, args)
 }
 
 #[cfg(test)]
@@ -248,8 +270,8 @@ mod tests {
     #[test]
     fn test_system_pager_creation() {
         let pager = SystemPager::new();
-        // Should detect PAGER or default to "less"
-        assert!(!pager.command.is_empty());
+        // Should detect PAGER or default to "less"/"more"
+        assert!(!pager.program.is_empty());
     }
 
     #[test]
@@ -298,16 +320,10 @@ mod tests {
     }
 
     #[test]
-    fn test_strip_ansi_escapes_basic() {
+    fn test_strip_ansi_via_export() {
+        // Uses crate::export::strip_ansi_escapes (hand-written FSM)
         let input = "\x1b[31mhello\x1b[0m world";
-        let result = strip_ansi_escapes(input);
-        assert_eq!(result, "hello world");
-    }
-
-    #[test]
-    fn test_strip_ansi_escapes_no_ansi() {
-        let input = "hello world";
-        let result = strip_ansi_escapes(input);
+        let result = crate::export::strip_ansi_escapes(input);
         assert_eq!(result, "hello world");
     }
 

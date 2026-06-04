@@ -120,6 +120,7 @@ impl Default for ConsoleOptions {
 
 impl ConsoleOptions {
     /// Update the max width.
+    #[must_use]
     pub fn update_width(&self, max_width: usize) -> Self {
         let mut opts = self.clone();
         opts.max_width = max_width;
@@ -127,6 +128,7 @@ impl ConsoleOptions {
     }
 
     /// Update the height.
+    #[must_use]
     pub fn update_height(&self, height: usize) -> Self {
         let mut opts = self.clone();
         opts.height = Some(height);
@@ -134,6 +136,7 @@ impl ConsoleOptions {
     }
 
     /// Shrink the max width by an amount (for padding).
+    #[must_use]
     pub fn shrink_width(&self, amount: usize) -> Self {
         let mut opts = self.clone();
         opts.max_width = opts.max_width.saturating_sub(amount);
@@ -923,11 +926,15 @@ impl Console {
     /// Export the current console output as an HTML document.
     ///
     /// Renders the given renderable and wraps it in a styled HTML page.
+    /// Export the current console output as an HTML document.
+    ///
+    /// Renders the given renderable to segments, converts to styled HTML spans,
+    /// and wraps in a full HTML document. Colors and styles are preserved.
     pub fn export_html(&self, renderable: &dyn Renderable) -> String {
-        let result = renderable.render(&self.options);
-        let ansi = result.to_ansi();
+        let segments = self.render(renderable, &self.options);
+        let code = crate::export::segments_to_html(&segments, &crate::export::ExportTheme::default());
         crate::export::export_html(&crate::export::ExportHtmlOptions {
-            code: crate::export::strip_ansi_escapes(&ansi),
+            code,
             ..Default::default()
         })
     }
@@ -935,18 +942,19 @@ impl Console {
     /// Save rendered output as an HTML file.
     pub fn save_html(&self, path: impl AsRef<std::path::Path>, renderable: &dyn Renderable) -> std::io::Result<()> {
         let html = self.export_html(renderable);
-        crate::export::save_html(path, &crate::export::ExportHtmlOptions {
-            code: html,
-            ..Default::default()
-        })
+        std::fs::write(path.as_ref(), html)
     }
 
     /// Export the current console output as an SVG document.
+    /// Export the current console output as an SVG document.
+    ///
+    /// Renders the given renderable to segments, converts to styled SVG
+    /// `<tspan>` elements, and wraps in a full SVG document.
     pub fn export_svg(&self, renderable: &dyn Renderable) -> String {
-        let result = renderable.render(&self.options);
-        let ansi = result.to_ansi();
+        let segments = self.render(renderable, &self.options);
+        let code = crate::export::segments_to_svg(&segments, &crate::export::ExportTheme::default());
         crate::export::export_svg(&crate::export::ExportSvgOptions {
-            code: crate::export::strip_ansi_escapes(&ansi),
+            code,
             ..Default::default()
         })
     }
@@ -1166,12 +1174,12 @@ impl Console {
     /// End capture mode and return the [`Capture`] containing all output written
     /// while capturing was active. The console's output is restored to its
     /// original destination.
-    pub fn end_capture(&mut self) -> Capture {
-        let buf = self.capture_buf.take().expect("not currently capturing");
+    pub fn end_capture(&mut self) -> Result<Capture, CaptureError> {
+        let buf = self.capture_buf.take().ok_or(CaptureError::NotCapturing)?;
         if let Some(saved) = self.saved_file.take() {
             self.file = saved;
         }
-        Capture { buf }
+        Ok(Capture { buf })
     }
 
     /// Run the given closure with output captured, returning the captured text.
@@ -1183,14 +1191,13 @@ impl Console {
     /// let mut console = Console::new();
     /// let output = console.capture(|c| {
     ///     c.print_str("Hello, world!");
-    /// });
+    /// }).unwrap();
     /// assert_eq!(output, "Hello, world!");
     /// ```
-    pub fn capture<F: FnOnce(&mut Self)>(&mut self, f: F) -> String {
+    pub fn capture<F: FnOnce(&mut Self)>(&mut self, f: F) -> Result<String, CaptureError> {
         self.begin_capture();
         f(self);
-        let cap = self.end_capture();
-        cap.get()
+        self.end_capture().map(|cap| cap.get())
     }
 
     // -- Pager System --------------------------------------------------------
@@ -1481,7 +1488,7 @@ static GLOBAL_CONSOLE: Lazy<Mutex<Console>> = Lazy::new(|| {
 
 /// Get a reference to the global Console.
 pub fn get_console() -> std::sync::MutexGuard<'static, Console> {
-    GLOBAL_CONSOLE.lock().unwrap()
+    GLOBAL_CONSOLE.lock().unwrap_or_else(|e| e.into_inner())
 }
 
 // ---------------------------------------------------------------------------
@@ -1677,7 +1684,7 @@ mod tests {
         let mut console = Console::with_file(Box::new(std::io::sink()));
         console.begin_capture();
         let _ = write!(console.file, "captured text");
-        let cap = console.end_capture();
+        let cap = console.end_capture().unwrap();
         assert_eq!(cap.get(), "captured text");
     }
 
@@ -1686,7 +1693,7 @@ mod tests {
         let mut console = Console::with_file(Box::new(std::io::sink()));
         let output = console.capture(|c| {
             let _ = write!(c.file, "hello from capture");
-        });
+        }).unwrap();
         assert_eq!(output, "hello from capture");
     }
 
@@ -1695,6 +1702,14 @@ mod tests {
         let console = Console::new();
         let cap = Capture::new(&console);
         assert_eq!(cap.get(), "");
+    }
+
+    #[test]
+    fn test_end_capture_not_capturing() {
+        let mut console = Console::new();
+        let result = console.end_capture();
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), CaptureError::NotCapturing);
     }
 
     #[test]
@@ -1777,7 +1792,6 @@ mod tests {
     fn test_console_input_renderable() {
         // input_renderable reads from stdin, which is hard to test
         // Verify the method signature compiles
-        let _console = Console::new();
     }
 
     #[test]

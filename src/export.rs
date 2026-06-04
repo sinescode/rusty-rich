@@ -537,6 +537,71 @@ pub fn segments_to_html(
     html
 }
 
+/// Convert Rich styled segments to SVG `<tspan>` elements with inline fill
+/// colors. Each segment's foreground color maps to a `fill` attribute, and
+/// text attributes (bold, italic, underline, strike, dim, conceal) are
+/// mapped to CSS properties.
+pub fn segments_to_svg(
+    segments: &[Segment],
+    theme: &ExportTheme,
+) -> String {
+    let mut svg = String::new();
+
+    for seg in segments {
+        let mut styles: Vec<String> = Vec::new();
+
+        if let Some(ref style) = seg.style {
+            // Foreground color
+            if let Some(color) = &style.color {
+                let rgb = resolve_color(color, theme);
+                styles.push(format!("fill:rgb({},{},{})", rgb.0, rgb.1, rgb.2));
+            } else {
+                let fg = theme.foreground;
+                styles.push(format!("fill:rgb({},{},{})", fg.0, fg.1, fg.2));
+            }
+
+            // Text attributes
+            let attrs = &style.attributes;
+            if attrs.get(crate::style::Attributes::BOLD) {
+                styles.push("font-weight:bold".into());
+            }
+            if attrs.get(crate::style::Attributes::ITALIC) {
+                styles.push("font-style:italic".into());
+            }
+            if attrs.get(crate::style::Attributes::UNDERLINE)
+                || attrs.get(crate::style::Attributes::UNDERLINE2)
+            {
+                styles.push("text-decoration:underline".into());
+            }
+            if attrs.get(crate::style::Attributes::STRIKE) {
+                styles.push("text-decoration:line-through".into());
+            }
+            if attrs.get(crate::style::Attributes::DIM) {
+                styles.push("opacity:0.7".into());
+            }
+            if attrs.get(crate::style::Attributes::CONCEAL) {
+                styles.push("visibility:hidden".into());
+            }
+        } else {
+            let fg = theme.foreground;
+            styles.push(format!("fill:rgb({},{},{})", fg.0, fg.1, fg.2));
+        }
+
+        if styles.is_empty() {
+            svg.push_str(&escape_xml(&seg.text));
+        } else {
+            let style_attr = styles.join("; ");
+            svg.push_str(&format!(
+                "<tspan style=\"{}\">{}</tspan>",
+                style_attr,
+                escape_xml(&seg.text)
+            ));
+        }
+    }
+
+    svg
+}
+
 /// Resolve a color to an RGB triplet given a terminal theme.
 fn resolve_color(color: &Color, theme: &ExportTheme) -> (u8, u8, u8) {
     match color.color_type {
@@ -727,6 +792,29 @@ mod tests {
         let theme = ExportTheme::default();
         assert_eq!(theme.background, (0, 0, 0));
         assert_eq!(theme.foreground, (255, 255, 255));
+    }
+
+    #[test]
+    fn test_segments_to_svg_styled() {
+        let seg = Segment::styled(
+            "hello",
+            Style::new()
+                .color(Color::parse("red").unwrap())
+                .bold(true),
+        );
+        let svg = segments_to_svg(&[seg], &ExportTheme::default());
+        assert!(svg.contains("fill:rgb(128,0,0)"));
+        assert!(svg.contains("font-weight:bold"));
+        assert!(svg.contains("hello"));
+        assert!(svg.contains("<tspan"));
+    }
+
+    #[test]
+    fn test_segments_to_svg_plain() {
+        let seg = Segment::new("plain");
+        let svg = segments_to_svg(&[seg], &ExportTheme::default());
+        assert!(svg.contains("plain"));
+        assert!(svg.contains("fill:rgb(255,255,255)"));
     }
 
     #[test]
