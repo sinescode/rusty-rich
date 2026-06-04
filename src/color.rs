@@ -762,8 +762,8 @@ pub fn blend_colors(
 // We use a simple linear scan backed by a slice — fast enough for the small
 // set of named colors.
 
-use std::sync::LazyLock;
 use std::collections::HashMap;
+use std::sync::LazyLock;
 
 static ANSI_NAME_MAP: LazyLock<HashMap<&'static str, u8>> = LazyLock::new(|| {
     let mut m = HashMap::new();
@@ -1041,7 +1041,8 @@ mod tests {
 
     #[test]
     fn test_rgb_to_8bit_black() {
-        assert_eq!(rgb_to_8bit(0, 0, 0), 16);
+        // Pure black maps to index 0 (standard black), not 16 (grey0) — BUG-009
+        assert_eq!(rgb_to_8bit(0, 0, 0), 0);
     }
 
     #[test]

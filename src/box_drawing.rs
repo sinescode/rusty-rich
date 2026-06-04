@@ -332,17 +332,21 @@ pub static BOX_SQUARE: LazyLock<BoxStyle> = LazyLock::new(|| BoxStyle::from_str(
 /// Heavy (thick) borders.
 pub static BOX_HEAVY: LazyLock<BoxStyle> = LazyLock::new(|| BoxStyle::from_str(HEAVY, false));
 /// Heavy outer edges with light inner dividers.
-pub static BOX_HEAVY_EDGE: LazyLock<BoxStyle> = LazyLock::new(|| BoxStyle::from_str(HEAVY_EDGE, false));
+pub static BOX_HEAVY_EDGE: LazyLock<BoxStyle> =
+    LazyLock::new(|| BoxStyle::from_str(HEAVY_EDGE, false));
 /// Heavy header row with regular body borders.
-pub static BOX_HEAVY_HEAD: LazyLock<BoxStyle> = LazyLock::new(|| BoxStyle::from_str(HEAVY_HEAD, false));
+pub static BOX_HEAVY_HEAD: LazyLock<BoxStyle> =
+    LazyLock::new(|| BoxStyle::from_str(HEAVY_HEAD, false));
 /// Double-line borders.
 pub static BOX_DOUBLE: LazyLock<BoxStyle> = LazyLock::new(|| BoxStyle::from_str(DOUBLE, false));
 /// Double outer edge with single inner dividers.
-pub static BOX_DOUBLE_EDGE: LazyLock<BoxStyle> = LazyLock::new(|| BoxStyle::from_str(DOUBLE_EDGE, false));
+pub static BOX_DOUBLE_EDGE: LazyLock<BoxStyle> =
+    LazyLock::new(|| BoxStyle::from_str(DOUBLE_EDGE, false));
 /// Simple borders (no vertical edges, horizontal rules only).
 pub static BOX_SIMPLE: LazyLock<BoxStyle> = LazyLock::new(|| BoxStyle::from_str(SIMPLE, false));
 /// Simple borders with heavy horizontal rules.
-pub static BOX_SIMPLE_HEAVY: LazyLock<BoxStyle> = LazyLock::new(|| BoxStyle::from_str(SIMPLE_HEAVY, false));
+pub static BOX_SIMPLE_HEAVY: LazyLock<BoxStyle> =
+    LazyLock::new(|| BoxStyle::from_str(SIMPLE_HEAVY, false));
 /// Minimal box (just horizontal separators between header/body).
 pub static BOX_MINIMAL: LazyLock<BoxStyle> = LazyLock::new(|| BoxStyle::from_str(MINIMAL, false));
 /// Minimal box with heavy horizontal separators.
@@ -359,7 +363,8 @@ pub static BOX_SQUARE_DOUBLE_HEAD: LazyLock<BoxStyle> =
 pub static BOX_MINIMAL_DOUBLE_HEAD: LazyLock<BoxStyle> =
     LazyLock::new(|| BoxStyle::from_str(MINIMAL_DOUBLE_HEAD, false));
 /// Simple box with a single horizontal rule under the header.
-pub static BOX_SIMPLE_HEAD: LazyLock<BoxStyle> = LazyLock::new(|| BoxStyle::from_str(SIMPLE_HEAD, false));
+pub static BOX_SIMPLE_HEAD: LazyLock<BoxStyle> =
+    LazyLock::new(|| BoxStyle::from_str(SIMPLE_HEAD, false));
 /// ASCII box with a double header line.
 pub static BOX_ASCII_DOUBLE_HEAD: LazyLock<BoxStyle> =
     LazyLock::new(|| BoxStyle::from_str(ASCII_DOUBLE_HEAD, true));
