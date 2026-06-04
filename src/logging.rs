@@ -5,6 +5,7 @@
 use std::io::Write;
 
 use crate::console::Console;
+#[cfg(feature = "syntax-highlighting")]
 use crate::highlighter::ReprHighlighter;
 use crate::style::Style;
 use crate::text::Text;
@@ -19,6 +20,7 @@ pub struct RichHandler {
     pub show_path: bool,
     pub enable_link_path: bool,
     pub markup: bool,
+    #[cfg(feature = "syntax-highlighting")]
     pub highlighter: ReprHighlighter,
 }
 
@@ -32,6 +34,7 @@ impl RichHandler {
             show_path: true,
             enable_link_path: false,
             markup: false,
+            #[cfg(feature = "syntax-highlighting")]
             highlighter: ReprHighlighter::new(),
         }
     }

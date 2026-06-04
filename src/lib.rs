@@ -112,7 +112,7 @@
 //! | [`constrain`] | [`Constrain`] — cap the maximum width of any renderable |
 //! | [`styled`] | [`Styled`] — apply a style to all output of a renderable |
 //! | [`containers`] | [`Lines`] and [`Renderables`] for grouping renderables |
-//! | [`filesize`] | [`format_file_size`], [`format_transfer_speed`], [`decimal`] (SI units) |
+//! | [`filesize`] | [`format_file_size`], [`format_transfer_speed`], `decimal` (SI units) |
 //! | [`scope`] | [`render_scope`] / [`scope_summary`] for variable inspection |
 //! | [`file_proxy`] | [`FileProxy`] — auto-refreshing file content display |
 //! | [`diagnose`] | Error diagnostics — [`report`] and [`diagnose`] |

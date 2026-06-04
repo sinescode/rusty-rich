@@ -30,7 +30,16 @@ pub trait RichRepr {
 /// Auto-implement RichRepr for Debug types using the ReprHighlighter.
 pub fn auto<T: std::fmt::Debug>(value: &T) -> Text {
     let debug_str = format!("{:#?}", value);
-    ReprHighlighter::new().highlight_str(&debug_str)
+    #[cfg(feature = "syntax-highlighting")]
+    {
+        ReprHighlighter::new().highlight_str(&debug_str)
+    }
+    #[cfg(not(feature = "syntax-highlighting"))]
+    {
+        let mut t = Text::new("");
+        t.plain = debug_str;
+        t
+    }
 }
 
 /// Create a rich representation with custom formatting.

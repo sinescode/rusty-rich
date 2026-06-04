@@ -248,6 +248,7 @@ impl Inspect {
 
 impl Renderable for Inspect {
     fn render(&self, options: &ConsoleOptions) -> RenderResult {
+        #[cfg(feature = "syntax-highlighting")]
         let highlighter = ReprHighlighter::new();
         let mut segments: Vec<Segment> = Vec::new();
         let mut items: Vec<Box<dyn Renderable>> = Vec::new();
@@ -260,9 +261,16 @@ impl Renderable for Inspect {
 
         // -- Value representation --
         if self.value {
-            let highlighted = highlighter.highlight_str(&self.value_repr);
-            let rendered = highlighted.render();
-            segments.push(Segment::new(rendered));
+            #[cfg(feature = "syntax-highlighting")]
+            {
+                let highlighted = highlighter.highlight_str(&self.value_repr);
+                let rendered = highlighted.render();
+                segments.push(Segment::new(rendered));
+            }
+            #[cfg(not(feature = "syntax-highlighting"))]
+            {
+                segments.push(Segment::new(&self.value_repr));
+            }
             segments.push(Segment::line());
         }
 
@@ -333,7 +341,10 @@ impl Renderable for Inspect {
 
                 let name_text = name_style.render(name);
                 let type_text = type_style.render(type_name);
+                #[cfg(feature = "syntax-highlighting")]
                 let val_text = highlighter.highlight_str(value_repr).render();
+                #[cfg(not(feature = "syntax-highlighting"))]
+                let val_text = (*value_repr).to_string();
 
                 table.add_row(vec![
                     crate::table::Cell::new(name_text),

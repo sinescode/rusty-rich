@@ -5,6 +5,7 @@
 //! indentation guides, syntax highlighting, and configurable depth limits.
 
 use crate::console::{ConsoleOptions, RenderResult, Renderable};
+#[cfg(feature = "syntax-highlighting")]
 use crate::highlighter::ReprHighlighter;
 use crate::segment::Segment;
 use crate::text::Text;
@@ -87,6 +88,7 @@ pub struct Pretty {
     /// If true, expand all containers regardless of depth.
     expand_all: bool,
     /// Highlighter for values.
+    #[cfg(feature = "syntax-highlighting")]
     highlighter: ReprHighlighter,
 }
 
@@ -100,6 +102,7 @@ impl Pretty {
             max_string: None,
             max_length: None,
             expand_all: false,
+            #[cfg(feature = "syntax-highlighting")]
             highlighter: ReprHighlighter::new(),
         }
     }
@@ -192,8 +195,15 @@ impl Pretty {
 
         // Key
         if let Some(ref key) = node.key {
-            let highlighted = self.highlighter.highlight_str(key);
-            line_text.push_str(&highlighted.plain);
+            #[cfg(feature = "syntax-highlighting")]
+            {
+                let highlighted = self.highlighter.highlight_str(key);
+                line_text.push_str(&highlighted.plain);
+            }
+            #[cfg(not(feature = "syntax-highlighting"))]
+            {
+                line_text.push_str(key);
+            }
             line_text.push_str(": ");
         }
 
@@ -209,8 +219,16 @@ impl Pretty {
                 } else {
                     value.clone()
                 };
+                #[cfg(feature = "syntax-highlighting")]
                 let highlighted = self.highlighter.highlight_str(&truncated);
-                line_text.push_str(&highlighted.plain);
+                #[cfg(feature = "syntax-highlighting")]
+                {
+                    line_text.push_str(&highlighted.plain);
+                }
+                #[cfg(not(feature = "syntax-highlighting"))]
+                {
+                    line_text.push_str(&truncated);
+                }
             }
             lines.push(vec![Segment::new(&line_text), Segment::line()]);
         } else {
@@ -269,8 +287,17 @@ pub fn pprint<T: std::fmt::Debug>(value: &T, console: &mut crate::console::Conso
 /// Generate a pretty [`Text`] representation of a value.
 pub fn pretty_repr<T: std::fmt::Debug>(value: &T) -> Text {
     let debug_str = format!("{:#?}", value);
-    let highlighter = ReprHighlighter::new();
-    highlighter.highlight_str(&debug_str)
+    #[cfg(feature = "syntax-highlighting")]
+    {
+        let highlighter = ReprHighlighter::new();
+        highlighter.highlight_str(&debug_str)
+    }
+    #[cfg(not(feature = "syntax-highlighting"))]
+    {
+        let mut t = Text::new("");
+        t.plain = debug_str;
+        t
+    }
 }
 
 /// Traverse an arbitrary value and build a [`Node`] tree.
