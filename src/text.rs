@@ -998,8 +998,7 @@ fn apply_sgr(style: &mut Style, params: &str) {
                             let r = parts[i + 2].parse::<u8>().unwrap_or(0);
                             let g = parts[i + 3].parse::<u8>().unwrap_or(0);
                             let b = parts[i + 4].parse::<u8>().unwrap_or(0);
-                            *style =
-                                style.clone().color(crate::color::Color::from_rgb(r, g, b));
+                            *style = style.clone().color(crate::color::Color::from_rgb(r, g, b));
                             i += 4;
                         }
                         "2" => {}
