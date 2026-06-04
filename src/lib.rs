@@ -115,7 +115,7 @@
 //! | [`filesize`] | [`format_file_size`], [`format_transfer_speed`], `decimal` (SI units) |
 //! | [`scope`] | [`render_scope`] / [`scope_summary`] for variable inspection |
 //! | [`file_proxy`] | [`FileProxy`] — auto-refreshing file content display |
-//! | [`diagnose()`] | Error diagnostics — [`report`] and `diagnose()` |
+//! | `diagnose` | Error diagnostics — [`report`] and `diagnose()` |
 //! | [`repr`] | [`RichRepr`] trait, [`repr_auto`] / [`rich_repr`] for custom pretty-printing |
 //!
 //! ### Export
@@ -301,7 +301,7 @@
 //!   [`spinner`], [`status`], [`live`], [`screen`], [`control`])
 //! - **Content** ([`syntax`], [`markdown`], [`json`], [`logging`],
 //!   [`log_render`], [`traceback`], [`pretty`], [`ansi`])
-//! - **Inspection** ([`inspect`], [`scope`], [`repr`], [`diagnose()`])
+//! - **Inspection** (`inspect`, `scope`, `repr`, `diagnose`)
 //! - **Export & I/O** ([`export`], [`pager`], [`emoji`], [`palette`],
 //!   [`filesize`], [`file_proxy`])
 //!
