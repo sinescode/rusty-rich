@@ -630,8 +630,10 @@ impl Default for Progress {
 /// let items: Vec<i32> = (0..100).collect();
 /// let tracker = progress.track(items, "Processing", None);
 /// let task_id = tracker.progress_id;
+/// let mut count = 0;
 /// for item in tracker {
-///     progress.update(task_id, tracker.count() as f64);
+///     count += 1;
+///     progress.update(task_id, count as f64);
 ///     // process item
 /// }
 /// ```

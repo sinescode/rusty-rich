@@ -1172,7 +1172,7 @@ impl Console {
     }
 
     /// Enter or exit the alternate screen buffer by writing the corresponding
-    /// escape sequences (uses [`control::ALT_SCREEN_ENTER`] / [`control::ALT_SCREEN_EXIT`]).
+    /// escape sequences [`crate::control::ALT_SCREEN_ENTER`] / [`crate::control::ALT_SCREEN_EXIT`].
     pub fn set_alt_screen(&mut self, enable: bool) {
         self.alt_screen = enable;
         let seq = if enable {
