@@ -59,10 +59,10 @@ pub fn ratio_resolve(
     let mut used = 0usize;
     let mut flex_indices: Vec<usize> = Vec::new();
 
-    for i in 0..n {
+    for (i, item) in result.iter_mut().enumerate() {
         if let Some(fixed) = fixed_sizes.get(i).copied().flatten() {
-            result[i] = fixed.max(minimums.get(i).copied().unwrap_or(1));
-            used += result[i];
+            *item = fixed.max(minimums.get(i).copied().unwrap_or(1));
+            used += *item;
         } else {
             flex_indices.push(i);
         }

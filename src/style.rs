@@ -347,7 +347,7 @@ impl Style {
     /// useful for background-only rendering.
     pub fn background_style(&self) -> Self {
         let mut s = Self::new();
-        s.bgcolor = self.color.clone();
+        s.bgcolor = self.color;
         s
     }
 
@@ -369,6 +369,7 @@ impl Style {
     /// (e.g. `"not bold"`, `"!bold"`, `"nobold"`). The `not` keyword works
     /// as a prefix for the NEXT token, so `"not bold not italic"` correctly
     /// disables both attributes.
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(definition: &str) -> Self {
         let mut style = Self::new();
         let parts: Vec<&str> = definition.split_whitespace().collect();
@@ -534,10 +535,10 @@ impl Style {
 
         let mut combined = self.clone();
         if other.color.is_some() {
-            combined.color = other.color.clone();
+            combined.color = other.color;
         }
         if other.bgcolor.is_some() {
-            combined.bgcolor = other.bgcolor.clone();
+            combined.bgcolor = other.bgcolor;
         }
         // Attributes: other's set bits override self (3-state cascade)
         for &bit in STYLE_BITS {
@@ -746,8 +747,8 @@ impl Style {
     /// otherwise fall through to `other`.
     pub fn chain(&self, other: &Style) -> Style {
         let mut result = Style::new();
-        result.color = self.color.clone().or_else(|| other.color.clone());
-        result.bgcolor = self.bgcolor.clone().or_else(|| other.bgcolor.clone());
+        result.color = self.color.or(other.color);
+        result.bgcolor = self.bgcolor.or(other.bgcolor);
         result.link = self.link.clone().or_else(|| other.link.clone());
         result.meta = self.meta.clone().or_else(|| other.meta.clone());
         for &bit in STYLE_BITS {
@@ -873,8 +874,8 @@ impl Style {
     /// colors.
     pub fn normalize(&self) -> Style {
         let mut s = Style::new();
-        s.color = self.color.clone();
-        s.bgcolor = self.bgcolor.clone();
+        s.color = self.color;
+        s.bgcolor = self.bgcolor;
         s.link = self.link.clone();
         s.link_id = self.link_id;
         s.meta = self.meta.clone();

@@ -114,7 +114,7 @@ pub fn render(markup: &str) -> Text {
                 let closing = tag.closing_name();
                 if closing.is_empty() {
                     // [/] — close all
-                    while style_stack.len() > 0 {
+                    while !style_stack.is_empty() {
                         style_stack.pop();
                     }
                 } else {
@@ -191,8 +191,8 @@ fn tag_to_style(tag: &Tag) -> Style {
 
         _ => {
             // Try as color name, including "on <color>"
-            if name.starts_with("on ") {
-                if let Ok(c) = crate::color::Color::parse(&name[3..]) {
+            if let Some(color_name) = name.strip_prefix("on ") {
+                if let Ok(c) = crate::color::Color::parse(color_name) {
                     return Style::new().bgcolor(c);
                 }
             }

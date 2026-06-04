@@ -1336,7 +1336,7 @@ impl Console {
         // This method provides the API surface; for actual panic tracebacks
         // see crate::traceback::install().
         let msg = "[bold red]Exception[/bold red]: No current exception info. ";
-        let msg_text = crate::text::Text::from_markup(&msg);
+        let msg_text = crate::text::Text::from_markup(msg);
         let result = msg_text.render();
         let _ = writeln!(self.file, "{result}");
         let _ = self.file.flush();
