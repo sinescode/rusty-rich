@@ -21,7 +21,6 @@
 
 - **51 modules** · **~25,500 lines** · **742+ tests** · **~86% feature parity** with Python Rich 14.x
 - **0 dependencies deprecated** · **0 Clippy warnings** · **CI all green** (Linux, macOS, Windows)
-- **7 security vulnerabilities fixed** · **10 bugs resolved** · **3 dependencies upgraded**
 
 ---
 
@@ -122,12 +121,6 @@ console.rule("Section Break", None, None, None);
 | **Overall** | **~86%** | 51 modules, full API compatibility |
 
 ---
-
-## Contributing
-
-See `RAW_URLS_AND_AI_PROMPTS.md` for AI-ready analysis prompts covering parity comparison, security audit, architecture review, performance analysis, and upgrade roadmap.
-
-CI runs on every push: build (×3 OS), test (all + no-default features), lint (fmt + clippy), docs (warnings as errors), and security audit (cargo-deny).
 
 ---
 
