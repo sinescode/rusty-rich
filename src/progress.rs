@@ -141,7 +141,7 @@ impl ProgressBar {
 
         if self.pulse || self.total.is_none() {
             // Indeterminate: pulsing animation
-            let pos = ((self.completed as usize / 8) % (w - 1)).min(w);
+            let pos = ((self.completed as usize / 8) % w.max(1)).min(w.saturating_sub(1));
             let left = " ".repeat(pos);
             let right = " ".repeat(w.saturating_sub(pos + 1));
             format!("[{left}⣿{right}]")
@@ -347,7 +347,12 @@ impl Progress {
     /// Set a task's completed count directly (overwrites current value).
     pub fn update(&mut self, task_id: usize, completed: f64) {
         if let Some(task) = self.tasks.get_mut(&task_id) {
-            task.completed = completed;
+            // Clamp to [0, total] to prevent NaN/Inf from escaping
+            task.completed = if let Some(total) = task.total {
+                completed.clamp(0.0, total)
+            } else {
+                completed.max(0.0)
+            };
         }
     }
 

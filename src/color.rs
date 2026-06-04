@@ -200,7 +200,12 @@ impl Color {
         if let Some((r, g, b)) = lookup_css_color(&lower) {
             return Ok(Self::from_rgb(r, g, b));
         }
-        if lower.starts_with('#') || lower.len() == 6 {
+        if lower.starts_with('#') {
+            return Self::from_hex(&lower);
+        }
+        // Only try hex for 6-char strings that are ALL hex digits
+        // (prevents misdetecting "purple", "yellow", etc. as hex)
+        if lower.len() == 6 && lower.chars().all(|c| c.is_ascii_hexdigit()) {
             return Self::from_hex(&lower);
         }
         // Try "color<N>" format for 8-bit
@@ -645,7 +650,7 @@ pub static STANDARD_COLOR_NAMES: &[&str] = &[
 ];
 
 /// The 6×6×6 color cube + greyscale ramp = 256-color palette.
-pub static EIGHT_BIT_PALETTE: Lazy<[[u8; 3]; 256]> = Lazy::new(|| {
+pub static EIGHT_BIT_PALETTE: LazyLock<[[u8; 3]; 256]> = LazyLock::new(|| {
     let mut table = [[0u8; 3]; 256];
     let std: [[u8; 3]; 16] = [
         [0, 0, 0],
@@ -691,8 +696,12 @@ pub fn rgb_to_8bit(r: u8, g: u8, b: u8) -> u8 {
     // Check if it's close to a greyscale value
     let grey = ((r as u32 + g as u32 + b as u32) / 3) as u8;
     if r == g && g == b {
+        // Pure black (0,0,0) → index 0 (standard black), not 16 (grey0)
+        if r == 0 && g == 0 && b == 0 {
+            return 0;
+        }
         if grey < 8 {
-            return 16; // black
+            return 16;
         }
         if grey > 248 {
             return 231; // white
@@ -753,10 +762,10 @@ pub fn blend_colors(
 // We use a simple linear scan backed by a slice — fast enough for the small
 // set of named colors.
 
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 use std::collections::HashMap;
 
-static ANSI_NAME_MAP: Lazy<HashMap<&'static str, u8>> = Lazy::new(|| {
+static ANSI_NAME_MAP: LazyLock<HashMap<&'static str, u8>> = LazyLock::new(|| {
     let mut m = HashMap::new();
     // Standard ANSI (0-15)
     m.insert("black", 0u8);

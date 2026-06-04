@@ -225,13 +225,15 @@ pub fn export_html(options: &ExportHtmlOptions) -> String {
     let fg = options.theme.foreground;
     let bg = options.theme.background;
 
+    // Safe ordered replacement: {code} is replaced FIRST to prevent injection
+    // via font_family/font_size containing literal placeholder strings (VULN-007)
     CONSOLE_HTML_FORMAT
-        .replace("{font_family}", &options.font_family)
-        .replace("{font_size}", &options.font_size.to_string())
-        .replace("{line_height}", &options.line_height.to_string())
-        .replace("{foreground}", &format!("rgb({},{},{})", fg.0, fg.1, fg.2))
-        .replace("{background}", &format!("rgb({},{},{})", bg.0, bg.1, bg.2))
         .replace("{code}", &escape_html(&options.code))
+        .replace("{font_family}", &escape_html(&options.font_family))
+        .replace("{font_size}", &escape_html(&options.font_size.to_string()))
+        .replace("{line_height}", &escape_html(&options.line_height.to_string()))
+        .replace("{foreground}", &escape_html(&format!("rgb({},{},{})", fg.0, fg.1, fg.2)))
+        .replace("{background}", &escape_html(&format!("rgb({},{},{})", bg.0, bg.1, bg.2)))
 }
 
 /// Save rendered output as an HTML file.
@@ -307,14 +309,15 @@ pub fn export_svg(options: &ExportSvgOptions) -> String {
     let bg = options.theme.background;
     let baseline = options.font_size as f64 * 1.2; // approximate first-line baseline
 
+    // Safe ordered replacement: {code} goes FIRST, all values escaped (VULN-007)
     CONSOLE_SVG_FORMAT
-        .replace("{font_family}", &options.font_family)
-        .replace("{font_size}", &options.font_size.to_string())
-        .replace("{width}", &options.width.to_string())
-        .replace("{height}", &options.height.to_string())
-        .replace("{background}", &format!("rgb({},{},{})", bg.0, bg.1, bg.2))
-        .replace("{baseline}", &format!("{:.0}", baseline))
         .replace("{code}", &escape_xml(&options.code))
+        .replace("{font_family}", &escape_xml(&options.font_family))
+        .replace("{font_size}", &escape_xml(&options.font_size.to_string()))
+        .replace("{width}", &escape_xml(&options.width.to_string()))
+        .replace("{height}", &escape_xml(&options.height.to_string()))
+        .replace("{background}", &escape_xml(&format!("rgb({},{},{})", bg.0, bg.1, bg.2)))
+        .replace("{baseline}", &escape_xml(&format!("{:.0}", baseline)))
         .replace("{foreground}", &format!("rgb({},{},{})", fg.0, fg.1, fg.2))
 }
 

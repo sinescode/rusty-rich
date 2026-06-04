@@ -66,6 +66,10 @@ impl Tag {
 // Parser
 // ---------------------------------------------------------------------------
 
+/// Maximum nesting depth for markup tags (prevents stack overflow from
+/// deeply nested input like `[bold][bold]...`).
+const MAX_MARKUP_DEPTH: usize = 100;
+
 /// Parse markup and return a `Text` with applied styles.
 ///
 /// Uses byte-based scanning (since `[` and `]` are ASCII single-byte) to
@@ -123,8 +127,11 @@ pub fn render(markup: &str) -> Text {
                 }
             } else {
                 // Opening tag — push style with tag name for matching
-                let style = tag_to_style(&tag);
-                style_stack.push_named(tag.name.clone(), style);
+                // Guard against unlimited nesting depth (BUG-007)
+                if style_stack.len() < MAX_MARKUP_DEPTH {
+                    let style = tag_to_style(&tag);
+                    style_stack.push_named(tag.name.clone(), style);
+                }
             }
         } else {
             // Regular text — accumulate until next `[` or end

@@ -567,6 +567,8 @@ pub struct ThemeContext<'a> {
     _phantom: std::marker::PhantomData<&'a mut Console>,
     console_ptr: *mut Console,
     previous_theme: Theme,
+    // Explicitly prevents Send + Sync auto-derive (VULN-004)
+    _not_send_sync: std::marker::PhantomData<*const ()>,
 }
 
 // SAFETY: ThemeContext is not Send or Sync because of the raw pointer.
@@ -580,6 +582,7 @@ impl<'a> ThemeContext<'a> {
             _phantom: std::marker::PhantomData,
             console_ptr: console as *mut Console,
             previous_theme,
+            _not_send_sync: std::marker::PhantomData,
         }
     }
 }
@@ -1575,9 +1578,9 @@ fn detect_color_system() -> ColorSystem {
 // Global console instance (like Rich's `get_console()`)
 // ---------------------------------------------------------------------------
 
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 
-static GLOBAL_CONSOLE: Lazy<Mutex<Console>> = Lazy::new(|| Mutex::new(Console::new()));
+static GLOBAL_CONSOLE: LazyLock<Mutex<Console>> = LazyLock::new(|| Mutex::new(Console::new()));
 
 /// Get a reference to the global Console.
 pub fn get_console() -> std::sync::MutexGuard<'static, Console> {
