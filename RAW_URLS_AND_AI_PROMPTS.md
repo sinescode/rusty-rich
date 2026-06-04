@@ -3,7 +3,7 @@
 > **Repo**: [sinescode/rusty-rich](https://github.com/sinescode/rusty-rich)  
 > **Branch**: `master`  
 > **Commit**: `4bb6dfc`  
-> **Version**: 0.4.1 — Rust port of Python's [Textualize/rich](https://github.com/Textualize/rich)  
+> **Version**: 0.4.2 — Rust port of Python's [Textualize/rich](https://github.com/Textualize/rich)  
 > **Stats**: ~25,500 lines Rust, 51 modules, 742+ tests, ~86% feature parity with Python Rich 14.x  
 > **CI**: All green — Build (×3 OS) · Test · Lint (fmt+clippy) · Docs · Security Audit
 
@@ -1085,4 +1085,4 @@ https://raw.githubusercontent.com/sinescode/rusty-rich/master/.github/dependabot
 
 ---
 
-Generated 2026-06-04 — repo: [sinescode/rusty-rich](https://github.com/sinescode/rusty-rich) (master, commit `4bb6dfc`)
+Generated 2026-06-04 — repo: [sinescode/rusty-rich](https://github.com/sinescode/rusty-rich) (master, v0.4.2)

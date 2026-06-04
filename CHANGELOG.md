@@ -1,5 +1,47 @@
 # Changelog
 
+## 0.4.2 (2026-06-04)
+
+### Security (7 vulnerabilities fixed)
+
+- **VULN-001** — Removed unmaintained `atty` dependency; migrated to `std::io::IsTerminal` (Rust 1.70+)
+- **VULN-002** — Fixed ANSI escape injection via literal text; `print_str()` now strips raw `\x1b[` sequences
+- **VULN-003** — Replaced regex-based `strip_ansi_escapes` with hand-written FSM covering OSC/DCS sequences
+- **VULN-004** — Made `Live` struct thread-safe with `Arc<Mutex<Option<DynRenderable>>>` + `Arc<AtomicUsize>`
+- **VULN-006** — Fixed `get_console()` poisoned mutex panic; now uses `unwrap_or_else(|e| e.into_inner())`
+- **VULN-007** — Sanitized `$PAGER` command injection via `split_pager_command()` (program + args separation)
+- **VULN-009** — Removed regex recompilation DoS vector in pager; uses FSM-based ANSI stripping
+
+### Fixed (10 bugs resolved)
+
+- **BUG-001** — Removed duplicate `CONCEAL` emission in `Style::to_ansi()`
+- **BUG-002** — Fixed `Color::parse` misdetecting 6-char names like "purple" as hex; added `is_ascii_hexdigit()` guard
+- **BUG-003** — `Progress::update()` now clamps completed to `[0.0, total]` to prevent NaN/Inf
+- **BUG-005** — Fixed `ProgressBar::render()` integer underflow with `saturating_sub(1)`
+- **BUG-006** — `Live::get_renderable()` and `renderable()` return `Option<DynRenderable>` instead of panicking
+- **BUG-007** — Added `MAX_MARKUP_DEPTH = 100` guard to markup parser preventing stack overflow from deep nesting
+- **BUG-008** — `Console::end_capture()` returns `Result<Capture, CaptureError>` instead of panicking
+- **BUG-009** — Fixed `rgb_to_8bit` pure black `(0,0,0)` mapping to index 0 (standard black) instead of 16 (grey0)
+- **BUG-010** — `Style::from_str()` fixed "not bold" with space handling; rewrite with `not` prefix token support
+
+### Fixed (code quality)
+
+- **VULN-004** — `ThemeContext` hardened with `PhantomData<*const ()>` for explicit `!Send + !Sync`
+- **VULN-007** — HTML/SVG export safe from template injection; all values escaped, `{code}` replaced first
+- **IMP-002** — Removed `once_cell` dependency; migrated to `std::sync::LazyLock` (Rust 1.80+)
+- **IMP-005** — Added 11 zero-allocation ANSI constants to `control` module; replaced all hardcoded `\x1b[...` strings in `console.rs` and `live.rs`
+- `clear_live()` redundant if/else branches removed
+- Doctest fixes: `ignore` → `no_run` for 5 doc-tests; cfg-gated markdown example for `--no-default-features`
+- Style negation regression tests added: "not bold", `!italic`, `nounderline`, `on red`
+
+### Changed
+
+- 51 source modules (was 48), ~25,569 lines (was ~21,400), 742+ tests (was 778)
+- 0 Clippy warnings, 0 fmt issues, 0 doc warnings
+- CI fully green: Build (×3 OS) · Test (all + no-default) · Lint (fmt + clippy) · Docs · Security Audit
+- `Full_audit.md` — comprehensive 4-part audit report included in repo
+- `RAW_URLS_AND_AI_PROMPTS.md` — 6 AI-ready analysis prompts with all source file URLs
+
 ## 0.4.1 (2026-06-03)
 
 ### Fixed
