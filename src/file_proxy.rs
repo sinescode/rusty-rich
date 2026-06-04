@@ -47,7 +47,7 @@ impl FileProxy {
     pub fn refresh(&mut self) -> bool {
         if let Ok(meta) = fs::metadata(&self.path) {
             if let Ok(modified) = meta.modified() {
-                if self.last_modified.map_or(true, |last| modified > last) {
+                if self.last_modified.is_none_or(|last| modified > last) {
                     if let Ok(content) = fs::read_to_string(&self.path) {
                         self.content = content;
                         self.last_modified = Some(modified);

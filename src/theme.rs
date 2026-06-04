@@ -76,6 +76,12 @@ pub struct ThemeStack {
     themes: Vec<Theme>,
 }
 
+impl Default for ThemeStack {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ThemeStack {
     pub fn new() -> Self {
         Self { themes: Vec::new() }

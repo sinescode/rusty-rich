@@ -90,6 +90,7 @@ impl Inspect {
     }
 
     /// Create a new `Inspect` from a string value representation.
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(value_repr: impl Into<String>) -> Self {
         Self {
             value_repr: value_repr.into(),

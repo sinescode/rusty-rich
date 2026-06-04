@@ -134,7 +134,7 @@ impl Tree {
         guides: &TreeGuides,
         prefix: &str,
         is_last: bool,
-        options: &ConsoleOptions,
+        _options: &ConsoleOptions,
     ) {
         let connector = if is_last { guides.end } else { guides.fork };
         let guide_ansi = self.guide_style.to_ansi();
@@ -165,7 +165,7 @@ impl Tree {
                 guides,
                 &child_prefix_styled,
                 child_is_last,
-                options,
+                _options,
             );
         }
     }

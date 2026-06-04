@@ -103,7 +103,7 @@ pub enum ColorType {
 // ANSI_COLOR_NAMES — maps name → index in the 256-color table
 // ---------------------------------------------------------------------------
 
-/// Full set of named ANSI colors. Use `Color::name_to_index()` to look up.
+// Full set of named ANSI colors. Use `Color::name_to_index()` to look up.
 // ---------------------------------------------------------------------------
 // Color
 // ---------------------------------------------------------------------------

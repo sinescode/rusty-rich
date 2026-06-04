@@ -75,11 +75,7 @@ impl Renderable for Columns {
 
         let available = self.width.unwrap_or(options.max_width);
         let total_padding = (count.saturating_sub(1)) * self.padding;
-        let col_width = if self.equal {
-            (available.saturating_sub(total_padding)) / count
-        } else {
-            available.saturating_sub(total_padding) / count
-        };
+        let col_width = available.saturating_sub(total_padding) / count;
 
         // Render each column
         let rendered: Vec<RenderResult> = self

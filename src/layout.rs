@@ -357,7 +357,7 @@ impl Layout {
                 let rendered = renderable.render(&ConsoleOptions::default());
                 let text = rendered.to_ansi();
                 if !text.is_empty() {
-                    let _ = console.print_str(&text);
+                    console.print_str(&text);
                 }
             }
         }

@@ -226,13 +226,13 @@ impl Renderable for Panel {
 
         // -- Bordered mode (original path) --
         // Top border (with optional title)
-        let top_line = self.render_top_border(&box_style, panel_width, &border_ansi, &border_reset);
+        let top_line = self.render_top_border(&box_style, panel_width, border_ansi.as_str(), border_reset);
         lines.push(top_line);
 
         // Pad top
         for _ in 0..padding.0 {
             let pad_line =
-                self.render_pad_line(&box_style, panel_width, &border_ansi, &border_reset);
+                self.render_pad_line(&box_style, panel_width, border_ansi.as_str(), border_reset);
             lines.push(pad_line);
         }
 
@@ -270,13 +270,13 @@ impl Renderable for Panel {
         // Pad bottom
         for _ in 0..padding.2 {
             let pad_line =
-                self.render_pad_line(&box_style, panel_width, &border_ansi, &border_reset);
+                self.render_pad_line(&box_style, panel_width, border_ansi.as_str(), border_reset);
             lines.push(pad_line);
         }
 
         // Bottom border (with optional subtitle)
         let bottom_line =
-            self.render_bottom_border(&box_style, panel_width, &border_ansi, &border_reset);
+            self.render_bottom_border(&box_style, panel_width, border_ansi.as_str(), border_reset);
         lines.push(bottom_line);
 
         RenderResult {

@@ -274,8 +274,7 @@ impl Renderable for MarkdownRender {
                         for (i, row) in table_rows.iter().enumerate() {
                             let cells: Vec<Cell> = row
                                 .iter()
-                                .enumerate()
-                                .map(|(_, c)| {
+                                .map(|c| {
                                     if i == 0 {
                                         Cell::new(c.clone()).style(Style::new().bold(true))
                                     } else {

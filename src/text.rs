@@ -127,6 +127,7 @@ impl Text {
     ///
     /// Extracts SGR (Select Graphic Rendition) codes as style spans and strips
     /// all other ANSI escape sequences.
+    #[allow(clippy::collapsible_match)]
     pub fn from_ansi(text: &str) -> Self {
         let re = Regex::new(r"\x1b\[([\d;]*)([a-zA-Z])").unwrap();
         let mut plain = String::new();
@@ -519,16 +520,8 @@ impl Text {
         text.style = self.style.clone();
         for span in &self.spans {
             if span.start < end && span.end > start {
-                let s_start = if span.start > start {
-                    span.start - start
-                } else {
-                    0
-                };
-                let s_end = if span.end < end {
-                    span.end - start
-                } else {
-                    end - start
-                };
+                let s_start = span.start.saturating_sub(start);
+                let s_end = (span.end.min(end)).saturating_sub(start);
                 if s_start < s_end {
                     text.spans
                         .push(Span::new(s_start, s_end, span.style.clone()));

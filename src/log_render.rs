@@ -229,6 +229,7 @@ impl LogRender {
     }
 
     /// Render multiple log records as a single table.
+    #[allow(clippy::type_complexity)]
     pub fn render_batch(
         &mut self,
         records: &[(Option<&str>, &str, &str, Option<&str>, Option<u32>)],
@@ -271,7 +272,7 @@ pub struct LogRecord {
 impl Renderable for LogRecord {
     fn render(&self, _options: &ConsoleOptions) -> RenderResult {
         let time_style = LogRender::get_time_style();
-        let level_style = LogRender::get_level_style(&self.level.trim());
+        let level_style = Self::get_level_style(&self.level.trim());
         let msg_style = LogRender::get_message_style();
         let path_style = LogRender::get_path_style();
 

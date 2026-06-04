@@ -69,7 +69,7 @@ impl Frame {
 }
 
 /// A stack of frames (one exception level).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Stack {
     pub exc_type: Option<String>,
     pub exc_value: Option<String>,
@@ -116,7 +116,7 @@ impl Stack {
 }
 
 /// Full trace data.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Trace {
     pub stacks: Vec<Stack>,
 }
@@ -344,19 +344,19 @@ fn top_border(total_width: usize) -> Vec<Segment> {
     let left_dashes = dashes_total / 2;
     let right_dashes = dashes_total - left_dashes;
 
-    let mut segs = Vec::new();
-    segs.push(Segment::styled("╭─".to_string(), border_style.clone()));
-    segs.push(Segment::styled(
-        "─".repeat(left_dashes.saturating_sub(1)),
-        border_style.clone(),
-    ));
-    segs.push(Segment::styled(title.to_string(), title_style));
-    segs.push(Segment::styled(
-        "─".repeat(right_dashes.saturating_sub(1)),
-        border_style.clone(),
-    ));
-    segs.push(Segment::styled("─╮".to_string(), border_style));
-    segs
+    vec![
+        Segment::styled("╭─".to_string(), border_style.clone()),
+        Segment::styled(
+            "─".repeat(left_dashes.saturating_sub(1)),
+            border_style.clone(),
+        ),
+        Segment::styled(title.to_string(), title_style),
+        Segment::styled(
+            "─".repeat(right_dashes.saturating_sub(1)),
+            border_style.clone(),
+        ),
+        Segment::styled("─╮".to_string(), border_style),
+    ]
 }
 
 /// Build the outer bottom border.
@@ -533,7 +533,7 @@ impl Renderable for Traceback {
                         let code = truncate_to_width(line_text, code_cells);
 
                         let raw_line =
-                            format!("{}{} {} │ {} ", marker_str, " ".repeat(1), ln_str, code,);
+                            format!("{}{} {} │ {} ", marker_str, " ", ln_str, code);
 
                         // Now build: indent + "│" + raw_line + "│"
                         // The raw_line should be padded to sub_box_inner - 2
@@ -719,8 +719,7 @@ impl Renderable for Traceback {
             // Show suppressed frame count
             if suppressed_count > 0 {
                 let msg = format!("  ... {} frames hidden ...", suppressed_count);
-                let mut segs = Vec::new();
-                segs.push(Segment::styled(msg, Style::new().dim(true)));
+                let segs = vec![Segment::styled(msg, Style::new().dim(true))];
                 out_lines.push(outer_content_line(segs, total_width));
                 out_lines.push(outer_blank(total_width));
                 suppressed_count = 0;
@@ -734,8 +733,7 @@ impl Renderable for Traceback {
                 } else {
                     format!("  {}: {}", exc_type, exc_value)
                 };
-                let mut segs = Vec::new();
-                segs.push(Segment::styled(msg, error_style.clone()));
+                let segs = vec![Segment::styled(msg, error_style.clone())];
                 out_lines.push(outer_content_line(segs, total_width));
                 out_lines.push(outer_blank(total_width));
             }

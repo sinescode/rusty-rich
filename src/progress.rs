@@ -123,7 +123,7 @@ impl ProgressBar {
     pub fn percentage(&self) -> f64 {
         if let Some(total) = self.total {
             if total > 0.0 {
-                (self.completed / total).min(1.0).max(0.0)
+                (self.completed / total).clamp(0.0, 1.0)
             } else {
                 0.0
             }
@@ -209,7 +209,7 @@ impl Task {
     pub fn progress(&self) -> f64 {
         if let Some(t) = self.total {
             if t > 0.0 {
-                (self.completed / t).min(1.0).max(0.0)
+                (self.completed / t).clamp(0.0, 1.0)
             } else {
                 0.0
             }

@@ -625,11 +625,11 @@ impl Renderable for Table {
             // Top padding
             let (pt, _pr, _pb, _pl) = self.padding;
             for _ in 0..pt {
-                lines.push(self.render_row_line(&col_widths, &[], &b, available_width, false));
+                lines.push(self.render_row_line(&col_widths, &[], b, available_width, false));
             }
 
             let header_cells: Vec<String> = self.columns.iter().map(|c| c.header.clone()).collect();
-            lines.push(self.render_cell_line(&col_widths, &header_cells, &b, true));
+            lines.push(self.render_cell_line(&col_widths, &header_cells, b, true));
 
             // Header separator
             let mut sep = vec![bs(b.head_row_left)];
@@ -666,13 +666,13 @@ impl Renderable for Table {
             // Leading blank lines between rows
             if row_idx > 0 {
                 for _ in 0..self.leading {
-                    lines.push(self.render_row_line(&col_widths, &[], &b, available_width, false));
+                    lines.push(self.render_row_line(&col_widths, &[], b, available_width, false));
                 }
             }
 
             let (pt, _pr, _pb, _pl) = self.padding;
             for _ in 0..pt {
-                lines.push(self.render_row_line(&col_widths, &[], &b, available_width, false));
+                lines.push(self.render_row_line(&col_widths, &[], b, available_width, false));
             }
 
             let _style = if row_idx < self.row_styles.len() {
@@ -686,7 +686,7 @@ impl Renderable for Table {
             lines.push(self.render_cell_line_with_rowspan(
                 &col_widths,
                 row,
-                &b,
+                b,
                 false,
                 &mut rowspan_remaining,
             ));
@@ -722,7 +722,7 @@ impl Renderable for Table {
             lines.push(sep);
 
             let footer_cells: Vec<String> = self.columns.iter().map(|c| c.footer.clone()).collect();
-            lines.push(self.render_cell_line(&col_widths, &footer_cells, &b, false));
+            lines.push(self.render_cell_line(&col_widths, &footer_cells, b, false));
         }
 
         // -- Bottom border --
@@ -1035,8 +1035,8 @@ impl Table {
 
             // Set rowspan for future rows
             if cell.rowspan > 1 {
-                for rc in col..span_end {
-                    rowspan_remaining[rc] = cell.rowspan - 1;
+                for item in &mut rowspan_remaining[col..span_end] {
+                    *item = cell.rowspan - 1;
                 }
             }
 

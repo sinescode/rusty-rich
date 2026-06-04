@@ -57,6 +57,7 @@ use crate::console::{ConsoleOptions, DynRenderable, Renderable};
 use crate::segment::Segment;
 
 /// A writer that captures output for live display.
+#[derive(Default)]
 pub struct LiveWriter {
     buffer: Vec<u8>,
 }
@@ -108,8 +109,11 @@ impl Write for LiveWriter {
 ///     reversed
 /// });
 /// ```
+/// Type alias for the render hook function to reduce type complexity.
+type RenderHookFn = dyn Fn(&[Vec<Segment>]) -> Vec<Vec<Segment>> + Send;
+
 pub struct RenderHook {
-    hook: Box<dyn Fn(&[Vec<Segment>]) -> Vec<Vec<Segment>> + Send>,
+    hook: Box<RenderHookFn>,
 }
 
 impl RenderHook {
@@ -305,7 +309,7 @@ impl Live {
             write!(io::stdout(), "{ansi}")?;
             if line_count < prev_lines {
                 for _ in line_count..prev_lines {
-                    write!(io::stdout(), "{}\n", crate::control::ERASE_LINE)?;
+                    writeln!(io::stdout(), "{}", crate::control::ERASE_LINE)?;
                 }
             }
 
