@@ -127,7 +127,6 @@ impl Text {
     ///
     /// Extracts SGR (Select Graphic Rendition) codes as style spans and strips
     /// all other ANSI escape sequences.
-    #[allow(clippy::collapsible_match)]
     pub fn from_ansi(text: &str) -> Self {
         let re = Regex::new(r"\x1b\[([\d;]*)([a-zA-Z])").unwrap();
         let mut plain = String::new();
@@ -995,16 +994,15 @@ fn apply_sgr(style: &mut Style, params: &str) {
                                 i += 2;
                             }
                         }
-                        "2" => {
-                            if i + 4 < parts.len() {
-                                let r = parts[i + 2].parse::<u8>().unwrap_or(0);
-                                let g = parts[i + 3].parse::<u8>().unwrap_or(0);
-                                let b = parts[i + 4].parse::<u8>().unwrap_or(0);
-                                *style =
-                                    style.clone().color(crate::color::Color::from_rgb(r, g, b));
-                                i += 4;
-                            }
+                        "2" if i + 4 < parts.len() => {
+                            let r = parts[i + 2].parse::<u8>().unwrap_or(0);
+                            let g = parts[i + 3].parse::<u8>().unwrap_or(0);
+                            let b = parts[i + 4].parse::<u8>().unwrap_or(0);
+                            *style =
+                                style.clone().color(crate::color::Color::from_rgb(r, g, b));
+                            i += 4;
                         }
+                        "2" => {}
                         _ => {}
                     }
                 }
@@ -1022,17 +1020,16 @@ fn apply_sgr(style: &mut Style, params: &str) {
                                 i += 2;
                             }
                         }
-                        "2" => {
-                            if i + 4 < parts.len() {
-                                let r = parts[i + 2].parse::<u8>().unwrap_or(0);
-                                let g = parts[i + 3].parse::<u8>().unwrap_or(0);
-                                let b = parts[i + 4].parse::<u8>().unwrap_or(0);
-                                *style = style
-                                    .clone()
-                                    .bgcolor(crate::color::Color::from_rgb(r, g, b));
-                                i += 4;
-                            }
+                        "2" if i + 4 < parts.len() => {
+                            let r = parts[i + 2].parse::<u8>().unwrap_or(0);
+                            let g = parts[i + 3].parse::<u8>().unwrap_or(0);
+                            let b = parts[i + 4].parse::<u8>().unwrap_or(0);
+                            *style = style
+                                .clone()
+                                .bgcolor(crate::color::Color::from_rgb(r, g, b));
+                            i += 4;
                         }
+                        "2" => {}
                         _ => {}
                     }
                 }
