@@ -12,6 +12,7 @@ use std::fmt;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum AlignMethod {
     /// Left-align (the default).
+    #[default]
     Left,
     /// Center-align.
     Center,
@@ -93,6 +94,7 @@ impl fmt::Display for AlignMethod {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum VerticalAlignMethod {
     /// Align to the top edge.
+    #[default]
     Top,
     /// Align to the vertical center.
     Middle,
