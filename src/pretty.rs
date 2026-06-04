@@ -274,7 +274,7 @@ impl Pretty {
 /// Install Pretty as the default display handler.
 ///
 /// This is a no-op in Rust (the Rust standard library handles this via
-/// the [`Display`] and [`Debug`] traits), but is provided for API
+/// the `Display` and `Debug` traits), but is provided for API
 /// compatibility with Python Rich's `pretty.install()`.
 pub fn install() {}
 

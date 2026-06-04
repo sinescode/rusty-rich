@@ -5,7 +5,7 @@
 //! serde or manual key-value pairs), and documentation.
 //!
 //! Since Rust lacks Python's runtime introspection, this module works with
-//! the [`std::fmt::Debug`] trait, [`serde::Serialize`], and manual attribute
+//! the [`std::fmt::Debug`] trait, `serde::Serialize`, and manual attribute
 //! maps to produce Rich-styled inspection output.
 //!
 //! # Quick Example

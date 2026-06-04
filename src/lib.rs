@@ -96,7 +96,7 @@
 //! | Module | Provides |
 //! |--------|----------|
 //! | [`prompt`] | 5 prompt types: [`Prompt`], [`IntPrompt`], [`FloatPrompt`], [`Confirm`], [`Select`] |
-//! | [`inspect`] | [`Inspect`] for structured object introspection with attribute/method tables |
+//! | `inspect` | [`Inspect`] for structured object introspection with attribute/method tables |
 //! | [`control`] | [`Control`] for composable terminal escape sequences (cursor, screen, title, bell) |
 //!
 //! ### Additional Renderables

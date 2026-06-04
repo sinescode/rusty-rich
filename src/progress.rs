@@ -292,7 +292,7 @@ impl Progress {
         }
     }
 
-    /// Replace the default columns with a custom list of [`ProgressColumn`](crate::progress_columns::ProgressColumn)s.
+    /// Replace the default columns with a custom list of [`ProgressColumn`]s.
     ///
     /// Each task is rendered as one row using the provided columns.
     pub fn with_columns(mut self, columns: Vec<Box<dyn crate::progress_columns::ProgressColumn>>) -> Self {
