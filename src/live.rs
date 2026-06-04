@@ -203,9 +203,9 @@ impl Live {
         self.started = true;
         self.started_at = Some(Instant::now());
         if self.screen {
-            write!(io::stdout(), "\x1b[?1049h")?;
+            write!(io::stdout(), "{}", crate::control::ALT_SCREEN_ENTER)?;
         }
-        write!(io::stdout(), "\x1b[?25l")?;
+        write!(io::stdout(), "{}", crate::control::CURSOR_HIDE)?;
         self.refresh()
     }
 
@@ -214,13 +214,13 @@ impl Live {
         if self.transient {
             let prev = self.previous_line_count.load(Ordering::Relaxed);
             for _ in 0..prev {
-                write!(io::stdout(), "\x1b[1A\x1b[2K")?;
+                write!(io::stdout(), "{}{}", crate::control::CURSOR_UP, crate::control::ERASE_LINE)?;
             }
         }
         if self.screen {
-            write!(io::stdout(), "\x1b[?1049l")?;
+            write!(io::stdout(), "{}", crate::control::ALT_SCREEN_EXIT)?;
         }
-        write!(io::stdout(), "\x1b[?25h")?;
+        write!(io::stdout(), "{}", crate::control::CURSOR_SHOW)?;
         io::stdout().flush()?;
         self.started = false;
         self.started_at = None;
@@ -245,6 +245,7 @@ impl Live {
 
             let prev_lines = self.previous_line_count.load(Ordering::Relaxed);
             if prev_lines > 0 {
+                // Move cursor up `prev_lines` rows: `\x1b[{N}F`
                 write!(io::stdout(), "\x1b[{}F", prev_lines)?;
             }
             drop(renderable_guard);
@@ -273,7 +274,7 @@ impl Live {
             write!(io::stdout(), "{ansi}")?;
             if line_count < prev_lines {
                 for _ in line_count..prev_lines {
-                    write!(io::stdout(), "\x1b[2K\n")?;
+                    write!(io::stdout(), "{}\n", crate::control::ERASE_LINE)?;
                 }
             }
 

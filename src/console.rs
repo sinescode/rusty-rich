@@ -802,27 +802,27 @@ impl Console {
     /// Clear the screen.
     pub fn clear(&mut self) {
         if self.quiet { return; }
-        let _ = write!(self.file, "\x1b[2J\x1b[H");
+        let _ = write!(self.file, "{}", crate::control::CLEAR_HOME);
         let _ = self.file.flush();
     }
 
     /// Show the cursor.
     pub fn show_cursor(&mut self) {
         self.cursor_visible = true;
-        let _ = write!(self.file, "\x1b[?25h");
+        let _ = write!(self.file, "{}", crate::control::CURSOR_SHOW);
         let _ = self.file.flush();
     }
 
     /// Hide the cursor.
     pub fn hide_cursor(&mut self) {
         self.cursor_visible = false;
-        let _ = write!(self.file, "\x1b[?25l");
+        let _ = write!(self.file, "{}", crate::control::CURSOR_HIDE);
         let _ = self.file.flush();
     }
 
     /// Set the terminal window title.
     pub fn set_window_title(&mut self, title: &str) {
-        let _ = write!(self.file, "\x1b]0;{title}\x07");
+        let _ = write!(self.file, "{}{}{}", crate::control::OSC, title, crate::control::ST);
         let _ = self.file.flush();
     }
 
@@ -1095,14 +1095,15 @@ impl Console {
     }
 
     /// Enter or exit the alternate screen buffer by writing the corresponding
-    /// escape sequences (`\x1b[?1049h` / `\x1b[?1049l`).
+    /// escape sequences (uses [`control::ALT_SCREEN_ENTER`] / [`control::ALT_SCREEN_EXIT`]).
     pub fn set_alt_screen(&mut self, enable: bool) {
         self.alt_screen = enable;
-        if enable {
-            let _ = write!(self.file, "\x1b[?1049h");
+        let seq = if enable {
+            crate::control::ALT_SCREEN_ENTER
         } else {
-            let _ = write!(self.file, "\x1b[?1049l");
-        }
+            crate::control::ALT_SCREEN_EXIT
+        };
+        let _ = write!(self.file, "{seq}");
         let _ = self.file.flush();
     }
 
@@ -1346,11 +1347,12 @@ impl Console {
     /// so it can be queried via internal fields.
     pub fn set_cursor_visible(&mut self, visible: bool) {
         self.cursor_visible = visible;
-        if visible {
-            let _ = write!(self.file, "\x1b[?25h");
+        let seq = if visible {
+            crate::control::CURSOR_SHOW
         } else {
-            let _ = write!(self.file, "\x1b[?25l");
-        }
+            crate::control::CURSOR_HIDE
+        };
+        let _ = write!(self.file, "{seq}");
         let _ = self.file.flush();
     }
 
@@ -1378,11 +1380,7 @@ impl Console {
     /// the entire alternate screen. Otherwise, it's equivalent to
     /// [`clear`](Self::clear).
     pub fn clear_live(&mut self) {
-        if self.alt_screen {
-            let _ = write!(self.file, "\x1b[2J\x1b[H");
-        } else {
-            let _ = write!(self.file, "\x1b[2J\x1b[H");
-        }
+        let _ = write!(self.file, "{}", crate::control::CLEAR_HOME);
         let _ = self.file.flush();
     }
 
@@ -1408,7 +1406,7 @@ impl Console {
         for seg in &segments {
             output.push_str(&seg.to_ansi());
         }
-        let _ = write!(self.file, "\x1b[2J\x1b[H{output}");
+        let _ = write!(self.file, "{}{output}", crate::control::CLEAR_HOME);
         let _ = self.file.flush();
     }
 
@@ -1425,7 +1423,7 @@ impl Console {
             }
             output.push('\n');
         }
-        let _ = write!(self.file, "\x1b[2J\x1b[H{output}");
+        let _ = write!(self.file, "{}{output}", crate::control::CLEAR_HOME);
         let _ = self.file.flush();
     }
 

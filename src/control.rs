@@ -16,6 +16,37 @@
 //! ```
 
 // ---------------------------------------------------------------------------
+// ANSI escape sequence constants (zero-allocation, for hot-path use)
+// ---------------------------------------------------------------------------
+
+/// Clear entire screen and move cursor to home: `\x1b[2J\x1b[H`
+pub const CLEAR_HOME: &str = "\x1b[2J\x1b[H";
+/// Clear entire screen: `\x1b[2J`
+pub const CLEAR_SCREEN: &str = "\x1b[2J";
+/// Move cursor to home: `\x1b[H`
+pub const CURSOR_HOME: &str = "\x1b[H";
+/// Show cursor: `\x1b[?25h`
+pub const CURSOR_SHOW: &str = "\x1b[?25h";
+/// Hide cursor: `\x1b[?25l`
+pub const CURSOR_HIDE: &str = "\x1b[?25l";
+/// Enter alternate screen buffer: `\x1b[?1049h`
+pub const ALT_SCREEN_ENTER: &str = "\x1b[?1049h";
+/// Exit alternate screen buffer: `\x1b[?1049l`
+pub const ALT_SCREEN_EXIT: &str = "\x1b[?1049l";
+/// Erase the current line: `\x1b[2K`
+pub const ERASE_LINE: &str = "\x1b[2K";
+/// Move cursor up one row: `\x1b[1A`
+pub const CURSOR_UP: &str = "\x1b[1A";
+/// Carriage return: `\r`
+pub const CARRIAGE_RETURN: &str = "\r";
+/// Newline: `\n`
+pub const NEWLINE: &str = "\n";
+/// Operating System Command (OSC) introducer: `\x1b]`
+pub const OSC: &str = "\x1b]";
+/// String Terminator (ST) for OSC sequences: `\x07`
+pub const ST: &str = "\x07";
+
+// ---------------------------------------------------------------------------
 // Control — composable control sequence
 // ---------------------------------------------------------------------------
 

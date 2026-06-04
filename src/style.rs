@@ -338,41 +338,128 @@ impl Style {
     }
 
     /// Builder: set style from a string (e.g. "bold red on blue").
+    ///
+    /// Supports negation with `not` prefix, `!` prefix, and `no` prefix
+    /// (e.g. `"not bold"`, `"!bold"`, `"nobold"`). The `not` keyword works
+    /// as a prefix for the NEXT token, so `"not bold not italic"` correctly
+    /// disables both attributes.
     pub fn from_str(definition: &str) -> Self {
         let mut style = Self::new();
-        for part in definition.split_whitespace() {
+        let parts: Vec<&str> = definition.split_whitespace().collect();
+        let mut i = 0;
+        let mut negate = false;
+        let mut saw_on = false;
+
+        while i < parts.len() {
+            let part = parts[i];
+
+            // Handle standalone "not" prefix (negates next token)
+            if part == "not" {
+                negate = true;
+                i += 1;
+                continue;
+            }
+
             match part {
-                "bold" | "b" => { style.set_attributes |= Attributes::BOLD; style.attributes.set(Attributes::BOLD, true); }
-                "dim" | "d" => { style.set_attributes |= Attributes::DIM; style.attributes.set(Attributes::DIM, true); }
-                "italic" | "i" => { style.set_attributes |= Attributes::ITALIC; style.attributes.set(Attributes::ITALIC, true); }
-                "underline" | "u" => { style.set_attributes |= Attributes::UNDERLINE; style.attributes.set(Attributes::UNDERLINE, true); }
-                "blink" => { style.set_attributes |= Attributes::BLINK; style.attributes.set(Attributes::BLINK, true); }
-                "reverse" | "r" => { style.set_attributes |= Attributes::REVERSE; style.attributes.set(Attributes::REVERSE, true); }
-                "strike" | "s" => { style.set_attributes |= Attributes::STRIKE; style.attributes.set(Attributes::STRIKE, true); }
-                "not bold" | "!bold" | "nobold" => { style.set_attributes |= Attributes::BOLD; style.attributes.set(Attributes::BOLD, false); }
-                "not italic" | "!italic" | "noitalic" => { style.set_attributes |= Attributes::ITALIC; style.attributes.set(Attributes::ITALIC, false); }
-                "not underline" | "!underline" | "nounderline" => { style.set_attributes |= Attributes::UNDERLINE; style.attributes.set(Attributes::UNDERLINE, false); }
+                "bold" | "b" => {
+                    style.set_attributes |= Attributes::BOLD;
+                    style.attributes.set(Attributes::BOLD, !negate);
+                }
+                "dim" | "d" => {
+                    style.set_attributes |= Attributes::DIM;
+                    style.attributes.set(Attributes::DIM, !negate);
+                }
+                "italic" | "i" => {
+                    style.set_attributes |= Attributes::ITALIC;
+                    style.attributes.set(Attributes::ITALIC, !negate);
+                }
+                "underline" | "u" => {
+                    style.set_attributes |= Attributes::UNDERLINE;
+                    style.attributes.set(Attributes::UNDERLINE, !negate);
+                }
+                "blink" => {
+                    style.set_attributes |= Attributes::BLINK;
+                    style.attributes.set(Attributes::BLINK, !negate);
+                }
+                "reverse" | "r" => {
+                    style.set_attributes |= Attributes::REVERSE;
+                    style.attributes.set(Attributes::REVERSE, !negate);
+                }
+                "strike" | "s" => {
+                    style.set_attributes |= Attributes::STRIKE;
+                    style.attributes.set(Attributes::STRIKE, !negate);
+                }
                 "none" | "default" => {}
-                "on" => { /* "on <color>" handled below */ }
+                "on" => {
+                    saw_on = true;
+                    // If next token is a color, consume it as background
+                    if i + 1 < parts.len() {
+                        if let Ok(c) = Color::parse(parts[i + 1]) {
+                            style.bgcolor = Some(c);
+                            i += 1; // consumed the color token
+                        }
+                    }
+                }
+                part if part.starts_with('!') => {
+                    // Inline negation: !bold, !italic, etc.
+                    let inner = &part[1..];
+                    let (bit, _name) = match inner {
+                        "bold" | "b" => (Attributes::BOLD, "bold"),
+                        "dim" | "d" => (Attributes::DIM, "dim"),
+                        "italic" | "i" => (Attributes::ITALIC, "italic"),
+                        "underline" | "u" => (Attributes::UNDERLINE, "underline"),
+                        "blink" => (Attributes::BLINK, "blink"),
+                        "reverse" | "r" => (Attributes::REVERSE, "reverse"),
+                        "strike" | "s" => (Attributes::STRIKE, "strike"),
+                        _ => {
+                            // Not a known attribute — skip
+                            i += 1;
+                            negate = false;
+                            continue;
+                        }
+                    };
+                    style.set_attributes |= bit;
+                    style.attributes.set(bit, false);
+                }
+                part if part.starts_with("no") && part.len() > 2 => {
+                    // Prefix negation: nobold, noitalic, nounderline
+                    let inner = &part[2..];
+                    let (bit, _name) = match inner {
+                        "bold" => (Attributes::BOLD, "bold"),
+                        "italic" => (Attributes::ITALIC, "italic"),
+                        "underline" => (Attributes::UNDERLINE, "underline"),
+                        _ => {
+                            // Not a known attribute — skip
+                            i += 1;
+                            negate = false;
+                            continue;
+                        }
+                    };
+                    style.set_attributes |= bit;
+                    style.attributes.set(bit, false);
+                }
+                part if part.starts_with("link=") => {
+                    style.link = Some(part[5..].to_string());
+                }
                 part if part.starts_with("on ") => {
                     if let Ok(c) = Color::parse(&part[3..]) {
                         style.bgcolor = Some(c);
                     }
                 }
-                part if part.starts_with("link=") => {
-                    style.link = Some(part[5..].to_string());
-                }
                 part => {
                     // Try as color name
                     if let Ok(c) = Color::parse(part) {
-                        if style.bgcolor.is_some() && style.color.is_none() {
-                            // We already saw "on" — don't overwrite fg
+                        if saw_on {
+                            style.bgcolor = Some(c);
+                            saw_on = false;
                         } else {
                             style.color = Some(c);
                         }
                     }
                 }
             }
+            negate = false;
+            i += 1;
         }
         style
     }
@@ -1243,5 +1330,65 @@ mod tests {
         assert!(names.contains(&"italic"));
         assert!(names.contains(&"underline"));
         assert!(!names.contains(&"notexist"));
+    }
+
+    // -----------------------------------------------------------------------
+    // "not" prefix / negation tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_not_bold_with_space() {
+        // 'not' prefix negates the next token
+        let s = Style::from_str("not bold");
+        assert_eq!(s.get_bold(), Some(false));
+    }
+
+    #[test]
+    fn test_not_italic_with_space() {
+        let s = Style::from_str("not italic");
+        assert_eq!(s.get_italic(), Some(false));
+    }
+
+    #[test]
+    fn test_not_underline_with_space() {
+        let s = Style::from_str("not underline");
+        // Verify the bit is set and value is false (no get_underline accessor)
+        assert!(s.set_attributes & Attributes::UNDERLINE != 0);
+        assert!(!s.attributes.get(Attributes::UNDERLINE));
+    }
+
+    #[test]
+    fn test_bang_negation_bold() {
+        let s = Style::from_str("!bold");
+        assert_eq!(s.get_bold(), Some(false));
+    }
+
+    #[test]
+    fn test_nobold_prefix() {
+        let s = Style::from_str("nobold");
+        assert_eq!(s.get_bold(), Some(false));
+    }
+
+    #[test]
+    fn test_not_bold_red() {
+        // "not bold red" should disable bold and set red color
+        let s = Style::from_str("not bold red");
+        assert_eq!(s.get_bold(), Some(false));
+        assert!(s.color.is_some());
+    }
+
+    #[test]
+    fn test_not_multiple() {
+        // "not bold not italic" should disable both
+        let s = Style::from_str("not bold not italic");
+        assert_eq!(s.get_bold(), Some(false));
+        assert_eq!(s.get_italic(), Some(false));
+    }
+
+    #[test]
+    fn test_on_next_color() {
+        // "on red" sets background color to red
+        let s = Style::from_str("on red");
+        assert!(s.bgcolor.is_some());
     }
 }

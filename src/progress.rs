@@ -576,7 +576,39 @@ impl Default for Progress {
 // Standalone track function
 // ---------------------------------------------------------------------------
 
-/// Create a [`TrackIterator`] from a sequence (standalone, no Progress).
+/// Create a [`TrackIterator`] from a sequence (standalone, item counting only).
+///
+/// This standalone function does NOT update any [`Progress`] display — it only
+/// counts consumed items via [`TrackIterator::count`]. To get live progress
+/// updates, use [`Progress::track`] instead and call
+/// [`Progress::update`](Progress::update) with the tracker's `progress_id` and
+/// `count()` in your loop body.
+///
+/// # Example (count only)
+///
+/// ```rust
+/// use rusty_rich::progress::track;
+///
+/// let tracker = track(0..100, "Processing", None);
+/// for item in tracker {
+///     // item is yielded; tracker.count() tracks position
+/// }
+/// ```
+///
+/// # Example (with Progress display)
+///
+/// ```rust
+/// use rusty_rich::Progress;
+///
+/// let mut progress = Progress::new();
+/// let items: Vec<i32> = (0..100).collect();
+/// let tracker = progress.track(items, "Processing", None);
+/// let task_id = tracker.progress_id;
+/// for item in tracker {
+///     progress.update(task_id, tracker.count() as f64);
+///     // process item
+/// }
+/// ```
 pub fn track<T: IntoIterator>(sequence: T, _description: &str, total: Option<f64>) -> TrackIterator<T::IntoIter> {
     let iter = sequence.into_iter();
     let (lower, upper) = iter.size_hint();
@@ -594,6 +626,8 @@ pub fn track<T: IntoIterator>(sequence: T, _description: &str, total: Option<f64
 // ---------------------------------------------------------------------------
 
 /// Wrap a file with progress tracking (standalone, no Progress).
+///
+/// To get live progress updates on reads, use [`Progress::wrap_file`] instead.
 pub fn wrap_file(file: std::fs::File, _description: &str, total: Option<u64>) -> ProgressFile {
     ProgressFile::new(file, 0, total.unwrap_or(0))
 }
