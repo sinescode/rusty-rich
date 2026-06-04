@@ -264,7 +264,7 @@ impl ProgressColumn for RenderableColumn {
 /// A multi-task progress display.
 ///
 /// Tasks are stored in a [`HashMap`] keyed by task ID for O(1) lookup.
-/// [`task_order`] maintains insertion order for rendering.
+/// `task_order` maintains insertion order for rendering.
 #[derive(Debug)]
 pub struct Progress {
     pub tasks: HashMap<usize, Task>,

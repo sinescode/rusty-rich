@@ -810,6 +810,7 @@ fn json_deeply_nested() {
 // ===========================================================================
 
 #[test]
+#[cfg(feature = "markdown")]
 fn markdown_h1() {
     let md = markdown::render_markdown("# Hello\n");
     let opts = ConsoleOptions { max_width: 60, ..Default::default() };
@@ -819,6 +820,7 @@ fn markdown_h1() {
 }
 
 #[test]
+#[cfg(feature = "markdown")]
 fn markdown_h2() {
     let md = markdown::render_markdown("## Section\n");
     let opts = ConsoleOptions { max_width: 60, ..Default::default() };
@@ -828,6 +830,7 @@ fn markdown_h2() {
 }
 
 #[test]
+#[cfg(feature = "markdown")]
 fn markdown_list() {
     let md = markdown::render_markdown("* one\n* two\n* three\n");
     let opts = ConsoleOptions { max_width: 60, ..Default::default() };
@@ -838,6 +841,7 @@ fn markdown_list() {
 }
 
 #[test]
+#[cfg(feature = "markdown")]
 fn markdown_code_block() {
     let md = markdown::render_markdown("```\nlet x = 1;\n```\n");
     let opts = ConsoleOptions { max_width: 60, ..Default::default() };
@@ -847,6 +851,7 @@ fn markdown_code_block() {
 }
 
 #[test]
+#[cfg(feature = "markdown")]
 fn markdown_blockquote() {
     let md = markdown::render_markdown("> quoted text\n");
     let opts = ConsoleOptions { max_width: 60, ..Default::default() };
@@ -856,6 +861,7 @@ fn markdown_blockquote() {
 }
 
 #[test]
+#[cfg(feature = "markdown")]
 fn markdown_empty() {
     let md = markdown::render_markdown("");
     let opts = ConsoleOptions::default();
@@ -868,6 +874,7 @@ fn markdown_empty() {
 // ===========================================================================
 
 #[test]
+#[cfg(feature = "syntax-highlighting")]
 fn syntax_rust_code() {
     let s = Syntax::new("fn main() { println!(\"hello\"); }", "rust");
     let opts = ConsoleOptions { max_width: 80, ..Default::default() };
@@ -878,6 +885,7 @@ fn syntax_rust_code() {
 }
 
 #[test]
+#[cfg(feature = "syntax-highlighting")]
 fn syntax_unknown_language() {
     let s = Syntax::new("some code", "nonexistent_lang_xyz");
     let opts = ConsoleOptions::default();
@@ -888,6 +896,7 @@ fn syntax_unknown_language() {
 }
 
 #[test]
+#[cfg(feature = "syntax-highlighting")]
 fn syntax_line_numbers_enabled() {
     let s = Syntax::new("line1\nline2\nline3\n", "rust").line_numbers();
     let opts = ConsoleOptions { max_width: 80, ..Default::default() };
@@ -899,6 +908,7 @@ fn syntax_line_numbers_enabled() {
 }
 
 #[test]
+#[cfg(feature = "syntax-highlighting")]
 fn syntax_empty_code() {
     let s = Syntax::new("", "rust");
     let opts = ConsoleOptions::default();

@@ -1386,8 +1386,9 @@ impl Console {
         let _ = self.file.flush();
     }
 
-    /// Set the active live display. Stores a reference to the [`Live`]
-    /// renderer for integration with the console's rendering pipeline.
+    /// Set the active live display. Stores a reference to the
+    /// [`Live`](crate::live::Live) renderer for integration with the
+    /// console's rendering pipeline.
     ///
     /// Note: [`Live`](crate::live::Live) manages its own refresh cycle;
     /// this method is primarily for API compatibility with Python Rich.

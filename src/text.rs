@@ -409,7 +409,7 @@ impl Text {
         }
     }
 
-    /// Like [`stylize`] but inserts the span at the beginning of the spans
+    /// Like `stylize()` but inserts the span at the beginning of the spans
     /// list, giving it lower priority than existing spans.
     pub fn stylize_before(&mut self, style: Style, start: usize, end: Option<usize>) {
         let end = end.unwrap_or(self.plain.len());
