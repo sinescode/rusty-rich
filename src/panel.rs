@@ -226,7 +226,8 @@ impl Renderable for Panel {
 
         // -- Bordered mode (original path) --
         // Top border (with optional title)
-        let top_line = self.render_top_border(&box_style, panel_width, border_ansi.as_str(), border_reset);
+        let top_line =
+            self.render_top_border(&box_style, panel_width, border_ansi.as_str(), border_reset);
         lines.push(top_line);
 
         // Pad top

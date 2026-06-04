@@ -532,8 +532,7 @@ impl Renderable for Traceback {
                         let ln_str = format!("{:>width$}", line_num, width = ln_width);
                         let code = truncate_to_width(line_text, code_cells);
 
-                        let raw_line =
-                            format!("{}{} {} │ {} ", marker_str, " ", ln_str, code);
+                        let raw_line = format!("{}{} {} │ {} ", marker_str, " ", ln_str, code);
 
                         // Now build: indent + "│" + raw_line + "│"
                         // The raw_line should be padded to sub_box_inner - 2
