@@ -296,6 +296,10 @@ pub struct Progress {
     /// Columns to render for each task (if None, uses default columns).
     pub columns: Option<Vec<Box<dyn crate::progress_columns::ProgressColumn>>>,
     next_id: usize,
+    /// Whether live-refreshing mode is active (set by [`Progress::start`]).
+    started: bool,
+    /// Number of lines rendered in the previous refresh (for cursor movement).
+    prev_line_count: usize,
 }
 
 impl Progress {
@@ -309,6 +313,8 @@ impl Progress {
             transient: false,
             columns: None,
             next_id: 1,
+            started: false,
+            prev_line_count: 0,
         }
     }
 
@@ -363,10 +369,75 @@ impl Progress {
     }
 
     /// Force a refresh/render of the progress display.
-    /// In a live display context this triggers a re-render.
+    ///
+    /// When called during live-refreshing mode (after [`Progress::start`]),
+    /// this moves the cursor to overwrite the previous render. In stateless
+    /// mode, use [`Progress::render`] to get the output string.
     pub fn refresh(&mut self) {
-        // Force refresh — in a live display this triggers a redraw.
-        // Stateless rendering: this is a no-op placeholder.
+        use std::io::Write;
+
+        let mut stdout = std::io::stdout();
+        let rendered = self.render(80);
+
+        if self.started && self.prev_line_count > 0 {
+            // Move cursor up to overwrite previous output
+            let _ = write!(stdout, "\x1b[{}F", self.prev_line_count);
+        }
+
+        let current_lines = rendered.lines().count().max(1);
+        let _ = write!(stdout, "{}", rendered);
+
+        // Clear extra lines if new output is shorter
+        if current_lines < self.prev_line_count {
+            for _ in current_lines..self.prev_line_count {
+                let _ = writeln!(stdout, "\x1b[K");
+            }
+            // Move cursor back up to keep the progress display aligned
+            let diff = self.prev_line_count.saturating_sub(current_lines);
+            if diff > 0 {
+                let _ = write!(stdout, "\x1b[{}F", diff);
+            }
+        }
+
+        let _ = stdout.flush();
+        self.prev_line_count = current_lines;
+    }
+
+    /// Start live-refreshing mode. Subsequent calls to [`Progress::update`]
+    /// or [`Progress::advance`] will automatically refresh the display.
+    ///
+    /// Call [`Progress::stop`] when done to finalize or erase the display.
+    pub fn start(&mut self) {
+        use std::io::Write;
+
+        self.started = true;
+        self.prev_line_count = 0;
+        // Hide cursor during live updates for cleaner output
+        let _ = write!(std::io::stdout(), "{}", crate::control::CURSOR_HIDE);
+    }
+
+    /// Stop live-refreshing mode and finalize the display.
+    ///
+    /// If [`Progress::transient`] is true, the progress display is erased
+    /// entirely. Otherwise, the final state remains visible on the terminal.
+    pub fn stop(&mut self) {
+        use std::io::Write;
+
+        let mut stdout = std::io::stdout();
+        if self.transient {
+            for _ in 0..self.prev_line_count {
+                let _ = write!(
+                    stdout,
+                    "{}{}",
+                    crate::control::CURSOR_UP,
+                    crate::control::ERASE_LINE
+                );
+            }
+        }
+        // Show cursor again
+        let _ = write!(stdout, "{}", crate::control::CURSOR_SHOW);
+        let _ = stdout.flush();
+        self.started = false;
     }
 
     /// Mark a task as started (reset its start_time to now).

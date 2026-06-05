@@ -1165,3 +1165,329 @@ fn empty_renderables_dont_panic() {
     let p = Progress::new();
     let _ = p.render(40);
 }
+
+// =========================================================================
+// Text::assemble / Text::join / Text::highlight_words
+// =========================================================================
+
+#[test]
+fn text_assemble_plain_parts() {
+    use rusty_rich::Text;
+    use rusty_rich::TextPart;
+
+    let text = Text::assemble_simple(vec![
+        TextPart::from("Hello"),
+        TextPart::from(" "),
+        TextPart::from("World"),
+    ]);
+    assert_eq!(text.plain, "Hello World");
+}
+
+#[test]
+fn text_assemble_styled_parts() {
+    use rusty_rich::{Style, Text, TextPart};
+
+    let text = Text::assemble_simple(vec![
+        TextPart::Plain("Hello".to_string()),
+        TextPart::Styled(" World".to_string(), Style::new().bold(true)),
+    ]);
+    assert_eq!(text.plain, "Hello World");
+    assert!(!text.spans.is_empty());
+}
+
+#[test]
+fn text_assemble_with_rich_text() {
+    use rusty_rich::{Style, Text, TextPart};
+
+    let mut inner = Text::new("styled");
+    inner.stylize(Style::new().italic(true), 0, Some(6));
+
+    let text = Text::assemble_simple(vec![
+        TextPart::from("Prefix "),
+        TextPart::from(inner),
+    ]);
+    assert_eq!(text.plain, "Prefix styled");
+}
+
+#[test]
+fn text_join_multiple() {
+    use rusty_rich::Text;
+
+    let sep = Text::new(", ");
+    let parts = vec![Text::new("a"), Text::new("b"), Text::new("c")];
+    let joined = sep.join(parts);
+    assert_eq!(joined.plain, "a, b, c");
+}
+
+#[test]
+fn text_join_single() {
+    use rusty_rich::Text;
+
+    let sep = Text::new(", ");
+    let joined = sep.join(vec![Text::new("only")]);
+    assert_eq!(joined.plain, "only");
+}
+
+#[test]
+fn text_highlight_words_simple() {
+    use rusty_rich::{Style, Text};
+
+    let mut t = Text::new("hello world hello");
+    let count = t.highlight_words(&["hello"], Style::new().bold(true), true);
+    assert_eq!(count, 2);
+}
+
+// =========================================================================
+// Style — all 13 attribute getters
+// =========================================================================
+
+#[test]
+fn style_all_getters() {
+    use rusty_rich::Style;
+
+    let s = Style::new()
+        .bold(true)
+        .dim(true)
+        .italic(true)
+        .underline(true)
+        .blink(true)
+        .reverse(true)
+        .strike(true)
+        .underline2(true)
+        .frame(true)
+        .encircle(true)
+        .overline(true)
+        .blink2(true)
+        .conceal(true);
+
+    assert_eq!(s.get_bold(), Some(true));
+    assert_eq!(s.get_dim(), Some(true));
+    assert_eq!(s.get_italic(), Some(true));
+    assert_eq!(s.get_underline(), Some(true));
+    assert_eq!(s.get_blink(), Some(true));
+    assert_eq!(s.get_reverse(), Some(true));
+    assert_eq!(s.get_strike(), Some(true));
+    assert_eq!(s.get_underline2(), Some(true));
+    assert_eq!(s.get_frame(), Some(true));
+    assert_eq!(s.get_encircle(), Some(true));
+    assert_eq!(s.get_overline(), Some(true));
+    assert_eq!(s.get_blink2(), Some(true));
+    assert_eq!(s.get_conceal(), Some(true));
+}
+
+#[test]
+fn style_getters_unset_return_none() {
+    use rusty_rich::Style;
+
+    let s = Style::new();
+    // By default, no attributes are set
+    assert_eq!(s.get_bold(), None);
+    assert_eq!(s.get_dim(), None);
+    assert_eq!(s.get_italic(), None);
+    assert_eq!(s.get_underline(), None);
+}
+
+// =========================================================================
+// Columns — column_first, right_to_left, title, align
+// =========================================================================
+
+#[test]
+fn columns_with_column_first() {
+    use rusty_rich::Columns;
+
+    let mut cols = Columns::new();
+    cols.add("item 1");
+    cols.add("item 2");
+    cols.add("item 3");
+    cols.add("item 4");
+    let cols = cols.column_first(true);
+
+    use rusty_rich::console::{ConsoleOptions, Renderable};
+    let opts = ConsoleOptions::default();
+    let result = cols.render(&opts);
+    assert!(!result.lines.is_empty());
+}
+
+#[test]
+fn columns_with_right_to_left() {
+    use rusty_rich::Columns;
+
+    let mut cols = Columns::new();
+    cols.add("a");
+    cols.add("b");
+    let cols = cols.right_to_left(true);
+
+    use rusty_rich::console::{ConsoleOptions, Renderable};
+    let opts = ConsoleOptions::default();
+    let result = cols.render(&opts);
+    assert!(!result.lines.is_empty());
+}
+
+#[test]
+fn columns_with_title() {
+    use rusty_rich::{Columns, Style};
+
+    let mut cols = Columns::new();
+    cols.add("item 1");
+    cols.add("item 2");
+    let cols = cols
+        .title("My Columns")
+        .title_style(Style::new().bold(true));
+
+    use rusty_rich::console::{ConsoleOptions, Renderable};
+    let opts = ConsoleOptions::default();
+    let result = cols.render(&opts);
+    assert!(!result.lines.is_empty());
+}
+
+#[test]
+fn columns_with_align() {
+    use rusty_rich::{AlignMethod, Columns};
+
+    let mut cols = Columns::new();
+    cols.add("short");
+    cols.add("a bit longer");
+    let cols = cols.align(AlignMethod::Center);
+
+    use rusty_rich::console::{ConsoleOptions, Renderable};
+    let opts = ConsoleOptions::default();
+    let result = cols.render(&opts);
+    assert!(!result.lines.is_empty());
+}
+
+// =========================================================================
+// Console — tab_size property
+// =========================================================================
+
+#[test]
+fn console_has_tab_size_default() {
+    use rusty_rich::Console;
+
+    let console = Console::new();
+    assert_eq!(console.tab_size, 8);
+}
+
+// =========================================================================
+// AnsiDecoder — TrueColor and 8-bit color support
+// =========================================================================
+
+#[test]
+fn ansi_decode_8bit_color() {
+    use rusty_rich::AnsiDecoder;
+
+    let text = AnsiDecoder::decode("\x1b[38;5;196mRed\x1b[0m");
+    assert_eq!(text.plain, "Red");
+    assert!(!text.spans.is_empty());
+}
+
+#[test]
+fn ansi_decode_truecolor() {
+    use rusty_rich::AnsiDecoder;
+
+    let text = AnsiDecoder::decode("\x1b[38;2;255;0;0mRed\x1b[0m");
+    assert_eq!(text.plain, "Red");
+    assert!(!text.spans.is_empty());
+}
+
+#[test]
+fn ansi_decode_truecolor_bg() {
+    use rusty_rich::AnsiDecoder;
+
+    let text = AnsiDecoder::decode("\x1b[48;2;0;255;0mGreen bg\x1b[0m");
+    assert_eq!(text.plain, "Green bg");
+    assert!(!text.spans.is_empty());
+}
+
+#[test]
+fn ansi_decode_frame_encircle_overline() {
+    use rusty_rich::AnsiDecoder;
+
+    // Frame=51, Encircle=52, Overline=53
+    let text = AnsiDecoder::decode("\x1b[51mFramed\x1b[0m");
+    assert!(text.plain.contains("Framed"));
+}
+
+// =========================================================================
+// Progress — start/stop/refresh with live updating
+// =========================================================================
+
+#[test]
+fn progress_live_start_stop() {
+    use rusty_rich::Progress;
+
+    let mut p = Progress::new();
+    // start() and stop() should not panic
+    p.start();
+    let task = p.add_task("Test", Some(100.0));
+    p.advance(task, 50.0);
+    p.refresh();
+    p.stop();
+}
+
+#[test]
+fn progress_live_transient() {
+    use rusty_rich::Progress;
+
+    let mut p = Progress::new();
+    p.transient = true;
+    p.start();
+    let task = p.add_task("Test", Some(100.0));
+    p.update(task, 100.0);
+    p.refresh();
+    p.stop();
+}
+
+// =========================================================================
+// Markup — emoji and link support
+// =========================================================================
+
+#[test]
+fn markup_emoji_smile() {
+    use rusty_rich::markup;
+
+    let t = markup::render("Hello :smile:");
+    // Should contain the emoji character (not the shortcode)
+    assert!(t.plain.contains('\u{1F60A}'));
+    assert!(!t.plain.contains(":smile:"));
+}
+
+#[test]
+fn markup_emoji_disabled() {
+    use rusty_rich::markup;
+
+    let t = markup::render_with_emoji("Hello :smile:", false);
+    // Should preserve the shortcode
+    assert!(t.plain.contains(":smile:"));
+}
+
+#[test]
+fn markup_link_tag() {
+    use rusty_rich::markup;
+
+    let t = markup::render("[link=https://example.com]click here[/link]");
+    assert!(t.plain.contains("click here"));
+}
+
+// =========================================================================
+// Status — spinner_style, status_style, speed, Drop cleanup
+// =========================================================================
+
+#[test]
+fn status_with_spinner_style() {
+    use rusty_rich::{Status, Style};
+
+    let s = Status::new("Working")
+        .spinner_style(Style::new().color(
+            rusty_rich::Color::parse("blue").unwrap(),
+        ));
+    assert!(!s.spinner_style.is_plain());
+    assert_eq!(s.status, "Working");
+}
+
+#[test]
+fn status_with_speed() {
+    use rusty_rich::Status;
+
+    let s = Status::new("Working").speed(2.0);
+    assert_eq!(s.speed, 2.0);
+}

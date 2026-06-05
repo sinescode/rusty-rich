@@ -75,7 +75,17 @@ const MAX_MARKUP_DEPTH: usize = 100;
 /// Uses byte-based scanning (since `[` and `]` are ASCII single-byte) to
 /// avoid allocating a `Vec<char>`.  Literal text is sanitized to prevent
 /// raw ANSI escape injection.
+///
+/// When `emoji` is true (the default), `:shortcode:` patterns are replaced
+/// with Unicode emoji characters.
 pub fn render(markup: &str) -> Text {
+    render_with_emoji(markup, true)
+}
+
+/// Parse markup with explicit emoji control.
+///
+/// Set `emoji` to `false` to leave `:shortcode:` patterns as-is.
+pub fn render_with_emoji(markup: &str, emoji: bool) -> Text {
     let mut text = Text::new("");
     let mut style_stack = StyleStack::new(Style::new());
 
@@ -143,8 +153,14 @@ pub fn render(markup: &str) -> Text {
             // inside a multi-byte character (we stop at ASCII '[', and the
             // range starts after a ']' or at the beginning of the string).
             let chunk = &markup[start..pos];
+            // Replace emoji shortcodes if enabled
+            let emoji_replaced = if emoji {
+                crate::emoji::Emoji::replace(chunk)
+            } else {
+                chunk.to_string()
+            };
             // Sanitize to prevent raw ANSI escape injection in literal text
-            let sanitized = crate::export::strip_ansi_escapes(chunk);
+            let sanitized = crate::export::strip_ansi_escapes(&emoji_replaced);
             text.append_styled(sanitized, style_stack.current());
         }
     }
@@ -194,7 +210,17 @@ fn tag_to_style(tag: &Tag) -> Style {
         "strike" | "s" => Style::new().strike(true),
 
         "/bold" | "/b" | "/dim" | "/d" | "/italic" | "/i" | "/underline" | "/u" | "/blink"
-        | "/reverse" | "/r" | "/strike" | "/s" => Style::null(),
+        | "/reverse" | "/r" | "/strike" | "/s" | "/link" => Style::null(),
+
+        "link" => {
+            // [link=url]text[/link] — create a link style
+            if let Some(ref url) = tag.parameters {
+                Style::new().link(url.clone())
+            } else {
+                // [link]url[/link] — the URL is in the text, not the tag
+                Style::new()
+            }
+        }
 
         _ => {
             // Try as color name, including "on <color>"

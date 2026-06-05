@@ -457,6 +457,8 @@ pub use segment::Segments;
 pub use text::Span;
 /// Styled text with `Span` regions, markup support, and text manipulation methods.
 pub use text::Text;
+/// A part for [`Text::assemble`] — plain text, styled pair, or existing [`Text`].
+pub use text::TextPart;
 
 /// A named style map — look up styles by key (e.g. `"repr.number"`, `"markdown.h1"`).
 pub use theme::Theme;

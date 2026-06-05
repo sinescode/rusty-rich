@@ -623,6 +623,8 @@ pub struct Console {
     alt_screen: bool,
     /// Is the cursor visible?
     cursor_visible: bool,
+    /// Number of spaces per tab (default 8).
+    pub tab_size: usize,
     /// Active render hooks that modify output before display.
     render_hooks: Vec<RenderHook>,
     /// Captured output buffer (active when capturing).
@@ -661,6 +663,7 @@ impl Console {
             soft_wrap: false,
             alt_screen: false,
             cursor_visible: true,
+            tab_size: 8,
             render_hooks: Vec::new(),
             capture_buf: None,
             saved_file: None,
@@ -691,6 +694,7 @@ impl Console {
             soft_wrap: false,
             alt_screen: false,
             cursor_visible: true,
+            tab_size: 8,
             render_hooks: Vec::new(),
             capture_buf: None,
             saved_file: None,

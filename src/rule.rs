@@ -69,20 +69,29 @@ impl Renderable for Rule {
         let char_w = UnicodeWidthStr::width(chars);
 
         if char_w == 0 {
-            return RenderResult::from_text("");
+            return RenderResult::new();
         }
 
-        let style_ansi = self.style.to_ansi();
-        let style_reset = if style_ansi.is_empty() { "" } else { "\x1b[0m" };
+        // Build a simple rule line using styled segments
+        let make_rule_line = |w: usize| -> Vec<Segment> {
+            let count = w / char_w;
+            let line_text = chars.repeat(count.max(1));
+            let mut seg = if self.style.is_plain() {
+                Segment::new(line_text)
+            } else {
+                Segment::styled(line_text, self.style.clone())
+            };
+            let cell_len = seg.cell_length();
+            if cell_len > w {
+                // Truncate to exact width
+                let new_text = crate::cells::set_cell_size(&seg.text, w);
+                seg.text = new_text;
+            }
+            vec![seg, Segment::line()]
+        };
 
         if self.title.is_empty() {
-            // Simple rule line
-            let count = width / char_w;
-            let line = chars.repeat(count);
-            return RenderResult::from_segments(vec![
-                Segment::new(format!("{style_ansi}{line}{style_reset}")),
-                Segment::line(),
-            ]);
+            return RenderResult::from_segments(make_rule_line(width));
         }
 
         let title_w = UnicodeWidthStr::width(self.title.as_str());
@@ -95,12 +104,7 @@ impl Renderable for Rule {
 
         if available < 1 {
             // Not enough space — just draw a plain rule
-            let count = width / char_w;
-            let line = chars.repeat(count);
-            return RenderResult::from_segments(vec![
-                Segment::new(format!("{style_ansi}{line}{style_reset}")),
-                Segment::line(),
-            ]);
+            return RenderResult::from_segments(make_rule_line(width));
         }
 
         let mut segments = Vec::new();
@@ -114,34 +118,57 @@ impl Renderable for Rule {
                     .saturating_sub(title_w)
                     .saturating_sub(2);
 
-                let left = chars.repeat((left_w / char_w).max(1));
-                let right = chars.repeat((right_w / char_w).max(1));
+                let left_text = chars.repeat((left_w / char_w).max(1));
+                let right_text = chars.repeat((right_w / char_w).max(1));
 
-                segments.push(Segment::new(format!(
-                    "{style_ansi}{left} {}{} {right}{style_reset}",
-                    self.title, style_ansi
-                )));
+                // Truncate to exact width
+                let left_actual = crate::cells::set_cell_size(&left_text, left_w);
+                let right_actual = crate::cells::set_cell_size(&right_text, right_w);
+
+                if self.style.is_plain() {
+                    segments.push(Segment::new(format!(
+                        "{left_actual} {} {right_actual}",
+                        self.title
+                    )));
+                } else {
+                    segments.push(Segment::styled(
+                        left_actual,
+                        self.style.clone(),
+                    ));
+                    segments.push(Segment::new(format!(" {} ", self.title)));
+                    segments.push(Segment::styled(
+                        right_actual,
+                        self.style.clone(),
+                    ));
+                }
             }
             AlignMethod::Left => {
                 let rem = width.saturating_sub(title_w + 1);
-                let right = chars.repeat((rem / char_w).max(1));
-                segments.push(Segment::new(format!(
-                    "{style_ansi}{} {right}{style_reset}",
-                    self.title
-                )));
+                let right_text = chars.repeat((rem / char_w).max(1));
+                let right_actual = crate::cells::set_cell_size(&right_text, rem);
+
+                segments.push(Segment::new(format!("{} ", self.title)));
+                if self.style.is_plain() {
+                    segments.push(Segment::new(right_actual));
+                } else {
+                    segments.push(Segment::styled(right_actual, self.style.clone()));
+                }
             }
             AlignMethod::Right => {
                 let rem = width.saturating_sub(title_w + 1);
-                let left = chars.repeat((rem / char_w).max(1));
-                segments.push(Segment::new(format!(
-                    "{style_ansi}{left} {}{style_reset}",
-                    self.title
-                )));
+                let left_text = chars.repeat((rem / char_w).max(1));
+                let left_actual = crate::cells::set_cell_size(&left_text, rem);
+
+                if self.style.is_plain() {
+                    segments.push(Segment::new(format!("{left_actual} ")));
+                } else {
+                    segments.push(Segment::styled(left_actual, self.style.clone()));
+                    segments.push(Segment::new(" "));
+                }
+                segments.push(Segment::new(self.title.clone()));
             }
             AlignMethod::Full => {
-                let count = width / char_w;
-                let line = chars.repeat(count);
-                segments.push(Segment::new(format!("{style_ansi}{line}{style_reset}")));
+                return RenderResult::from_segments(make_rule_line(width));
             }
         }
 

@@ -43,102 +43,122 @@ impl AnsiDecoder {
 }
 
 /// Apply SGR parameters to a style.
+///
+/// Handles standard colors (30-37, 40-47, 90-97, 100-107), attributes (1-9,
+/// 21-29, 51-55), and extended colors (38 for fg, 48 for bg) in both 8-bit
+/// (38;5;N) and TrueColor (38;2;R;G;B) forms.
 fn apply_sgr(style: &Style, params: &str) -> Style {
     if params.is_empty() || params == "0" {
         return Style::new(); // Reset
     }
 
     let mut s = style.clone();
-    for param in params.split(';') {
-        if let Ok(n) = param.parse::<u32>() {
-            match n {
-                0 => s = Style::new(), // Reset
-                1 => {
-                    s = s.bold(true);
-                } // Bold
-                2 => {
-                    s = s.dim(true);
-                } // Dim
-                3 => {
-                    s = s.italic(true);
-                } // Italic
-                4 => {
-                    s = s.underline(true);
-                } // Underline
-                5 => {
-                    s = s.blink(true);
-                } // Slow blink
-                6 => {
-                    s = s.blink2(true);
-                } // Fast blink
-                7 => {
-                    s = s.reverse(true);
-                } // Reverse
-                8 => {
-                    s = s.conceal(true);
-                } // Conceal
-                9 => {
-                    s = s.strike(true);
-                } // Strikethrough
-                21 => {
-                    s = s.underline2(true);
-                } // Double underline
-                22 => {
-                    s = s.bold(false);
-                } // Normal intensity
-                23 => {
-                    s = s.italic(false);
-                } // Not italic
-                24 => {
-                    s = s.underline(false);
-                } // Not underline
-                25 => {
-                    s = s.blink(false);
-                } // Not blink
-                27 => {
-                    s = s.reverse(false);
-                } // Not reverse
-                28 => {
-                    s = s.conceal(false);
-                } // Not conceal
-                29 => {
-                    s = s.strike(false);
-                } // Not strikethrough
-                30..=37 => {
-                    // Standard fg
-                    if let Ok(c) = crate::color::Color::parse(&format!("color({})", n - 30)) {
-                        s = s.color(c);
-                    }
-                }
-                38 => { /* Extended fg - skip for simplicity */ }
-                39 => {
-                    s = s.color(crate::color::Color::default());
-                } // Default fg
-                40..=47 => {
-                    // Standard bg
-                    if let Ok(c) = crate::color::Color::parse(&format!("color({})", n - 40)) {
-                        s = s.bgcolor(c);
-                    }
-                }
-                48 => { /* Extended bg - skip */ }
-                49 => {
-                    s = s.bgcolor(crate::color::Color::default());
-                } // Default bg
-                90..=97 => {
-                    // Bright fg
-                    if let Ok(c) = crate::color::Color::parse(&format!("color({})", n - 90 + 8)) {
-                        s = s.color(c);
-                    }
-                }
-                100..=107 => {
-                    // Bright bg
-                    if let Ok(c) = crate::color::Color::parse(&format!("color({})", n - 100 + 8)) {
-                        s = s.bgcolor(c);
-                    }
-                }
-                _ => {}
+    let parts: Vec<&str> = params.split(';').collect();
+    let mut i = 0usize;
+
+    while i < parts.len() {
+        let n = parts[i].parse::<u32>().unwrap_or(999);
+        match n {
+            0 => s = Style::new(), // Reset
+            1 => s = s.bold(true),
+            2 => s = s.dim(true),
+            3 => s = s.italic(true),
+            4 => s = s.underline(true),
+            5 => s = s.blink(true),
+            6 => s = s.blink2(true),
+            7 => s = s.reverse(true),
+            8 => s = s.conceal(true),
+            9 => s = s.strike(true),
+            21 => s = s.underline2(true),
+            22 => { s = s.bold(false); s = s.dim(false); }
+            23 => s = s.italic(false),
+            24 => s = s.underline(false),
+            25 => { s = s.blink(false); s = s.blink2(false); }
+            27 => s = s.reverse(false),
+            28 => s = s.conceal(false),
+            29 => s = s.strike(false),
+            30..=37 => {
+                let idx = n - 30;
+                s = s.color(crate::color::Color::from_8bit(idx as u8));
             }
+            38 => {
+                // Extended foreground color
+                i += 1;
+                if i < parts.len() {
+                    match parts[i] {
+                        "5" => {
+                            // 8-bit color: 38;5;N
+                            i += 1;
+                            if i < parts.len() {
+                                if let Ok(n) = parts[i].parse::<u8>() {
+                                    s = s.color(crate::color::Color::from_8bit(n));
+                                }
+                            }
+                        }
+                        "2" => {
+                            // TrueColor: 38;2;R;G;B
+                            if i + 3 < parts.len() {
+                                let r = parts[i + 1].parse::<u8>().unwrap_or(0);
+                                let g = parts[i + 2].parse::<u8>().unwrap_or(0);
+                                let b = parts[i + 3].parse::<u8>().unwrap_or(0);
+                                s = s.color(crate::color::Color::from_rgb(r, g, b));
+                                i += 3;
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            39 => { s = s.color(crate::color::Color::default()); }
+            40..=47 => {
+                let idx = n - 40;
+                s = s.bgcolor(crate::color::Color::from_8bit(idx as u8));
+            }
+            48 => {
+                // Extended background color
+                i += 1;
+                if i < parts.len() {
+                    match parts[i] {
+                        "5" => {
+                            // 8-bit color: 48;5;N
+                            i += 1;
+                            if i < parts.len() {
+                                if let Ok(n) = parts[i].parse::<u8>() {
+                                    s = s.bgcolor(crate::color::Color::from_8bit(n));
+                                }
+                            }
+                        }
+                        "2" => {
+                            // TrueColor: 48;2;R;G;B
+                            if i + 3 < parts.len() {
+                                let r = parts[i + 1].parse::<u8>().unwrap_or(0);
+                                let g = parts[i + 2].parse::<u8>().unwrap_or(0);
+                                let b = parts[i + 3].parse::<u8>().unwrap_or(0);
+                                s = s.bgcolor(crate::color::Color::from_rgb(r, g, b));
+                                i += 3;
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            49 => { s = s.bgcolor(crate::color::Color::default()); }
+            51 => s = s.frame(true),
+            52 => s = s.encircle(true),
+            53 => s = s.overline(true),
+            54 => { s = s.frame(false); s = s.encircle(false); }
+            55 => s = s.overline(false),
+            90..=97 => {
+                let idx = n - 90 + 8; // bright colors start at 8
+                s = s.color(crate::color::Color::from_8bit(idx as u8));
+            }
+            100..=107 => {
+                let idx = n - 100 + 8;
+                s = s.bgcolor(crate::color::Color::from_8bit(idx as u8));
+            }
+            _ => {}
         }
+        i += 1;
     }
     s
 }

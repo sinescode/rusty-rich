@@ -190,6 +190,133 @@ impl Text {
         crate::markup::render(markup)
     }
 
+    /// Assemble a [`Text`] from a sequence of parts with full configuration.
+    ///
+    /// Each part can be:
+    /// - A plain string (via `TextPart::Plain` or `.into()`)
+    /// - A `(String, Style)` tuple (via `TextPart::Styled` or `.into()`)
+    /// - An existing [`Text`] (via `TextPart::Rich` or `.into()`)
+    ///
+    /// This is the equivalent of Python Rich's `Text.assemble()`.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rusty_rich::{Text, Style, TextPart};
+    ///
+    /// let text = Text::assemble(
+    ///     vec![
+    ///         TextPart::from("Hello "),
+    ///         TextPart::from(("World".to_string(), Style::new().bold(true))),
+    ///     ],
+    ///     None, None, None, None, None, None,
+    /// );
+    /// assert_eq!(text.plain, "Hello World");
+    /// ```
+    ///
+    /// For the common case, use [`Text::assemble_simple`] which accepts just the
+    /// parts and uses sensible defaults.
+    pub fn assemble(
+        parts: Vec<TextPart>,
+        style: Option<Style>,
+        justify: Option<JustifyMethod>,
+        overflow: Option<OverflowMethod>,
+        no_wrap: Option<bool>,
+        end: Option<&str>,
+        tab_size: Option<usize>,
+    ) -> Self {
+        let mut text = Self {
+            plain: String::new(),
+            spans: Vec::new(),
+            style: style.unwrap_or_default(),
+            justify: justify.unwrap_or(JustifyMethod::Left),
+            end: end.unwrap_or("\n").to_string(),
+            overflow: overflow.unwrap_or(OverflowMethod::Fold),
+            no_wrap: no_wrap.unwrap_or(false),
+            tab_size: tab_size.unwrap_or(8),
+            indent_guides: false,
+        };
+
+        for part in parts {
+            match part {
+                TextPart::Plain(s) => {
+                    text.append(s, None::<Style>);
+                }
+                TextPart::Rich(t) => {
+                    text.append(t, None::<Style>);
+                }
+                TextPart::Styled(s, st) => {
+                    let len = text.plain.len();
+                    text.plain.push_str(&s);
+                    text.spans.push(Span::new(len, text.plain.len(), st));
+                }
+            }
+        }
+
+        text
+    }
+
+    /// Simplified version of [`Text::assemble`] that takes only the parts
+    /// and uses sensible defaults for everything else.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rusty_rich::{Text, Style};
+    ///
+    /// let text = Text::assemble_simple(vec![
+    ///     "Hello ".into(),
+    ///     ("World".to_string(), Style::new().bold(true)).into(),
+    /// ]);
+    /// assert_eq!(text.plain, "Hello World");
+    /// ```
+    pub fn assemble_simple(parts: Vec<TextPart>) -> Self {
+        Self::assemble(parts, None, None, None, None, None, None)
+    }
+
+    /// Join multiple [`Text`] instances with this text as the separator.
+    ///
+    /// Equivalent to Python Rich's `Text.join()`.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rusty_rich::Text;
+    ///
+    /// let separator = Text::new(", ");
+    /// let parts = vec![Text::new("a"), Text::new("b"), Text::new("c")];
+    /// let joined = separator.join(parts);
+    /// assert_eq!(joined.plain, "a, b, c");
+    /// ```
+    pub fn join(&self, parts: Vec<Text>) -> Text {
+        let mut result = Text::new("");
+        let mut first = true;
+        for part in parts {
+            if !first {
+                result.append(self.clone(), None::<Style>);
+            }
+            first = false;
+            result.append(part, None::<Style>);
+        }
+        result
+    }
+
+    /// Highlight specific words with a style.
+    ///
+    /// Equivalent to Python Rich's `Text.highlight_words()`.
+    ///
+    /// Returns the number of words highlighted.
+    pub fn highlight_words(&mut self, words: &[&str], style: Style, case_sensitive: bool) -> usize {
+        let flags = if case_sensitive { "" } else { "(?i)" };
+        let pattern = words
+            .iter()
+            .map(|w| regex::escape(w))
+            .collect::<Vec<_>>()
+            .join("|");
+        let full_pattern = format!("{flags}{pattern}");
+        self.highlight_regex(&full_pattern, style)
+    }
+
     /// Get a reference to the default style.
     pub fn get_style(&self) -> &Style {
         &self.style
@@ -854,6 +981,43 @@ impl From<String> for Text {
 // ---------------------------------------------------------------------------
 // TextType — either a &str or a Text
 // ---------------------------------------------------------------------------
+
+/// A part used in [`Text::assemble`].
+///
+/// Can be plain text, a styled (string, style) pair, or an existing [`Text`].
+#[derive(Debug, Clone)]
+pub enum TextPart {
+    /// Plain text with no additional styling.
+    Plain(String),
+    /// Styled text — a string with a specific [`Style`].
+    Styled(String, Style),
+    /// An existing [`Text`] with its own spans and style.
+    Rich(Text),
+}
+
+impl From<&str> for TextPart {
+    fn from(s: &str) -> Self {
+        Self::Plain(s.to_string())
+    }
+}
+
+impl From<String> for TextPart {
+    fn from(s: String) -> Self {
+        Self::Plain(s)
+    }
+}
+
+impl From<(String, Style)> for TextPart {
+    fn from((s, st): (String, Style)) -> Self {
+        Self::Styled(s, st)
+    }
+}
+
+impl From<Text> for TextPart {
+    fn from(t: Text) -> Self {
+        Self::Rich(t)
+    }
+}
 
 /// Represents something that can be used as text: a plain `&str` or a `Text`.
 #[derive(Debug, Clone)]

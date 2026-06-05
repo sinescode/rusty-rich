@@ -515,10 +515,109 @@ impl Style {
         }
     }
 
+    /// Check if the dim attribute is explicitly set.
+    pub fn get_dim(&self) -> Option<bool> {
+        if self.set_attributes & Attributes::DIM != 0 {
+            Some(self.attributes.get(Attributes::DIM))
+        } else {
+            None
+        }
+    }
+
     /// Check if the italic attribute is explicitly set to `true`.
     pub fn get_italic(&self) -> Option<bool> {
         if self.set_attributes & Attributes::ITALIC != 0 {
             Some(self.attributes.get(Attributes::ITALIC))
+        } else {
+            None
+        }
+    }
+
+    /// Check if the underline attribute is explicitly set.
+    pub fn get_underline(&self) -> Option<bool> {
+        if self.set_attributes & Attributes::UNDERLINE != 0 {
+            Some(self.attributes.get(Attributes::UNDERLINE))
+        } else {
+            None
+        }
+    }
+
+    /// Check if the blink attribute is explicitly set.
+    pub fn get_blink(&self) -> Option<bool> {
+        if self.set_attributes & Attributes::BLINK != 0 {
+            Some(self.attributes.get(Attributes::BLINK))
+        } else {
+            None
+        }
+    }
+
+    /// Check if the reverse attribute is explicitly set.
+    pub fn get_reverse(&self) -> Option<bool> {
+        if self.set_attributes & Attributes::REVERSE != 0 {
+            Some(self.attributes.get(Attributes::REVERSE))
+        } else {
+            None
+        }
+    }
+
+    /// Check if the strike attribute is explicitly set.
+    pub fn get_strike(&self) -> Option<bool> {
+        if self.set_attributes & Attributes::STRIKE != 0 {
+            Some(self.attributes.get(Attributes::STRIKE))
+        } else {
+            None
+        }
+    }
+
+    /// Check if the underline2 (double underline) attribute is explicitly set.
+    pub fn get_underline2(&self) -> Option<bool> {
+        if self.set_attributes & Attributes::UNDERLINE2 != 0 {
+            Some(self.attributes.get(Attributes::UNDERLINE2))
+        } else {
+            None
+        }
+    }
+
+    /// Check if the frame attribute is explicitly set.
+    pub fn get_frame(&self) -> Option<bool> {
+        if self.set_attributes & Attributes::FRAME != 0 {
+            Some(self.attributes.get(Attributes::FRAME))
+        } else {
+            None
+        }
+    }
+
+    /// Check if the encircle attribute is explicitly set.
+    pub fn get_encircle(&self) -> Option<bool> {
+        if self.set_attributes & Attributes::ENCIRCLE != 0 {
+            Some(self.attributes.get(Attributes::ENCIRCLE))
+        } else {
+            None
+        }
+    }
+
+    /// Check if the overline attribute is explicitly set.
+    pub fn get_overline(&self) -> Option<bool> {
+        if self.set_attributes & Attributes::OVERLINE != 0 {
+            Some(self.attributes.get(Attributes::OVERLINE))
+        } else {
+            None
+        }
+    }
+
+    /// Check if the blink2 (rapid blink) attribute is explicitly set.
+    pub fn get_blink2(&self) -> Option<bool> {
+        if self.set_attributes & Attributes::BLINK2 != 0 {
+            Some(self.attributes.get(Attributes::BLINK2))
+        } else {
+            None
+        }
+    }
+
+    /// Check if the conceal attribute is explicitly set.
+    pub fn get_conceal(&self) -> Option<bool> {
+        if self.set_attributes & Attributes::CONCEAL != 0 {
+            Some(self.attributes.get(Attributes::CONCEAL))
         } else {
             None
         }
