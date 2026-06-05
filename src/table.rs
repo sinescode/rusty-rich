@@ -294,6 +294,9 @@ pub struct Table {
     pub pad_edge: bool,
     /// Row indices where sections end (ordered, in insertion order).
     pub sections: Vec<usize>,
+    /// If true, use ASCII-safe box characters for legacy terminals.
+    /// When None, defers to the console's ascii_only setting.
+    pub safe_box: Option<bool>,
 }
 
 impl Table {
@@ -325,6 +328,7 @@ impl Table {
             section_rows: HashSet::new(),
             pad_edge: true,
             sections: Vec::new(),
+            safe_box: None,
         }
     }
 
@@ -500,6 +504,14 @@ impl Table {
         self
     }
 
+    /// Builder: force safe (ASCII) box characters for legacy terminals.
+    ///
+    /// When `None` (default), the table defers to the console's `ascii_only` setting.
+    pub fn safe_box(mut self, safe: bool) -> Self {
+        self.safe_box = Some(safe);
+        self
+    }
+
     /// Get the style for a specific row (cycling through `row_styles` if set).
     pub fn get_row_style(&self, row_index: usize) -> Option<Style> {
         if self.row_styles.is_empty() {
@@ -538,6 +550,7 @@ impl Table {
             section_rows: HashSet::new(),
             pad_edge: true,
             sections: Vec::new(),
+            safe_box: None,
         }
     }
 
@@ -562,7 +575,8 @@ impl Renderable for Table {
             return RenderResult::new();
         }
 
-        let box_style = get_safe_box(&self.box_style, options.ascii_only);
+        let use_ascii = self.safe_box.unwrap_or(options.ascii_only);
+        let box_style = get_safe_box(&self.box_style, use_ascii);
         let available_width = self.width.unwrap_or(options.max_width);
         let col_count = self.columns.len();
 

@@ -625,6 +625,8 @@ pub struct Console {
     cursor_visible: bool,
     /// Number of spaces per tab (default 8).
     pub tab_size: usize,
+    /// If true, use ASCII-safe box characters (for legacy terminals).
+    pub safe_box: bool,
     /// Active render hooks that modify output before display.
     render_hooks: Vec<RenderHook>,
     /// Captured output buffer (active when capturing).
@@ -664,6 +666,7 @@ impl Console {
             alt_screen: false,
             cursor_visible: true,
             tab_size: 8,
+            safe_box: true,
             render_hooks: Vec::new(),
             capture_buf: None,
             saved_file: None,
@@ -695,6 +698,7 @@ impl Console {
             alt_screen: false,
             cursor_visible: true,
             tab_size: 8,
+            safe_box: true,
             render_hooks: Vec::new(),
             capture_buf: None,
             saved_file: None,

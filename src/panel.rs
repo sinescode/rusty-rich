@@ -39,6 +39,9 @@ pub struct Panel {
     pub padding: (usize, usize, usize, usize),
     /// If true, highlight string titles.
     pub highlight: bool,
+    /// If true, use ASCII-safe box characters (overrides ConsoleOptions.ascii_only).
+    /// When None, defers to the console's safe_box setting.
+    pub safe_box: Option<bool>,
 }
 
 impl Panel {
@@ -58,6 +61,7 @@ impl Panel {
             height: None,
             padding: (0, 1, 0, 1), // top, right, bottom, left
             highlight: false,
+            safe_box: None,
         }
     }
 
@@ -120,6 +124,14 @@ impl Panel {
         self.title_align = align;
         self
     }
+
+    /// Builder: force safe (ASCII) box characters for legacy terminals.
+    ///
+    /// When `None` (default), the panel uses the console's `safe_box` setting.
+    pub fn safe_box(mut self, safe: bool) -> Self {
+        self.safe_box = Some(safe);
+        self
+    }
 }
 
 impl std::fmt::Debug for Panel {
@@ -134,7 +146,9 @@ impl std::fmt::Debug for Panel {
 
 impl Renderable for Panel {
     fn render(&self, options: &ConsoleOptions) -> RenderResult {
-        let box_style = get_safe_box(&self.box_style, options.ascii_only);
+        // Use safe_box from self if set, otherwise fall back to the options
+        let use_ascii = self.safe_box.unwrap_or(options.ascii_only);
+        let box_style = get_safe_box(&self.box_style, use_ascii);
         let padding = self.padding;
         let has_edge = box_style.has_visible_edges();
         // Only reserve space for borders if the box actually draws them.
