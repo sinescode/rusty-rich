@@ -1,113 +1,131 @@
 #!/usr/bin/env bash
-# ci-driver.sh — Trigger, monitor, and report on rusty-rich CI workflows.
+# ci-driver.sh — Dead-simple CI driver for rusty-rich.
 #
-# Usage:
-#   ./ci-driver.sh run              Trigger a CI run on the current branch
-#   ./ci-driver.sh watch [run-id]   Watch the latest (or specific) CI run
-#   ./ci-driver.sh results [run-id] Show test/build results for a CI run
-#   ./ci-driver.sh test [filter]    Show test output (optionally filter by name)
-#   ./ci-driver.sh status           Quick status of the latest CI run
+# Just run it. No arguments needed.
 #
-# Requires: gh CLI authenticated, in the rusty-rich repo.
-# No local cargo — all build/test/lint through GitHub Actions.
+#   ./ci-driver.sh            Show dashboard (status + jobs + recent history)
+#   ./ci-driver.sh run        Trigger CI on the current branch
+#   ./ci-driver.sh watch [id] Watch a CI run live, then show dashboard
+#   ./ci-driver.sh log [id]   Show test output from a CI run
+#
+# Requires: gh CLI authenticated. That's it.
 
 set -euo pipefail
-
 REPO="sinescode/rusty-rich"
-WF_CI="ci.yml"
+WF="ci.yml"
+SELF="${BASH_SOURCE[0]:-$0}"
 
 # ── helpers ────────────────────────────────────────────────────────────────
 
-_color() {
-  case "$1" in
-    green)  printf '\033[1;32m%s\033[0m\n' "$2" ;;
-    red)    printf '\033[1;31m%s\033[0m\n' "$2" ;;
-    yellow) printf '\033[1;33m%s\033[0m\n' "$2" ;;
-    cyan)   printf '\033[1;36m%s\033[0m\n' "$2" ;;
-    bold)   printf '\033[1m%s\033[0m\n' "$2" ;;
-    *)      printf '%s\n' "$2" ;;
+BOLD=$'\033[1m'; GREEN=$'\033[1;32m'; RED=$'\033[1;31m'; YELLOW=$'\033[1;33m'
+CYAN=$'\033[1;36m'; DIM=$'\033[2m'; RESET=$'\033[0m'
+
+say() { printf "%s%s%s\n" "${2:-}" "$1" "$RESET"; }
+latest_run() { gh run list -R "$REPO" -w "$WF" -L1 --json databaseId -q '.[0].databaseId'; }
+
+die() { say "$1" "$RED"; exit "${2:-1}"; }
+
+check_prereqs() {
+  if ! gh auth status &>/dev/null; then
+    die "gh CLI not authenticated. Run: gh auth login" 2
+  fi
+}
+
+# ── dashboard (default, no args) ───────────────────────────────────────────
+
+cmd_dashboard() {
+  check_prereqs
+
+  local id branch title conclusion
+  id=$(gh run list -R "$REPO" -w "$WF" -L1 --json databaseId,headBranch,displayTitle,conclusion -q '
+    .[0] | "\(.databaseId)|\(.headBranch)|\(.displayTitle)|\(.conclusion // "pending")"')
+  IFS='|' read -r _rid branch title conclusion <<< "$id"
+
+  # -- header --
+  echo ""
+  say " rusty-rich CI" "$BOLD$CYAN"
+  echo ""
+
+  # -- latest run status badge --
+  case "$conclusion" in
+    success) say "  ✓  Latest CI passed" "$GREEN" ;;
+    failure) say "  ✗  Latest CI failed" "$RED" ;;
+    *)       say "  ◌  Latest CI $conclusion" "$YELLOW" ;;
   esac
+  echo "  ${DIM}branch:${RESET} $branch  ${DIM}title:${RESET} ${title:0:60}"
+  echo "  ${DIM}url:${RESET}    https://github.com/$REPO/actions/runs/$_rid"
+  echo ""
+
+  # -- job summary --
+  say " Jobs" "$BOLD"
+  gh run view "$_rid" -R "$REPO" --json jobs -q '
+    .jobs[] | "  \(if .conclusion == "success" then "✓" elif .conclusion == "failure" then "✗" else "◌" end)  \(.name)"'
+  echo ""
+
+  # -- quick actions --
+  say " Quick actions" "$BOLD"
+  echo "  ${DIM}$SELF${RESET}          show this dashboard"
+  echo "  ${DIM}$SELF run${RESET}      trigger CI on current branch"
+  echo "  ${DIM}$SELF watch${RESET}    watch latest CI run live"
+  echo "  ${DIM}$SELF log${RESET}      show test output from latest CI"
+  echo ""
 }
 
-_latest_run_id() {
-  gh run list --repo "$REPO" --workflow "$WF_CI" --limit 1 --json databaseId --jq '.[0].databaseId'
-}
-
-# ── commands ───────────────────────────────────────────────────────────────
+# ── run ────────────────────────────────────────────────────────────────────
 
 cmd_run() {
+  check_prereqs
   local branch
   branch=$(git branch --show-current)
-  _color cyan "Triggering CI for branch: $branch"
-  gh workflow run "$WF_CI" --repo "$REPO" --ref "$branch"
+  say "Triggering CI for branch: $branch" "$CYAN"
+  gh workflow run "$WF" -R "$REPO" --ref "$branch"
   sleep 3
   local id
-  id=$(_latest_run_id)
-  _color green "CI triggered: https://github.com/$REPO/actions/runs/$id"
-  echo "Run: $0 watch $id"
+  id=$(latest_run)
+  say "CI triggered! https://github.com/$REPO/actions/runs/$id" "$GREEN"
+  echo ""
+  echo "  To watch: $SELF watch $id"
 }
+
+# ── watch ──────────────────────────────────────────────────────────────────
 
 cmd_watch() {
-  local id="${1:-$(_latest_run_id)}"
-  _color cyan "Watching CI run: $id"
-  gh run watch "$id" --repo "$REPO" --exit-status || true
-  cmd_results "$id"
-}
-
-cmd_results() {
-  local id="${1:-$(_latest_run_id)}"
-  _color bold "=== CI Run $id ==="
+  check_prereqs
+  local id="${1:-$(latest_run)}"
+  say "Watching run $id ..." "$CYAN"
+  gh run watch "$id" -R "$REPO" --exit-status 2>/dev/null || true
   echo ""
-  gh run view "$id" --repo "$REPO" --json name,status,conclusion,displayTitle,headBranch \
-    --jq '"  Branch: \(.headBranch)\n  Title:  \(.displayTitle)\n  Status: \(.status) / \(.conclusion)"'
+  cmd_dashboard
+}
+
+# ── log ────────────────────────────────────────────────────────────────────
+
+cmd_log() {
+  check_prereqs
+  local id="${1:-$(latest_run)}"
+  say "Test output — run $id" "$BOLD"
   echo ""
-  _color bold "--- Jobs ---"
-  gh run view "$id" --repo "$REPO" --json jobs --jq '
-    .jobs[] | "  \(.name): \(.status) → \(.conclusion // "pending")"'
-}
-
-cmd_test() {
-  local id="${1:-$(_latest_run_id)}"
-  _color bold "=== Test Output (run $id) ==="
-  gh run view "$id" --repo "$REPO" --log 2>/dev/null | \
-    grep -E '(test result:|running [0-9]+ tests|Doc-tests)' | \
-    grep -v '^Lint' | \
-    tail -20
-}
-
-cmd_status() {
-  local id
-  id=$(_latest_run_id)
-  local conclusion
-  conclusion=$(gh run view "$id" --repo "$REPO" --json conclusion --jq '.conclusion')
-  local name
-  name=$(gh run view "$id" --repo "$REPO" --json displayTitle --jq '.displayTitle' | cut -c1-60)
-
-  case "$conclusion" in
-    success) _color green "✓ CI passed — $name" ;;
-    failure) _color red   "✗ CI failed — $name" ;;
-    *)       _color yellow "◌ CI $conclusion — $name" ;;
-  esac
-  echo "  https://github.com/$REPO/actions/runs/$id"
+  gh run view "$id" -R "$REPO" --log 2>/dev/null \
+    | grep -E '(test result:|running [0-9]+ tests|Doc-tests|error\[|Compiling rusty-rich)' \
+    | grep -v '^Lint' | tail -25
 }
 
 # ── dispatch ───────────────────────────────────────────────────────────────
 
+check_prereqs
+
 case "${1:-}" in
-  run)     shift; cmd_run "$@" ;;
-  watch)   shift; cmd_watch "$@" ;;
-  results) shift; cmd_results "$@" ;;
-  test)    shift; cmd_test "$@" ;;
-  status)  shift; cmd_status "$@" ;;
-  *)
-    echo "Usage: $0 {run|watch|results|test|status} [run-id]"
+  run)     cmd_run ;;
+  watch)   cmd_watch "${2:-}" ;;
+  log)     cmd_log "${2:-}" ;;
+  -h|--help|help)
+    echo "Usage: $SELF [run|watch|log]"
     echo ""
-    echo "Commands:"
-    echo "  run              Trigger CI on the current branch"
-    echo "  watch [run-id]   Watch a CI run, then show results"
-    echo "  results [run-id] Show job status for a CI run"
-    echo "  test [run-id]    Show test output from a CI run"
-    echo "  status           Quick pass/fail status of latest CI"
-    exit 1
+    echo "No arguments → dashboard (CI status + jobs + actions)"
+    echo "  run         Trigger CI on the current branch"
+    echo "  watch [id]  Watch a CI run, then show dashboard"
+    echo "  log [id]    Show test output from a CI run"
     ;;
+  "")      cmd_dashboard ;;
+  *)       die "Unknown: $1. Try: $SELF" ;;
 esac
