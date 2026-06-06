@@ -18,7 +18,7 @@ gh auth status
 ## Run
 
 ```bash
-# Dashboard — CI status, jobs, actions (default, no args needed)
+# Dashboard — CI status, jobs, + failure diagnosis (default)
 .claude/skills/run-rusty-rich/ci-driver.sh
 
 # Trigger CI on the current branch
@@ -26,6 +26,9 @@ gh auth status
 
 # Watch a run live, then show dashboard
 .claude/skills/run-rusty-rich/ci-driver.sh watch
+
+# Show what failed and why (unique errors, fmt diffs)
+.claude/skills/run-rusty-rich/ci-driver.sh why
 
 # Show test output from latest (or specific) CI run
 .claude/skills/run-rusty-rich/ci-driver.sh log
