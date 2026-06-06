@@ -83,7 +83,7 @@ User calls console.print(obj) or console.println(obj)
 
 ## Box Drawing (`src/box_drawing.rs`)
 
-17 box styles: `ROUNDED`, `SQUARE`, `HEAVY`, `HEAVY_EDGE`, `HEAVY_HEAD`, `DOUBLE`, `DOUBLE_EDGE`, `SIMPLE`, `SIMPLE_HEAVY`, `MINIMAL`, `MINIMAL_HEAVY`, `ASCII`, `ASCII2`, `SQUARE_DOUBLE_HEAD`, `MINIMAL_DOUBLE_HEAD`, `SIMPLE_HEAD`, `ASCII_DOUBLE_HEAD`, `MARKDOWN`. Definitions must match Python Rich 14.x exactly — validate with `compare_rich.py`.
+17 box styles: `ROUNDED`, `SQUARE`, `HEAVY`, `HEAVY_EDGE`, `HEAVY_HEAD`, `DOUBLE`, `DOUBLE_EDGE`, `SIMPLE`, `SIMPLE_HEAVY`, `MINIMAL`, `MINIMAL_HEAVY`, `ASCII`, `ASCII2`, `SQUARE_DOUBLE_HEAD`, `MINIMAL_DOUBLE_HEAD`, `SIMPLE_HEAD`, `ASCII_DOUBLE_HEAD`, `MARKDOWN`. Definitions must match Python Rich 14.x exactly — validate via CI tests (`box_table_exhaustive.rs` covers all 18 styles).
 
 ## Module Organization
 
@@ -99,7 +99,7 @@ User calls console.print(obj) or console.println(obj)
 ## Project-Specific Conventions
 
 - **Consuming builders** — all setter/builder methods take `self` and return `Self`. Never use `&mut self` builders.
-- **Match Python Rich behavior** — when in doubt, check Python Rich 14.x output. Use `compare_rich.py` to diff against the Python reference.
+- **Match Python Rich behavior** — when in doubt, check Python Rich 14.x output. Use the `view_all` example and `box_table_exhaustive` test to validate box styles.
 - **ANSI stripped from width measurement** — `cells::cell_len()` excludes ANSI escape sequences before measuring Unicode display width. Always use it, never raw `str::len()`.
 - **Theme fallbacks, never panics** — never index into a `HashMap` where a missing key would panic. Use `.get()` with a sensible fallback.
 - **Terminal width** — max render width = `terminal_width - 1` to prevent edge-of-screen line wrapping.
@@ -133,6 +133,16 @@ pub fn render_markdown(md: &str) -> Markdown { ... }
 - **Integration tests** — `tests/battle_test.rs` (103 tests) and `tests/box_table_exhaustive.rs` (150 tests covering all 18 box styles × features)
 - Render to string and assert on key substrings (border characters, alignment, ANSI codes, visible text).
 
-## Python Parity Comparison
+## Run & Verify
 
-`compare_rich.py` renders all box styles, panels, and tables using Python Rich 14.x. Pipe output to a file and diff against the Rust `view_all` example output to verify rendering fidelity.
+Use `/run-rusty-rich` (the project skill at `.claude/skills/run-rusty-rich/`) to check CI status, trigger builds, and view test results — all via GitHub Actions. No local Rust required.
+
+```bash
+# Dashboard (CI status + job summary)
+.claude/skills/run-rusty-rich/ci-driver.sh
+
+# Trigger CI, watch runs, view test logs
+.claude/skills/run-rusty-rich/ci-driver.sh run
+.claude/skills/run-rusty-rich/ci-driver.sh watch
+.claude/skills/run-rusty-rich/ci-driver.sh log
+```
