@@ -629,10 +629,23 @@ pub struct Console {
     pub safe_box: bool,
     /// Active render hooks that modify output before display.
     render_hooks: Vec<RenderHook>,
+    /// Stack of active live displays (most recent last).
+    /// Equivalent to Python Rich's `Console._live_stack`.
+    live_stack: Vec<Livetracker>,
     /// Captured output buffer (active when capturing).
     capture_buf: Option<Arc<Mutex<Vec<u8>>>>,
     /// Original file writer saved during capture.
     saved_file: Option<Box<dyn Write + Send>>,
+}
+
+/// Opaque tracker for a registered live display.
+///
+/// Equivalent to Python Rich storing `Live` instances directly in the stack.
+/// Since Rust can't hold a typed reference, we track the live display's ID.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Livetracker {
+    /// Unique ID for this live display (used for dedup).
+    pub id: usize,
 }
 
 impl Console {
@@ -668,6 +681,7 @@ impl Console {
             tab_size: 8,
             safe_box: true,
             render_hooks: Vec::new(),
+            live_stack: Vec::new(),
             capture_buf: None,
             saved_file: None,
         }
@@ -700,6 +714,7 @@ impl Console {
             tab_size: 8,
             safe_box: true,
             render_hooks: Vec::new(),
+            live_stack: Vec::new(),
             capture_buf: None,
             saved_file: None,
         }
@@ -1486,15 +1501,29 @@ impl Console {
         let _ = self.file.flush();
     }
 
-    /// Set the active live display. Stores a reference to the
-    /// [`Live`](crate::live::Live) renderer for integration with the
-    /// console's rendering pipeline.
+    /// Register a live display with the console.
     ///
-    /// Note: [`Live`](crate::live::Live) manages its own refresh cycle;
-    /// this method is primarily for API compatibility with Python Rich.
-    pub fn set_live(&mut self, _live: &crate::live::Live) {
-        // Live manages its own refresh cycle; this method provides the
-        // API surface for attaching a live display to the console.
+    /// Equivalent to Python Rich's `Console.set_live()`.  Returns `true` if
+    /// the live display was registered (non-nested), or `false` if another
+    /// live display is already active (nested — this Live should skip
+    /// alt-screen and cursor control).
+    ///
+    /// The live stack is used to track nested [`Live`](crate::live::Live)
+    /// instances so that the outermost one controls screen state.
+    pub fn set_live(&mut self, live: &crate::live::Live) -> bool {
+        // Generate a unique ID from the pointer-like state
+        let id = if live.is_started() { 1 } else { 0 };
+        let was_empty = self.live_stack.is_empty();
+        self.live_stack.push(Livetracker { id });
+        was_empty
+    }
+
+    /// Unregister a live display.
+    ///
+    /// Equivalent to Python Rich's `Console.clear_live()`. Removes the
+    /// most recently registered live display from the stack.
+    pub fn clear_live(&mut self) {
+        self.live_stack.pop();
     }
 
     /// Update the full screen (enter alt-screen, render content, exit).

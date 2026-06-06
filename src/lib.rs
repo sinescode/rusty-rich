@@ -321,6 +321,8 @@ pub mod cells;
 pub mod color;
 /// Central rendering engine — Console, Renderable trait, capture, export.
 pub mod console;
+/// Dedicated error types for rendering, styling, markup, and live display.
+pub mod errors;
 /// Regex-based and repr-style text highlighters (requires `syntax-highlighting` feature).
 #[cfg(feature = "syntax-highlighting")]
 pub mod highlighter;
@@ -330,6 +332,8 @@ pub mod markup;
 pub mod measure;
 /// Proportional space distribution algorithms with minimums and maximums.
 pub mod ratio;
+/// Rectangular screen region used by the layout engine for space partitioning.
+pub mod region;
 /// Styled text unit with control codes — the smallest rendering primitive.
 pub mod segment;
 /// 13 text attributes (bold, italic, underline, …), links, style combination.
@@ -338,6 +342,8 @@ pub mod style;
 pub mod text;
 /// Named style maps (170+ defaults) with stack-based inheritance.
 pub mod theme;
+/// Word-boundary-aware text wrapping utilities for line splitting.
+pub mod wrap;
 
 // -- Renderable components --------------------------------------------------
 
@@ -360,6 +366,8 @@ pub mod tree;
 
 /// Auto-updating display region with stdout/stderr capture via `LiveWriter`.
 pub mod live;
+/// Live rendering helper — cursor positioning, vertical overflow, and shape tracking.
+pub mod live_render;
 /// Multi-task progress bars with configurable column layouts and iterable tracking.
 pub mod progress;
 /// 11 progress column types: bar, text, spinner, time, file size, transfer speed.
@@ -460,6 +468,11 @@ pub use text::Text;
 /// A part for [`Text::assemble`] — plain text, styled pair, or existing [`Text`].
 pub use text::TextPart;
 
+/// Word-boundary text wrapping — compute break positions for line splitting.
+pub use wrap::divide_line;
+/// Yield word boundaries from text for wrapping calculations.
+pub use wrap::words;
+
 /// A named style map — look up styles by key (e.g. `"repr.number"`, `"markdown.h1"`).
 pub use theme::Theme;
 
@@ -472,6 +485,13 @@ pub use align::VerticalAlignMethod;
 
 /// Width measurement (minimum, maximum) returned by the layout protocol.
 pub use measure::Measurement;
+
+/// Error types for rendering failures — StyleError, MarkupError, LiveError, etc.
+pub use errors::ConsoleError;
+pub use errors::LiveError;
+pub use errors::MarkupError;
+pub use errors::NotRenderableError;
+pub use errors::StyleError;
 
 // -- Console -----------------------------------------------------------------
 
@@ -533,7 +553,11 @@ pub use layout::Layout;
 /// A node in the layout tree — either a `Split` or a `Leaf`.
 pub use layout::LayoutNode;
 /// A screen region defined by x, y, width, and height.
-pub use layout::Region;
+pub use region::Region;
+/// Renders a [`Layout`] tree as a visual diagram for debugging.
+pub use layout::LayoutRender;
+/// Convenience function to create a layout and return a [`LayoutRender`].
+pub use layout::make_layout;
 /// CSS-style padding (1–4 side values) around any renderable.
 pub use padding::Padding;
 /// Padding dimension specification: 1, 2, or 4 values (like CSS).
@@ -630,6 +654,10 @@ pub use status::Status;
 pub use live::Live;
 /// A writer that captures output for display within a [`Live`] region.
 pub use live::LiveWriter;
+/// Live rendering helper — cursor positioning and vertical overflow management.
+pub use live_render::LiveRender;
+/// How to handle content exceeding available height in a live display.
+pub use live_render::VerticalOverflow;
 
 /// Full-screen renderable — fills the terminal and crops/pads to fit.
 pub use screen::Screen;

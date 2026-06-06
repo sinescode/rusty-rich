@@ -230,6 +230,36 @@ impl Control {
 }
 
 // ---------------------------------------------------------------------------
+// Renderable impl — allows Control to be used as a renderable in the pipeline
+// ---------------------------------------------------------------------------
+
+use crate::console::{ConsoleOptions, DynRenderable, RenderResult, Renderable};
+use crate::segment::Segment;
+
+impl Renderable for Control {
+    fn render(&self, _options: &ConsoleOptions) -> RenderResult {
+        let ansi = self.to_ansi();
+        if ansi.is_empty() {
+            RenderResult {
+                lines: Vec::new(),
+                items: Vec::new(),
+            }
+        } else {
+            RenderResult {
+                lines: vec![vec![Segment::new(ansi)]],
+                items: Vec::new(),
+            }
+        }
+    }
+}
+
+impl From<Control> for DynRenderable {
+    fn from(ctrl: Control) -> Self {
+        DynRenderable::new(ctrl)
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Convenience functions
 // ---------------------------------------------------------------------------
 
