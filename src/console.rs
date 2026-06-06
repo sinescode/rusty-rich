@@ -1493,14 +1493,6 @@ impl Console {
         ThemeContext::new(self, prev)
     }
 
-    /// Clear the live display region. When in alt-screen mode, this clears
-    /// the entire alternate screen. Otherwise, it's equivalent to
-    /// [`clear`](Self::clear).
-    pub fn clear_live(&mut self) {
-        let _ = write!(self.file, "{}", crate::control::CLEAR_HOME);
-        let _ = self.file.flush();
-    }
-
     /// Register a live display with the console.
     ///
     /// Equivalent to Python Rich's `Console.set_live()`.  Returns `true` if

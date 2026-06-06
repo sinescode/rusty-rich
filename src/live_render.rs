@@ -202,7 +202,7 @@ impl Renderable for LiveRender {
                             .style(Style::new().bold(true).color(
                                 crate::color::Color::parse("red").unwrap_or_default(),
                             ))
-                            .justify(crate::align::JustifyMethod::Center);
+                            .justify(crate::align::AlignMethod::Center);
                         let ellipsis_result = ellipsis_text.render(options);
                         if let Some(ellipsis_line) = ellipsis_result.lines.into_iter().next() {
                             lines.push(ellipsis_line);

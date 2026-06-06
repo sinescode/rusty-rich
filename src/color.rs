@@ -124,6 +124,17 @@ pub struct Color {
     pub(crate) name: Option<&'static str>,
 }
 
+impl Default for Color {
+    fn default() -> Self {
+        Self {
+            color_type: ColorType::Default,
+            number: None,
+            triplet: None,
+            name: None,
+        }
+    }
+}
+
 impl Color {
     // -- constructors -------------------------------------------------------
 

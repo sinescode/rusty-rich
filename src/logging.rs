@@ -521,7 +521,7 @@ mod tests {
     #[test]
     fn test_style_level() {
         let error_style = style_level(log::Level::Error);
-        assert!(error_style.bold);
+        assert!(error_style.get_bold().unwrap_or(false));
 
         let info_style = style_level(log::Level::Info);
         assert!(!info_style.bold); // info is not bold in Python Rich

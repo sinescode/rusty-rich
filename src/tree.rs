@@ -55,9 +55,9 @@ pub enum GuideStyleKind {
 impl GuideStyleKind {
     /// Determine the guide style from a [`Style`]'s attributes.
     pub fn from_style(style: &Style) -> Self {
-        if style.underline2 {
+        if style.get_underline2().unwrap_or(false) {
             Self::Underline2
-        } else if style.bold {
+        } else if style.get_bold().unwrap_or(false) {
             Self::Bold
         } else {
             Self::Normal
